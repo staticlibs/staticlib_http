@@ -25,10 +25,12 @@ endif ( )
 project ( staticlib_httpclient_test CXX )
 include ( ${STATICLIB_CMAKE}/staticlibs_common.cmake )
 
+staticlib_enable_deplibs_cache ( )
+
 # dependencies
-set ( STATICLIB_WITH_ICU OFF CACHE BOOL "" )
+set ( STATICLIB_WITH_ICU ON CACHE BOOL "" )
 if ( NOT STATICLIB_TOOLCHAIN MATCHES "linux_[^_]+_[^_]+" )
-#    staticlib_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/deps/external_icu )
+    staticlib_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/deps/external_icu )
     staticlib_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/deps/external_curl )
 endif ( )
 staticlib_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/deps/staticlib_utils )
