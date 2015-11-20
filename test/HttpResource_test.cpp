@@ -18,7 +18,7 @@ namespace hc = staticlib::httpclient;
 
 void test_get() {
     hc::HttpSession session{};
-    hc::HttpResource src = session.open_url_test("https://google.com/");
+    hc::HttpResource src = session.open_get("https://google.com/");
     std::string out{};
     out.resize(12);
     std::streamsize res = src.read(std::addressof(out.front()), 12);

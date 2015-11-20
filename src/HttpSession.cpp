@@ -6,6 +6,7 @@
  */
 
 #include <memory>
+#include <sstream>
 
 #include "curl/curl.h"
 
@@ -21,6 +22,11 @@ namespace httpclient {
 
 namespace { // anonymous
 
+typedef const std::vector<std::pair<std::string, std::string>>& headers_type;
+#ifdef STATICLIB_WITH_ICU
+typedef const std::vector<std::pair<icu::UnicodeString, icu::UnicodeString>>& icu_headers_type;
+#endif // STATICLIB_WITH_ICU
+
 class CurlMultiDeleter {
 public:
     void operator()(CURLM* curlm) {
@@ -32,6 +38,7 @@ public:
 
 class HttpSession::Impl : public staticlib::pimpl::PimplObject::Impl {
     std::unique_ptr<CURLM, CurlMultiDeleter> handle;
+    std::istringstream empty_stream;
 
 public:
     Impl() :
@@ -39,13 +46,153 @@ public:
         if (nullptr == handle.get()) throw HttpClientException(TRACEMSG("Error initialising cURL multi handle"));
     }
     
-    HttpResource open_url_test(HttpSession&, const std::string& url) {
-        return HttpResource(handle.get(), url);
+    ~Impl() STATICLIB_NOEXCEPT { }
+    
+    HttpResource open_get(HttpSession&, const std::string& url,
+            const std::vector<std::pair<std::string, std::string>>& headers,
+            const std::string& ssl_ca_file,
+            const std::string& ssl_cert_file,
+            const std::string& ssl_key_file,
+            const std::string& ssl_key_passwd) {
+        return HttpResource(handle.get(), "GET", url, *empty_stream.rdbuf(), headers, 
+                ssl_ca_file, ssl_cert_file, ssl_key_file, ssl_key_passwd);
     }
+
+#ifdef STATICLIB_WITH_ICU
+    HttpResource open_get(HttpSession&, const icu::UnicodeString& url,
+            const std::vector<std::pair<icu::UnicodeString, icu::UnicodeString>>& headers,
+            const icu::UnicodeString& ssl_ca_file,
+            const icu::UnicodeString& ssl_cert_file,
+            const icu::UnicodeString& ssl_key_file,
+            const icu::UnicodeString& ssl_key_passwd) {
+        return HttpResource(handle.get(), "GET", to_utf8(url), *empty_stream.rdbuf(), 
+                headers_to_utf8(headers), to_utf8(ssl_ca_file), to_utf8(ssl_cert_file), 
+                to_utf8(ssl_key_file), to_utf8(ssl_key_passwd));        
+    }
+#endif // STATICLIB_WITH_ICU
+
+    HttpResource open_post(HttpSession&, const std::string& url, const std::streambuf& data,
+            const std::vector<std::pair<std::string, std::string>>& headers,
+            const std::string& ssl_ca_file,
+            const std::string& ssl_cert_file,
+            const std::string& ssl_key_file,
+            const std::string& ssl_key_passwd) {
+        return HttpResource(handle.get(), "POST", url, data, headers,
+                ssl_ca_file, ssl_cert_file, ssl_key_file, ssl_key_passwd);
+    }
+
+#ifdef STATICLIB_WITH_ICU    
+    HttpResource open_post(HttpSession&, const icu::UnicodeString& url, const std::streambuf& data,
+            const std::vector<std::pair<icu::UnicodeString, icu::UnicodeString>>& headers,
+            const icu::UnicodeString& ssl_ca_file,
+            const icu::UnicodeString& ssl_cert_file,
+            const icu::UnicodeString& ssl_key_file,
+            const icu::UnicodeString& ssl_key_passwd) {
+        return HttpResource(handle.get(), "POST", to_utf8(url), data,
+                headers_to_utf8(headers), to_utf8(ssl_ca_file), to_utf8(ssl_cert_file), 
+                to_utf8(ssl_key_file), to_utf8(ssl_key_passwd));
+    }
+#endif // STATICLIB_WITH_ICU
+
+    HttpResource open_put(HttpSession&, const std::string& url, const std::streambuf& data,
+            const std::vector<std::pair<std::string, std::string>>& headers,
+            const std::string& ssl_ca_file,
+            const std::string& ssl_cert_file,
+            const std::string& ssl_key_file,
+            const std::string& ssl_key_passwd) {
+        return HttpResource(handle.get(), "PUT", url, data, headers,
+                ssl_ca_file, ssl_cert_file, ssl_key_file, ssl_key_passwd);
+    }
+
+#ifdef STATICLIB_WITH_ICU
+    HttpResource open_put(HttpSession&, const icu::UnicodeString& url, const std::streambuf& data,
+            const std::vector<std::pair<icu::UnicodeString, icu::UnicodeString>>& headers,
+            const icu::UnicodeString& ssl_ca_file,
+            const icu::UnicodeString& ssl_cert_file,
+            const icu::UnicodeString& ssl_key_file,
+            const icu::UnicodeString& ssl_key_passwd) {
+        return HttpResource(handle.get(), "PUT", to_utf8(url), data,
+                headers_to_utf8(headers), to_utf8(ssl_ca_file), to_utf8(ssl_cert_file), 
+                to_utf8(ssl_key_file), to_utf8(ssl_key_passwd));
+    }
+#endif // STATICLIB_WITH_ICU
+
+    HttpResource open_delete(HttpSession&, const std::string& url,
+            const std::vector<std::pair<std::string, std::string>>& headers,
+            const std::string& ssl_ca_file,
+            const std::string& ssl_cert_file,
+            const std::string& ssl_key_file,
+            const std::string& ssl_key_passwd) {
+        return HttpResource(handle.get(), "DELETE", url, *empty_stream.rdbuf(), headers,
+                ssl_ca_file, ssl_cert_file, ssl_key_file, ssl_key_passwd);
+    }
+
+#ifdef STATICLIB_WITH_ICU
+    HttpResource open_delete(HttpSession&, const icu::UnicodeString& url,
+            const std::vector<std::pair<icu::UnicodeString, icu::UnicodeString>>& headers,
+            const icu::UnicodeString& ssl_ca_file,
+            const icu::UnicodeString& ssl_cert_file,
+            const icu::UnicodeString& ssl_key_file,
+            const icu::UnicodeString& ssl_key_passwd) {
+        return HttpResource(handle.get(), "DELETE", to_utf8(url), *empty_stream.rdbuf(),
+                headers_to_utf8(headers), to_utf8(ssl_ca_file), to_utf8(ssl_cert_file), 
+                to_utf8(ssl_key_file), to_utf8(ssl_key_passwd));
+    }
+#endif // STATICLIB_WITH_ICU    
+
+private:
+#ifdef STATICLIB_WITH_ICU
+    std::string to_utf8(const icu::UnicodeString& str) {
+        std::string bytes{};
+        str.toUTF8String(bytes);
+        return bytes;
+    }
+
+    std::vector<std::pair<icu::UnicodeString, icu::UnicodeString>> 
+    headers_to_utf8(const std::vector<std::pair<std::string, std::string>>& headers) {
+        std::vector<std::pair<icu::UnicodeString, icu::UnicodeString>> res{};
+        for (auto& en : headers) {
+            res.emplace_back(to_utf8(en.first), to_utf8(en.second));
+        }
+        return res;
+    }
+#endif // STATICLIB_WITH_ICU
     
 };
-PIMPL_FORWARD_CONSTRUCTOR(HttpSession, (), (), HttpClientException) 
-PIMPL_FORWARD_METHOD(HttpSession, HttpResource, open_url_test, (const std::string&), (), HttpClientException)
+PIMPL_FORWARD_CONSTRUCTOR(HttpSession, (), (), HttpClientException)
+PIMPL_FORWARD_METHOD(HttpSession, HttpResource, open_get, 
+        (const std::string&)(headers_type)(const std::string&)(const std::string&)(const std::string&)(const std::string&), 
+        (), HttpClientException)
+#ifdef STATICLIB_WITH_ICU        
+PIMPL_FORWARD_METHOD(HttpSession, HttpResource, open_get,
+        (const icu::UnicodeString&)(icu_headers_type)(const icu::UnicodeString&)(const icu::UnicodeString&)(const icu::UnicodeString&)(const icu::UnicodeString&),
+        (), HttpClientException)
+#endif // STATICLIB_WITH_ICU        
+PIMPL_FORWARD_METHOD(HttpSession, HttpResource, open_post,
+        (const std::string&)(const std::streambuf&)(headers_type) (const std::string&)(const std::string&)(const std::string&)(const std::string&),
+        (), HttpClientException)
+#ifdef STATICLIB_WITH_ICU        
+PIMPL_FORWARD_METHOD(HttpSession, HttpResource, open_post,
+        (const icu::UnicodeString&)(const std::streambuf&)(icu_headers_type) (const icu::UnicodeString&)(const icu::UnicodeString&)(const icu::UnicodeString&)(const icu::UnicodeString&),
+        (), HttpClientException)
+#endif // STATICLIB_WITH_ICU        
+PIMPL_FORWARD_METHOD(HttpSession, HttpResource, open_put,
+        (const std::string&)(const std::streambuf&)(headers_type) (const std::string&)(const std::string&)(const std::string&)(const std::string&),
+        (), HttpClientException)
+#ifdef STATICLIB_WITH_ICU        
+PIMPL_FORWARD_METHOD(HttpSession, HttpResource, open_put,
+        (const icu::UnicodeString&)(const std::streambuf&)(icu_headers_type) (const icu::UnicodeString&)(const icu::UnicodeString&)(const icu::UnicodeString&)(const icu::UnicodeString&),
+        (), HttpClientException)
+#endif // STATICLIB_WITH_ICU        
+PIMPL_FORWARD_METHOD(HttpSession, HttpResource, open_delete,
+        (const std::string&)(headers_type) (const std::string&)(const std::string&)(const std::string&)(const std::string&),
+        (), HttpClientException)
+#ifdef STATICLIB_WITH_ICU
+PIMPL_FORWARD_METHOD(HttpSession, HttpResource, open_delete,
+        (const icu::UnicodeString&)(icu_headers_type) (const icu::UnicodeString&)(const icu::UnicodeString&)(const icu::UnicodeString&)(const icu::UnicodeString&),
+        (), HttpClientException)
+#endif // STATICLIB_WITH_ICU        
+
 
 
 } // namespace

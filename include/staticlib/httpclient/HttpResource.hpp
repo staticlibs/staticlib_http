@@ -10,6 +10,8 @@
 
 #include <ios>
 #include <string>
+#include <vector>
+#include <utility>
 
 #include "staticlib/pimpl.hpp"
 
@@ -40,7 +42,15 @@ private:
      * 
      * @param impl_ptr implementation defined
      */
-    HttpResource(/* CURLM */ void* multi_handle, std::string url);
+    HttpResource(/* CURLM */ void* multi_handle,
+            const std::string& method,
+            const std::string& url,
+            const std::streambuf& data,
+            const std::vector<std::pair<std::string, std::string>>&headers,
+            const std::string& ssl_ca_file,
+            const std::string& ssl_cert_file,
+            const std::string& ssl_key_file,
+            const std::string& ssl_key_passwd);
     
 };
 

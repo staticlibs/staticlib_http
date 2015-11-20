@@ -27,6 +27,8 @@ namespace { // anonymous
 
 namespace su = staticlib::utils;
 
+typedef const std::vector<std::pair<std::string, std::string>>& headers_type;
+
 class CurlEasyDeleter {
     CURLM* multi_handle;
 public:
@@ -43,7 +45,6 @@ public:
 
 
 class HttpResource::Impl : public staticlib::pimpl::PimplObject::Impl {
-    
     CURLM* multi_handle;
     std::unique_ptr<CURL, CurlEasyDeleter> handle;
     std::string url;
@@ -53,14 +54,27 @@ class HttpResource::Impl : public staticlib::pimpl::PimplObject::Impl {
     bool open = false;
     
 public:
-    Impl(CURLM* multi_handle, std::string url_string) :
+    Impl(CURLM* multi_handle, const std::string& method, const std::string& url_string, 
+            const std::streambuf& data,
+            const std::vector<std::pair<std::string, std::string>>& headers,
+            const std::string& ssl_ca_file,
+            const std::string& ssl_cert_file,
+            const std::string& ssl_key_file,
+            const std::string& ssl_key_passwd) :
     multi_handle(multi_handle),
     handle(curl_easy_init(), CurlEasyDeleter{multi_handle}),
-    url(std::move(url_string)) {
-        if (nullptr == handle.get()) throw HttpClientException(TRACEMSG("Error initialising cURL handle"));
+    url(url_string) {
+        if (nullptr == handle.get()) throw HttpClientException(TRACEMSG("Error initializing cURL handle"));
         CURLMcode err =  curl_multi_add_handle(multi_handle, handle.get());
         if (err != CURLM_OK) throw HttpClientException(TRACEMSG(std::string() +
-                "cURL multi_add error: [" + su::to_string(err) + "]"));
+                "cURL multi_add error: [" + su::to_string(err) + "], url: [" + url + "]"));
+        (void) method;
+        (void) data;
+        (void) headers;
+        (void) ssl_ca_file;
+        (void) ssl_cert_file;
+        (void) ssl_key_file;
+        (void) ssl_key_passwd;
         curl_easy_setopt(handle.get(), CURLOPT_URL, url.c_str());
         curl_easy_setopt(handle.get(), CURLOPT_WRITEDATA, this);
         curl_easy_setopt(handle.get(), CURLOPT_WRITEFUNCTION, HttpResource::Impl::write_callback);
@@ -82,7 +96,7 @@ public:
     }
     
 private:
-    static size_t write_callback(char* buffer, size_t size, size_t nitems, void* userp) {
+    static size_t write_callback(char* buffer, size_t size, size_t nitems, void* userp) STATICLIB_NOEXCEPT {
         if (nullptr == userp) return -1;
         HttpResource::Impl* ptr = static_cast<HttpResource::Impl*> (userp);
         return ptr->write_data(buffer, size, nitems);
@@ -95,78 +109,66 @@ private:
         return len;
     } 
     
+    // curl_multi_socket_action may be used instead of fdset
     void fill_buffer() {
         // some data in buffer
         if (buf_idx < buf.size()) return;
         buf_idx = 0;
         buf.resize(0);
-        /* attempt to fill buffer */
-        do {
-            int maxfd = -1;
-            long curl_timeo = -1;
-
-            /* set a suitable timeout to fail on */
+        // attempt to fill buffer
+        while (open && 0 == buf.size()) {
+            // http://curl-library.cool.haxx.narkive.com/2sYifbgu/issue-with-curl-multi-timeout-while-doing-non-blocking-http-posts-in-vms
+            long timeo = -1;
+            CURLMcode err_timeout = curl_multi_timeout(multi_handle, &timeo);
+            if (err_timeout != CURLM_OK) throw HttpClientException(TRACEMSG(std::string() +
+                    "cURL timeout error: [" + su::to_string(err_timeout) + "], url: [" + url + "]"));
             struct timeval timeout;
             std::memset(std::addressof(timeout), '\0', sizeof(timeout));
-            timeout.tv_sec = 10; /* 1 minute */
-            timeout.tv_usec = 0;
-
-            // todo
-            curl_multi_timeout(multi_handle, &curl_timeo);
-            if (curl_timeo >= 0) {
-                timeout.tv_sec = curl_timeo / 1000;
-                if (timeout.tv_sec > 1)
-                    timeout.tv_sec = 1;
-                else
-                    timeout.tv_usec = (curl_timeo % 1000) * 1000;
+            timeout.tv_sec = 10;
+            if (timeo > 0) {
+                long ctsecs = timeo / 1000;
+                if (ctsecs < 10) {
+                    timeout.tv_sec = ctsecs;
+                }
+                timeout.tv_usec = (timeo % 1000) * 1000;
             }
 
-            /* get file descriptors from the transfers */
+            // get file descriptors from the transfers
             fd_set fdread;
-            FD_ZERO(&fdread);
+            FD_ZERO(std::addressof(fdread));
             fd_set fdwrite;
-            FD_ZERO(&fdwrite);
+            FD_ZERO(std::addressof(fdwrite));
             fd_set fdexcep;
-            FD_ZERO(&fdexcep);
-            CURLMcode mc = curl_multi_fdset(multi_handle, &fdread, &fdwrite, &fdexcep, &maxfd);
+            FD_ZERO(std::addressof(fdexcep));
+            int maxfd = -1;
+            CURLMcode err_fdset = curl_multi_fdset(multi_handle, std::addressof(fdread), 
+                    std::addressof(fdwrite), std::addressof(fdexcep), std::addressof(maxfd));
+            if (err_fdset != CURLM_OK) throw HttpClientException(TRACEMSG(std::string() + 
+                    "cURL fdset error: [" + su::to_string(err_fdset) + "], url: [" + url + "]"));
 
-            if (mc != CURLM_OK) throw HttpClientException(TRACEMSG(std::string() + 
-                    "cURL fdset error: [" + su::to_string(mc) + "]"));
-
-            /* On success the value of maxfd is guaranteed to be >= -1. We call
-               select(maxfd + 1, ...); specially in case of (maxfd == -1) there are
-               no fds ready yet so we call select(0, ...) --or Sleep() on Windows--
-               to sleep 100ms, which is the minimum suggested value in the
-               curl_multi_fdset() doc. */
-
-            int rc = 0;
+            // wait or select
+            int err_select = 0;
             if (maxfd == -1) {
                 std::this_thread::sleep_for(std::chrono::microseconds{100});
             } else {
-                /* Note that on some platforms 'timeout' may be modified by select().
-                   If you need access to the original value save a copy beforehand. */
-                rc = select(maxfd + 1, &fdread, &fdwrite, &fdexcep, &timeout);
+                err_select = select(maxfd + 1, &fdread, &fdwrite, &fdexcep, &timeout);
             }
-
-            switch (rc) {
-            case -1:
-                /* select error */
-                break;
-            case 0:
-            default:
-                /* timeout or readable/writable sockets */
+    
+            // do perform if no select error
+            if (-1 != err_select) {
                 int active = -1;
                 CURLMcode err = curl_multi_perform(multi_handle, std::addressof(active));
                 if (err != CURLM_OK) throw HttpClientException(TRACEMSG(std::string() +
-                        "cURL multi_perform error: [" + su::to_string(err) + "]"));
+                        "cURL multi_perform error: [" + su::to_string(err) + "], url: [" + url + "]"));
                 open = (1 == active);
-                break;
             }
-        } while (open && 0 == buf.size());
+        }
     }    
     
 };
-PIMPL_FORWARD_CONSTRUCTOR(HttpResource, (CURLM*)(std::string), (), HttpClientException)
+PIMPL_FORWARD_CONSTRUCTOR(HttpResource, 
+        (CURLM*)(const std::string&)(const std::string&)(const std::streambuf&)(headers_type)(const std::string&)(const std::string&)(const std::string&)(const std::string&),
+        (), HttpClientException)
 PIMPL_FORWARD_METHOD(HttpResource, std::streamsize, read, (char*)(std::streamsize), (), HttpClientException)
 
 } // namespace
