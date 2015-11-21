@@ -54,7 +54,9 @@ class HttpResource::Impl : public staticlib::pimpl::PimplObject::Impl {
     bool open = false;
     
 public:
-    Impl(CURLM* multi_handle, const std::string& method, const std::string& url_string, 
+    Impl(CURLM* multi_handle, 
+            const std::string& url_in,
+            const std::string& method,
             const std::streambuf& data,
             const std::vector<std::pair<std::string, std::string>>& headers,
             const std::string& ssl_ca_file,
@@ -63,11 +65,23 @@ public:
             const std::string& ssl_key_passwd) :
     multi_handle(multi_handle),
     handle(curl_easy_init(), CurlEasyDeleter{multi_handle}),
-    url(url_string) {
+    url(url_in) {
         if (nullptr == handle.get()) throw HttpClientException(TRACEMSG("Error initializing cURL handle"));
-        CURLMcode err =  curl_multi_add_handle(multi_handle, handle.get());
-        if (err != CURLM_OK) throw HttpClientException(TRACEMSG(std::string() +
-                "cURL multi_add error: [" + su::to_string(err) + "], url: [" + url + "]"));
+        CURLMcode errm = curl_multi_add_handle(multi_handle, handle.get());
+        if (errm != CURLM_OK) throw HttpClientException(TRACEMSG(std::string() +
+                "cURL multi_add error: [" + su::to_string(errm) + "], url: [" + url + "]"));
+//        CURLcode err = CURLE_OK;
+        // method options
+////        switch (method) {
+////        case "GET": break;
+////        case "POST":            
+////            err = curl_easy_setopt(handle.get(), CURLOPT_POST, 1);
+////            if (err != CURLE_OK) throw HttpClientException(TRACEMSG("cURL CURLOPT_POST error: [" + su::to_string(err) + "]"));    
+////            // todo
+////        case "PUT":
+////        case "DELETE":
+////        default: throw HttpClientException(TRACEMSG(std::string() + "Unsupported method: [" + method + "]"));    
+//        }
         (void) method;
         (void) data;
         (void) headers;
@@ -167,7 +181,15 @@ private:
     
 };
 PIMPL_FORWARD_CONSTRUCTOR(HttpResource, 
-        (CURLM*)(const std::string&)(const std::string&)(const std::streambuf&)(headers_type)(const std::string&)(const std::string&)(const std::string&)(const std::string&),
+        (CURLM*)
+        (const std::string&)
+        (const std::string&)
+        (const std::streambuf&)
+        (headers_type)
+        (const std::string&)
+        (const std::string&)
+        (const std::string&)
+        (const std::string&),
         (), HttpClientException)
 PIMPL_FORWARD_METHOD(HttpResource, std::streamsize, read, (char*)(std::streamsize), (), HttpClientException)
 

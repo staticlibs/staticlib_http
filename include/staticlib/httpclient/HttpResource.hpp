@@ -43,8 +43,8 @@ private:
      * @param impl_ptr implementation defined
      */
     HttpResource(/* CURLM */ void* multi_handle,
-            const std::string& method,
             const std::string& url,
+            const std::string& method,
             const std::streambuf& data,
             const std::vector<std::pair<std::string, std::string>>& headers,
             const std::string& ssl_ca_file,
