@@ -17,26 +17,29 @@ cmake_minimum_required ( VERSION 2.8.12 )
 # toolchain setup
 set ( STATICLIB_TOOLCHAIN linux_amd64_gcc CACHE STRING "toolchain triplet" )
 if ( NOT DEFINED STATICLIB_CMAKE )
-    set ( STATICLIB_CMAKE ${CMAKE_CURRENT_LIST_DIR}/cmake CACHE INTERNAL "" )
-    set ( CMAKE_TOOLCHAIN_FILE ${STATICLIB_CMAKE}/toolchains/${STATICLIB_TOOLCHAIN}.cmake CACHE INTERNAL "" )
+    set ( STATICLIB_CMAKE ${CMAKE_CURRENT_LIST_DIR}/../../cmake CACHE INTERNAL "" )
 endif ( )
+set ( CMAKE_TOOLCHAIN_FILE ${STATICLIB_CMAKE}/toolchains/${STATICLIB_TOOLCHAIN}.cmake CACHE INTERNAL "" )
 
 # project
 project ( staticlib_httpclient_test CXX )
 include ( ${STATICLIB_CMAKE}/staticlibs_common.cmake )
-
 staticlib_enable_deplibs_cache ( )
 
 # dependencies
+if ( NOT DEFINED STATICLIB_DEPS )
+    set ( STATICLIB_DEPS ${CMAKE_CURRENT_LIST_DIR}/../../ CACHE INTERNAL "" )    
+endif ( )
 set ( STATICLIB_WITH_ICU ON CACHE BOOL "" )
 if ( NOT STATICLIB_TOOLCHAIN MATCHES "linux_[^_]+_[^_]+" )
-    staticlib_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/deps/external_icu )
-    staticlib_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/deps/external_curl )
+    staticlib_add_subdirectory ( ${STATICLIB_DEPS}/external_icu )
+    staticlib_add_subdirectory ( ${STATICLIB_DEPS}/external_curl )
 endif ( )
-staticlib_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/deps/staticlib_utils )
-staticlib_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/deps/staticlib_pimpl )
+staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_config )
+staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_pimpl )
+staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_httpserver ) # testonly
 staticlib_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../../staticlib_httpclient )
-set ( ${PROJECT_NAME}_DEPS staticlib_httpclient )
+set ( ${PROJECT_NAME}_DEPS staticlib_httpclient staticlib_httpserver )
 staticlib_pkg_check_modules ( ${PROJECT_NAME}_DEPS_PC REQUIRED ${PROJECT_NAME}_DEPS )
 
 # tests

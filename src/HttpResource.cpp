@@ -5,27 +5,25 @@
  * Created on November 20, 2015, 8:43 AM
  */
 
-#include <memory>
-#include <string>
-#include <vector>
+#include "staticlib/httpclient/HttpResource.hpp"
+
 #include <chrono>
+#include <memory>
 #include <thread>
 #include <cstring>
 
 #include "curl/curl.h"
 
-#include "staticlib/utils.hpp"
+#include "staticlib/config.hpp"
 #include "staticlib/pimpl/pimpl_forward_macros.hpp"
 
-#include "staticlib/httpclient/HttpClientException.hpp"
-#include "staticlib/httpclient/HttpResource.hpp"
 
 namespace staticlib {
 namespace httpclient {
 
 namespace { // anonymous
 
-namespace su = staticlib::utils;
+namespace sc = staticlib::config;
 
 typedef const std::vector<std::pair<std::string, std::string>>& headers_type;
 
@@ -69,14 +67,14 @@ public:
         if (nullptr == handle.get()) throw HttpClientException(TRACEMSG("Error initializing cURL handle"));
         CURLMcode errm = curl_multi_add_handle(multi_handle, handle.get());
         if (errm != CURLM_OK) throw HttpClientException(TRACEMSG(std::string() +
-                "cURL multi_add error: [" + su::to_string(errm) + "], url: [" + url + "]"));
+                "cURL multi_add error: [" + sc::to_string(errm) + "], url: [" + url + "]"));
 //        CURLcode err = CURLE_OK;
         // method options
 ////        switch (method) {
 ////        case "GET": break;
 ////        case "POST":            
 ////            err = curl_easy_setopt(handle.get(), CURLOPT_POST, 1);
-////            if (err != CURLE_OK) throw HttpClientException(TRACEMSG("cURL CURLOPT_POST error: [" + su::to_string(err) + "]"));    
+////            if (err != CURLE_OK) throw HttpClientException(TRACEMSG("cURL CURLOPT_POST error: [" + sc::to_string(err) + "]"));    
 ////            // todo
 ////        case "PUT":
 ////        case "DELETE":
@@ -135,7 +133,7 @@ private:
             long timeo = -1;
             CURLMcode err_timeout = curl_multi_timeout(multi_handle, &timeo);
             if (err_timeout != CURLM_OK) throw HttpClientException(TRACEMSG(std::string() +
-                    "cURL timeout error: [" + su::to_string(err_timeout) + "], url: [" + url + "]"));
+                    "cURL timeout error: [" + sc::to_string(err_timeout) + "], url: [" + url + "]"));
             struct timeval timeout;
             std::memset(std::addressof(timeout), '\0', sizeof(timeout));
             timeout.tv_sec = 10;
@@ -158,7 +156,7 @@ private:
             CURLMcode err_fdset = curl_multi_fdset(multi_handle, std::addressof(fdread), 
                     std::addressof(fdwrite), std::addressof(fdexcep), std::addressof(maxfd));
             if (err_fdset != CURLM_OK) throw HttpClientException(TRACEMSG(std::string() + 
-                    "cURL fdset error: [" + su::to_string(err_fdset) + "], url: [" + url + "]"));
+                    "cURL fdset error: [" + sc::to_string(err_fdset) + "], url: [" + url + "]"));
 
             // wait or select
             int err_select = 0;
@@ -173,7 +171,7 @@ private:
                 int active = -1;
                 CURLMcode err = curl_multi_perform(multi_handle, std::addressof(active));
                 if (err != CURLM_OK) throw HttpClientException(TRACEMSG(std::string() +
-                        "cURL multi_perform error: [" + su::to_string(err) + "], url: [" + url + "]"));
+                        "cURL multi_perform error: [" + sc::to_string(err) + "], url: [" + url + "]"));
                 open = (1 == active);
             }
         }

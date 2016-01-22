@@ -5,14 +5,15 @@
  * Created on November 20, 2015, 8:44 AM
  */
 
+#include "staticlib/httpclient/HttpResource.hpp"
+
 #include <iostream>
 #include <string>
 
-#include "staticlib/utils.hpp"
-#include "staticlib/utils/assert.hpp"
+#include "staticlib/config/assert.hpp"
 
 #include "staticlib/httpclient/HttpSession.hpp"
-#include "staticlib/httpclient/HttpResource.hpp"
+
 
 namespace hc = staticlib::httpclient;
 

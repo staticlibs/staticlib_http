@@ -8,11 +8,11 @@
 #ifndef STATICLIB_HTTPCLIENT_HTTPSESSION_HPP
 #define	STATICLIB_HTTPCLIENT_HTTPSESSION_HPP
 
-#include <string>
-#include <vector>
-#include <utility>
-#include <streambuf>
 #include <sstream>
+#include <streambuf>
+#include <string>
+#include <utility>
+#include <vector>
 
 #ifdef STATICLIB_WITH_ICU
 #include "unicode/unistr.h"    
@@ -21,6 +21,7 @@
 #include "staticlib/pimpl.hpp"
 
 #include "staticlib/httpclient/HttpResource.hpp"
+#include "staticlib/httpclient/HttpClientException.hpp"
 
 namespace staticlib {
 namespace httpclient {

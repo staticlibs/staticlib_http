@@ -24,7 +24,7 @@
 #ifndef STATICLIB_HTTPCLIENT_HTTPCLIENTEXCEPTION_HPP
 #define	STATICLIB_HTTPCLIENT_HTTPCLIENTEXCEPTION_HPP
 
-#include "staticlib/utils/BaseException.hpp"
+#include "staticlib/config/BaseException.hpp"
 
 namespace staticlib {
 namespace httpclient {
@@ -32,7 +32,7 @@ namespace httpclient {
 /**
  * Module specific exception
  */
-class HttpClientException : public staticlib::utils::BaseException {
+class HttpClientException : public staticlib::config::BaseException {
 public:
     /**
      * Default constructor
@@ -45,7 +45,7 @@ public:
      * @param msg error message
      */
     HttpClientException(const std::string& msg) :
-    staticlib::utils::BaseException(msg) { }
+    staticlib::config::BaseException(msg) { }
 
 };
 

@@ -7,11 +7,23 @@
 
 #include "staticlib/httpclient/HttpSession.hpp"
 
-int main() {
+#include <iostream>
+
+#include "staticlib/config/assert.hpp"
+
+void test_not_leaked() {
     // check not leaked
     auto hs = staticlib::httpclient::HttpSession{};
     (void) hs;
+}
 
+int main() {
+    try {
+        test_not_leaked();
+    } catch (const std::exception& e) {
+        std::cout << e.what() << std::endl;
+        return 1;
+    }
     return 0;
 }
 

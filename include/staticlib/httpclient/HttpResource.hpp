@@ -10,10 +10,12 @@
 
 #include <ios>
 #include <string>
-#include <vector>
 #include <utility>
+#include <vector>
 
 #include "staticlib/pimpl.hpp"
+
+#include "staticlib/httpclient/HttpClientException.hpp"
 
 namespace staticlib {
 namespace httpclient {

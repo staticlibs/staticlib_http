@@ -42,13 +42,26 @@ endif ( )
 # options, use SET ( OPTNAME ON CACHE BOOL "") in parent to override
 option ( STATICLIB_WITH_ICU "Build with ICU support" OFF )
 
+# standalone build
+if ( NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY )
+    set ( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR} )
+endif ( )
+if ( NOT DEFINED STATICLIB_TOOLCHAIN )
+    if ( NOT ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" ) 
+        staticlib_httpclient_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../external_curl )
+        if ( STATICLIB_WITH_ICU )
+            staticlib_httpclient_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../external_icu )
+        endif ( )
+    endif (  )
+    staticlib_httpclient_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../staticlib_pimpl )
+endif ( )
+
 # deps
 set ( ${PROJECT_NAME}_OPTIONS "" )
 set ( ${PROJECT_NAME}_DEPS_PUBLIC
-        staticlib_pimpl        
-        staticlib_utils )
+        staticlib_pimpl )
 set ( ${PROJECT_NAME}_DEPS_PRIVATE 
-        libcurl )
+        curl )
 if ( STATICLIB_WITH_ICU )
     set ( ${PROJECT_NAME}_DEPS_PUBLIC ${${PROJECT_NAME}_DEPS_PUBLIC} icu-uc )
     set ( ${PROJECT_NAME}_OPTIONS -DSTATICLIB_WITH_ICU )
@@ -72,9 +85,6 @@ target_compile_options ( ${PROJECT_NAME} PRIVATE
         ${${PROJECT_NAME}_OPTIONS} )
 
 # pkg-config
-if ( NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY )
-    set ( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} )
-endif ( )
 staticlib_httpclient_list_to_string ( ${PROJECT_NAME}_PC_CFLAGS_OPTS "" ${PROJECT_NAME}_OPTIONS )
 set ( ${PROJECT_NAME}_PC_CFLAGS "-I${CMAKE_CURRENT_LIST_DIR}/include ${${PROJECT_NAME}_PC_CFLAGS_OPTS}" )
 set ( ${PROJECT_NAME}_PC_LIBS "-L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} -l${PROJECT_NAME}" )

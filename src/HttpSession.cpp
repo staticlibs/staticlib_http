@@ -5,18 +5,18 @@
  * Created on November 20, 2015, 8:42 AM
  */
 
+#include "staticlib/httpclient/HttpSession.hpp"
+
 #include <memory>
-#include <sstream>
 
 #include "curl/curl.h"
 
-#include "staticlib/utils.hpp"
-#include "staticlib/utils/tracemsg.hpp"
+
+#include "staticlib/config.hpp"
 #include "staticlib/pimpl/pimpl_forward_macros.hpp"
 
-#include "staticlib/httpclient/HttpClientException.hpp"
 #include "staticlib/httpclient/HttpResource.hpp"
-#include "staticlib/httpclient/HttpSession.hpp"
+
 
 namespace staticlib {
 namespace httpclient {
@@ -29,7 +29,7 @@ typedef const std::vector<std::pair<icu::UnicodeString, icu::UnicodeString>>& he
 typedef const std::vector<std::pair<std::string, std::string>>& headers_type;
 #endif // STATICLIB_WITH_ICU
 
-namespace su = staticlib::utils;
+namespace sc = staticlib::config;
 
 class CurlMultiDeleter {
 public:
@@ -50,8 +50,8 @@ public:
         if (nullptr == handle.get()) throw HttpClientException(TRACEMSG("Error initializing cURL multi handle"));
         CURLMcode err = curl_multi_setopt(handle.get(), CURLMOPT_MAXCONNECTS, conn_cache_size);
         if (err != CURLM_OK) throw HttpClientException(TRACEMSG(std::string() +
-                "CURLMOPT_MAXCONNECTS error: [" + su::to_string(err) + "]," +
-                " size: [" + su::to_string(conn_cache_size) + "]"));
+                "CURLMOPT_MAXCONNECTS error: [" + sc::to_string(err) + "]," +
+                " size: [" + sc::to_string(conn_cache_size) + "]"));
     }
     
     ~Impl() STATICLIB_NOEXCEPT { }
