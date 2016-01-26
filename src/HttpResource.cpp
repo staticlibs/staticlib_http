@@ -109,7 +109,7 @@ public:
     
 private:
     static size_t write_callback(char* buffer, size_t size, size_t nitems, void* userp) STATICLIB_NOEXCEPT {
-        if (nullptr == userp) return -1;
+        if (nullptr == userp) return static_cast<size_t>(-1);
         HttpResource::Impl* ptr = static_cast<HttpResource::Impl*> (userp);
         return ptr->write_data(buffer, size, nitems);
     }
