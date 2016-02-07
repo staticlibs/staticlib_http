@@ -23,10 +23,8 @@ void test_get() {
     std::string out{};
     out.resize(12);
     std::streamsize res = src.read(std::addressof(out.front()), 12);
-    (void) res;
-    // todo: check windows
-    //slassert(12 == res);
-    //slassert("<HTML><HEAD>" == out);
+    slassert(12 == res);
+    slassert("<HTML><HEAD>" == out);
 }
 
 int main() {

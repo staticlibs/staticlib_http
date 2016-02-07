@@ -47,6 +47,7 @@ class HttpResource::Impl : public staticlib::pimpl::PimplObject::Impl {
     std::unique_ptr<CURL, CurlEasyDeleter> handle;
     std::string url;
     
+    std::vector<std::pair<std::string, std::string>> server_headers;
     std::vector<char> buf;
     size_t buf_idx = 0;
     bool open = false;
@@ -56,7 +57,7 @@ public:
             const std::string& url_in,
             const std::string& method,
             const std::streambuf& data,
-            const std::vector<std::pair<std::string, std::string>>& headers,
+            const std::vector<std::pair<std::string, std::string>>& client_headers,
             const std::string& ssl_ca_file,
             const std::string& ssl_cert_file,
             const std::string& ssl_key_file,
@@ -82,7 +83,7 @@ public:
 //        }
         (void) method;
         (void) data;
-        (void) headers;
+        (void) client_headers;
         (void) ssl_ca_file;
         (void) ssl_cert_file;
         (void) ssl_key_file;
@@ -90,6 +91,11 @@ public:
         curl_easy_setopt(handle.get(), CURLOPT_URL, url.c_str());
         curl_easy_setopt(handle.get(), CURLOPT_WRITEDATA, this);
         curl_easy_setopt(handle.get(), CURLOPT_WRITEFUNCTION, HttpResource::Impl::write_callback);
+        curl_easy_setopt(handle.get(), CURLOPT_HEADERDATA, this);
+        curl_easy_setopt(handle.get(), CURLOPT_HEADERFUNCTION, HttpResource::Impl::headers_callback);
+
+        curl_easy_setopt(handle.get(), CURLOPT_SSL_VERIFYHOST, false);
+        curl_easy_setopt(handle.get(), CURLOPT_SSL_VERIFYPEER, false);
         open = true;
     }
 
@@ -108,6 +114,34 @@ public:
     }
     
 private:
+    static size_t headers_callback(char* buffer, size_t size, size_t nitems, void* userp) STATICLIB_NOEXCEPT{
+        if (nullptr == userp) return static_cast<size_t>(-1);
+        HttpResource::Impl* ptr = static_cast<HttpResource::Impl*> (userp);
+        return ptr->write_headers(buffer, size, nitems);
+    }
+
+    // http://stackoverflow.com/a/9681122/314015
+    size_t write_headers(char *buffer, size_t size, size_t nitems) {
+        size_t len = size*nitems;
+        std::string name{};
+        for (size_t i = 0; i < len; i++) {
+            if (':' != buffer[i]) {
+                name.push_back(buffer[i]);
+            } else {
+                std::string value{};
+                // 2 for ': ', 2 for '\r\n'
+                size_t valen = len - i - 2 - 2;
+                if (valen > 0) {
+                    value.resize(valen);
+                    std::memcpy(std::addressof(value.front()), buffer + i + 2, value.length());
+                    server_headers.emplace_back(std::move(name), std::move(value));
+                    break;
+                }
+            }
+        }
+        return len;
+    }
+
     static size_t write_callback(char* buffer, size_t size, size_t nitems, void* userp) STATICLIB_NOEXCEPT {
         if (nullptr == userp) return static_cast<size_t>(-1);
         HttpResource::Impl* ptr = static_cast<HttpResource::Impl*> (userp);
@@ -128,30 +162,17 @@ private:
         buf_idx = 0;
         buf.resize(0);
         // attempt to fill buffer
-        while (open && 0 == buf.size()) {
-            // http://curl-library.cool.haxx.narkive.com/2sYifbgu/issue-with-curl-multi-timeout-while-doing-non-blocking-http-posts-in-vms
+        while (open && 0 == buf.size()) {            
             long timeo = -1;
-            CURLMcode err_timeout = curl_multi_timeout(multi_handle, &timeo);
+            CURLMcode err_timeout = curl_multi_timeout(multi_handle, std::addressof(timeo));
             if (err_timeout != CURLM_OK) throw HttpClientException(TRACEMSG(std::string() +
                     "cURL timeout error: [" + sc::to_string(err_timeout) + "], url: [" + url + "]"));
-            struct timeval timeout;
-            std::memset(std::addressof(timeout), '\0', sizeof(timeout));
-            timeout.tv_sec = 10;
-            if (timeo > 0) {
-                long ctsecs = timeo / 1000;
-                if (ctsecs < 10) {
-                    timeout.tv_sec = ctsecs;
-                }
-                timeout.tv_usec = (timeo % 1000) * 1000;
-            }
+            struct timeval timeout = create_timeout_struct(timeo);
 
             // get file descriptors from the transfers
-            fd_set fdread;
-            FD_ZERO(std::addressof(fdread));
-            fd_set fdwrite;
-            FD_ZERO(std::addressof(fdwrite));
-            fd_set fdexcep;
-            FD_ZERO(std::addressof(fdexcep));
+            fd_set fdread = create_fd();
+            fd_set fdwrite = create_fd();
+            fd_set fdexcep = create_fd();
             int maxfd = -1;
             CURLMcode err_fdset = curl_multi_fdset(multi_handle, std::addressof(fdread), 
                     std::addressof(fdwrite), std::addressof(fdexcep), std::addressof(maxfd));
@@ -161,9 +182,10 @@ private:
             // wait or select
             int err_select = 0;
             if (maxfd == -1) {
-                std::this_thread::sleep_for(std::chrono::microseconds{100});
+                std::this_thread::sleep_for(std::chrono::milliseconds{100});
             } else {
-                err_select = select(maxfd + 1, &fdread, &fdwrite, &fdexcep, &timeout);
+                err_select = select(maxfd + 1, std::addressof(fdread), std::addressof(fdwrite), 
+                        std::addressof(fdexcep), std::addressof(timeout));
             }
     
             // do perform if no select error
@@ -175,7 +197,28 @@ private:
                 open = (1 == active);
             }
         }
-    }    
+    }
+
+    // http://curl-library.cool.haxx.narkive.com/2sYifbgu/issue-with-curl-multi-timeout-while-doing-non-blocking-http-posts-in-vms
+    struct timeval create_timeout_struct(long timeo) {
+        struct timeval timeout;
+        std::memset(std::addressof(timeout), '\0', sizeof(timeout));
+        timeout.tv_sec = 10;
+        if (timeo > 0) {
+            long ctsecs = timeo / 1000;
+            if (ctsecs < 10) {
+                timeout.tv_sec = ctsecs;
+            }
+            timeout.tv_usec = (timeo % 1000) * 1000;
+        }
+        return timeout;
+    }
+
+    fd_set create_fd() {
+        fd_set res;
+        FD_ZERO(std::addressof(res));
+        return res;
+    }
     
 };
 PIMPL_FORWARD_CONSTRUCTOR(HttpResource, 
