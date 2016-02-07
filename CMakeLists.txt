@@ -62,7 +62,7 @@ set ( ${PROJECT_NAME}_OPTIONS "" )
 set ( ${PROJECT_NAME}_DEPS_PUBLIC
         staticlib_pimpl )
 set ( ${PROJECT_NAME}_DEPS_PRIVATE 
-        curl )
+        libcurl )
 if ( STATICLIB_WITH_ICU )
     set ( ${PROJECT_NAME}_DEPS_PUBLIC ${${PROJECT_NAME}_DEPS_PUBLIC} icu-uc )
     set ( ${PROJECT_NAME}_OPTIONS -DSTATICLIB_WITH_ICU )
