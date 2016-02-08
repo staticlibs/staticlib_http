@@ -1,3 +1,19 @@
+/*
+ * Copyright 2016, alex at staticlibs.net
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /* 
  * File:   HttpSession.hpp
  * Author: alex
@@ -11,17 +27,17 @@
 #include <sstream>
 #include <streambuf>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
-#ifdef STATICLIB_WITH_ICU
-#include "unicode/unistr.h"    
-#endif // STATICLIB_WITH_ICU
-
+#include "staticlib/io.hpp"
 #include "staticlib/pimpl.hpp"
 
-#include "staticlib/httpclient/HttpResource.hpp"
 #include "staticlib/httpclient/HttpClientException.hpp"
+#include "staticlib/httpclient/HttpResource.hpp"
+#include "staticlib/httpclient/HttpRequestOptions.hpp"
+#include "staticlib/httpclient/HttpSessionOptions.hpp"
 
 namespace staticlib {
 namespace httpclient {
@@ -42,27 +58,19 @@ public:
      */
     PIMPL_CONSTRUCTOR(HttpSession)
     
-    HttpSession(long conn_cache_size = 32);
+    HttpSession(HttpSessionOptions options = HttpSessionOptions{});
 
-#ifdef STATICLIB_WITH_ICU    
-    HttpResource open_url(const icu::UnicodeString& url, 
-            const icu::UnicodeString& method = "GET",
-            const std::streambuf& data = *EMPTY_STREAM.rdbuf(),
-            const std::vector<std::pair<icu::UnicodeString, icu::UnicodeString>>& headers = {},
-            const icu::UnicodeString& ssl_ca_file = "",
-            const icu::UnicodeString& ssl_cert_file = "",
-            const icu::UnicodeString& ssl_key_file = "",
-            const icu::UnicodeString& ssl_key_passwd = "");
-#else
-    HttpResource open_url(const std::string& url,
-            const std::string& method = "GET",
-            const std::streambuf& data = *EMPTY_STREAM.rdbuf(),
-            const std::vector<std::pair<std::string, std::string>>& headers = {},
-            const std::string& ssl_ca_file = "",
-            const std::string& ssl_cert_file = "",
-            const std::string& ssl_key_file = "",
-            const std::string& ssl_key_passwd = "");
-#endif // STATICLIB_WITH_ICU
+    HttpResource open_url(std::string url,
+            const std::streambuf& post_data = *EMPTY_STREAM.rdbuf(),
+            HttpRequestOptions options = HttpRequestOptions{});
+
+    template<typename PostDataSource>
+    HttpResource open_url(std::string url,
+            PostDataSource&& post_data,
+            HttpRequestOptions options = HttpRequestOptions{}) {
+        auto sbuf = staticlib::io::make_unbuffered_istreambuf(std::forward(post_data));
+        return open_url(url, sbuf, options);
+    }
     
 };
 

@@ -9,8 +9,11 @@
 #define	STATICLIB_HTTPCLIENT_HTTPCLIENT_HPP
 
 #include "staticlib/httpclient/HttpClientException.hpp"
+#include "staticlib/httpclient/HttpRequestOptions.hpp"
 #include "staticlib/httpclient/HttpResource.hpp"
+#include "staticlib/httpclient/HttpResourceMetadata.hpp"
 #include "staticlib/httpclient/HttpSession.hpp"
+#include "staticlib/httpclient/HttpSessionOptions.hpp"
 
 #endif	/* STATICLIB_HTTPCLIENT_HTTPCLIENT_HPP */
 

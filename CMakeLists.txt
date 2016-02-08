@@ -54,6 +54,8 @@ if ( NOT DEFINED STATICLIB_TOOLCHAIN )
             staticlib_httpclient_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../external_icu )
         endif ( )
     endif (  )
+    staticlib_httpclient_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../staticlib_config )
+    staticlib_httpclient_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../staticlib_io )
     staticlib_httpclient_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../staticlib_pimpl )
 endif ( )
 
