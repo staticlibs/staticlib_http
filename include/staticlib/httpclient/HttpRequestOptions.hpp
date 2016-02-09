@@ -34,6 +34,7 @@ struct HttpRequestOptions {
     
     // options implemented manually
     
+    std::vector<std::pair<std::string, std::string>> headers;
     std::string method = "";
     uint32_t read_timeout_millis = 1000;
     uint32_t fdset_timeout_millis = 100;

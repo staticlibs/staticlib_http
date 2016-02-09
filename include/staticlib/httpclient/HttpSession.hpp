@@ -24,6 +24,7 @@
 #ifndef STATICLIB_HTTPCLIENT_HTTPSESSION_HPP
 #define	STATICLIB_HTTPCLIENT_HTTPSESSION_HPP
 
+#include <memory>
 #include <sstream>
 #include <streambuf>
 #include <string>
@@ -31,6 +32,7 @@
 #include <utility>
 #include <vector>
 
+#include "staticlib/config.hpp"
 #include "staticlib/io.hpp"
 #include "staticlib/pimpl.hpp"
 
@@ -41,8 +43,6 @@
 
 namespace staticlib {
 namespace httpclient {
-
-const std::istringstream EMPTY_STREAM{""};
 
 class HttpSession : public staticlib::pimpl::PimplObject {
     /**
@@ -60,16 +60,21 @@ public:
     
     HttpSession(HttpSessionOptions options = HttpSessionOptions{});
 
-    HttpResource open_url(std::string url,
-            const std::streambuf& post_data = *EMPTY_STREAM.rdbuf(),
+    HttpResource open_url(std::string url, 
+            std::streambuf* post_data = nullptr,
+            HttpRequestOptions options = HttpRequestOptions{});
+
+    HttpResource open_url(std::string url, 
+            std::unique_ptr<std::streambuf> post_data,
             HttpRequestOptions options = HttpRequestOptions{});
 
     template<typename PostDataSource>
     HttpResource open_url(std::string url,
             PostDataSource&& post_data,
             HttpRequestOptions options = HttpRequestOptions{}) {
-        auto sbuf = staticlib::io::make_unbuffered_istreambuf(std::forward(post_data));
-        return open_url(url, sbuf, options);
+        std::unique_ptr<std::streambuf> sbuf{
+            staticlib::io::make_unbuffered_istreambuf_ptr(std::forward(post_data))};
+        return open_url(std::move(url), std::move(sbuf), std::move(options));
     }
     
 };

@@ -25,15 +25,18 @@
 #define	STATICLIB_HTTPCLIENT_HTTPRESOURCE_HPP
 
 #include <ios>
+#include <memory>
 #include <streambuf>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "staticlib/io/unbuffered_streambuf.hpp"
 #include "staticlib/pimpl.hpp"
 
 #include "staticlib/httpclient/HttpClientException.hpp"
 #include "staticlib/httpclient/HttpRequestOptions.hpp"
+#include "staticlib/httpclient/HttpResourceInfo.hpp"
 
 namespace staticlib {
 namespace httpclient {
@@ -55,6 +58,8 @@ public:
     PIMPL_CONSTRUCTOR(HttpResource)
             
     std::streamsize read(char* buffer, std::streamsize length);
+    
+    HttpResourceInfo& get_info();
 
 private:
     /**
@@ -64,7 +69,7 @@ private:
      */
     HttpResource(/* CURLM */ void* multi_handle,
             std::string url,
-            const std::streambuf& post_data,
+            std::unique_ptr<std::streambuf> post_data,
             HttpRequestOptions options);
     
 };

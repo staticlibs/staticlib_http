@@ -1,3 +1,19 @@
+/*
+ * Copyright 2016, alex at staticlibs.net
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /* 
  * File:   HttpResource.cpp
  * Author: alex
@@ -16,7 +32,7 @@
 
 #include "staticlib/config.hpp"
 #include "staticlib/pimpl/pimpl_forward_macros.hpp"
-
+#include "staticlib/httpclient/HttpResourceInfo.hpp"
 
 namespace staticlib {
 namespace httpclient {
@@ -24,6 +40,7 @@ namespace httpclient {
 namespace { // anonymous
 
 namespace sc = staticlib::config;
+namespace io = staticlib::io;
 
 typedef const std::vector<std::pair<std::string, std::string>>& headers_type;
 
@@ -46,49 +63,29 @@ class HttpResource::Impl : public staticlib::pimpl::PimplObject::Impl {
     CURLM* multi_handle;
     std::unique_ptr<CURL, CurlEasyDeleter> handle;
     std::string url;
+    std::unique_ptr<std::streambuf> post_data;
+    HttpRequestOptions options;
     
-    std::vector<std::pair<std::string, std::string>> server_headers;
+    HttpResourceInfo info;
     std::vector<char> buf;
     size_t buf_idx = 0;
     bool open = false;
     
 public:
     Impl(CURLM* multi_handle, 
-            const std::string& url_in,
-            const std::string& method,
-            const std::streambuf& data,
-            const std::vector<std::pair<std::string, std::string>>& client_headers,
-            const std::string& ssl_ca_file,
-            const std::string& ssl_cert_file,
-            const std::string& ssl_key_file,
-            const std::string& ssl_key_passwd) :
+            std::string url,
+            std::unique_ptr<std::streambuf> post_data,
+            HttpRequestOptions options) :
     multi_handle(multi_handle),
     handle(curl_easy_init(), CurlEasyDeleter{multi_handle}),
-    url(url_in) {
+    url(std::move(url)),
+    post_data(std::move(post_data)),
+    options(std::move(options)) {
         if (nullptr == handle.get()) throw HttpClientException(TRACEMSG("Error initializing cURL handle"));
         CURLMcode errm = curl_multi_add_handle(multi_handle, handle.get());
         if (errm != CURLM_OK) throw HttpClientException(TRACEMSG(std::string() +
-                "cURL multi_add error: [" + sc::to_string(errm) + "], url: [" + url + "]"));
-//        CURLcode err = CURLE_OK;
-        // method options
-////        switch (method) {
-////        case "GET": break;
-////        case "POST":            
-////            err = curl_easy_setopt(handle.get(), CURLOPT_POST, 1);
-////            if (err != CURLE_OK) throw HttpClientException(TRACEMSG("cURL CURLOPT_POST error: [" + sc::to_string(err) + "]"));    
-////            // todo
-////        case "PUT":
-////        case "DELETE":
-////        default: throw HttpClientException(TRACEMSG(std::string() + "Unsupported method: [" + method + "]"));    
-//        }
-        (void) method;
-        (void) data;
-        (void) client_headers;
-        (void) ssl_ca_file;
-        (void) ssl_cert_file;
-        (void) ssl_key_file;
-        (void) ssl_key_passwd;
-        curl_easy_setopt(handle.get(), CURLOPT_URL, url.c_str());
+                "cURL multi_add error: [" + sc::to_string(errm) + "], url: [" + this->url + "]"));
+        curl_easy_setopt(handle.get(), CURLOPT_URL, this->url.c_str());
         curl_easy_setopt(handle.get(), CURLOPT_WRITEDATA, this);
         curl_easy_setopt(handle.get(), CURLOPT_WRITEFUNCTION, HttpResource::Impl::write_callback);
         curl_easy_setopt(handle.get(), CURLOPT_HEADERDATA, this);
@@ -98,12 +95,19 @@ public:
         curl_easy_setopt(handle.get(), CURLOPT_SSL_VERIFYPEER, false);
         open = true;
     }
+    
+    virtual ~Impl() STATICLIB_NOEXCEPT { }
 
     std::streamsize read(HttpResource&, char* buffer, std::streamsize length) {
         size_t ulen = static_cast<size_t> (length);
         fill_buffer();
         if (0 == buf.size()) {
-            return open ? 0 : std::char_traits<char>::eof();
+            if (open) {
+                return 0;
+            } else {
+                fill_info();
+                return std::char_traits<char>::eof();
+            }
         }
         // return from buffer
         size_t avail = buf.size() - buf_idx;
@@ -114,7 +118,7 @@ public:
     }
     
 private:
-    static size_t headers_callback(char* buffer, size_t size, size_t nitems, void* userp) STATICLIB_NOEXCEPT{
+    static size_t headers_callback(char* buffer, size_t size, size_t nitems, void* userp) STATICLIB_NOEXCEPT {
         if (nullptr == userp) return static_cast<size_t>(-1);
         HttpResource::Impl* ptr = static_cast<HttpResource::Impl*> (userp);
         return ptr->write_headers(buffer, size, nitems);
@@ -134,7 +138,7 @@ private:
                 if (valen > 0) {
                     value.resize(valen);
                     std::memcpy(std::addressof(value.front()), buffer + i + 2, value.length());
-                    server_headers.emplace_back(std::move(name), std::move(value));
+                    info.add_header(std::move(name), std::move(value));
                     break;
                 }
             }
@@ -220,18 +224,60 @@ private:
         return res;
     }
     
+    long getinfo_long(CURLINFO opt) {
+        long out = -1;
+        CURLcode err = curl_easy_getinfo(handle.get(), opt, std::addressof(out));
+        if (err != CURLE_OK) throw HttpClientException(TRACEMSG(std::string() +
+                "cURL curl_easy_getinfo error: [" + sc::to_string(err) + "]," +
+                " option: [" + sc::to_string(opt) + "]"));
+        return out;
+    }
+    
+    long getinfo_double(CURLINFO opt) {
+        double out = -1;
+        CURLcode err = curl_easy_getinfo(handle.get(), opt, std::addressof(out));
+        if (err != CURLE_OK) throw HttpClientException(TRACEMSG(std::string() +
+                "cURL curl_easy_getinfo error: [" + sc::to_string(err) + "]," +
+                " option: [" + sc::to_string(opt) + "]"));
+        return out;
+    }
+    
+    std::string getinfo_string(CURLINFO opt) {
+        char* out = nullptr;
+        CURLcode err = curl_easy_getinfo(handle.get(), opt, std::addressof(out));
+        if (err != CURLE_OK) throw HttpClientException(TRACEMSG(std::string() +
+                "cURL curl_easy_getinfo error: [" + sc::to_string(err) + "]," +
+                " option: [" + sc::to_string(opt) + "]"));
+        return std::string(out);
+    }
+    
+    void fill_info() {
+        if (info.ready) throw HttpClientException(TRACEMSG(std::string() +
+                "Resource info is already initialized, url: [" + url + "]"));
+        info.effective_url = getinfo_string(CURLINFO_EFFECTIVE_URL);
+        info.response_code = getinfo_long(CURLINFO_RESPONSE_CODE);
+        info.total_time_secs = getinfo_double(CURLINFO_TOTAL_TIME);
+        info.namelookup_time_secs = getinfo_double(CURLINFO_NAMELOOKUP_TIME);
+        info.connect_time_secs = getinfo_double(CURLINFO_CONNECT_TIME);
+        info.appconnect_time_secs = getinfo_double(CURLINFO_APPCONNECT_TIME);
+        info.pretransfer_time_secs = getinfo_double(CURLINFO_PRETRANSFER_TIME);
+        info.starttransfer_time_secs = getinfo_double(CURLINFO_STARTTRANSFER_TIME);
+        info.redirect_time_secs = getinfo_double(CURLINFO_REDIRECT_TIME);
+        info.redirect_count = getinfo_long(CURLINFO_REDIRECT_COUNT);
+        info.speed_download_bytes_secs = getinfo_double(CURLINFO_SPEED_DOWNLOAD);
+        info.speed_upload_bytes_secs = getinfo_double(CURLINFO_SPEED_UPLOAD);
+        info.header_size_bytes = getinfo_long(CURLINFO_HEADER_SIZE);
+        info.request_size_bytes = getinfo_long(CURLINFO_REQUEST_SIZE);
+        info.ssl_verifyresult = getinfo_long(CURLINFO_SSL_VERIFYRESULT);
+        info.os_errno = getinfo_long(CURLINFO_OS_ERRNO);
+        info.num_connects = getinfo_long(CURLINFO_NUM_CONNECTS);
+        info.primary_ip = getinfo_string(CURLINFO_PRIMARY_IP);
+        info.primary_port = getinfo_long(CURLINFO_PRIMARY_PORT);
+        info.ready = true;
+    }
+    
 };
-PIMPL_FORWARD_CONSTRUCTOR(HttpResource, 
-        (CURLM*)
-        (const std::string&)
-        (const std::string&)
-        (const std::streambuf&)
-        (headers_type)
-        (const std::string&)
-        (const std::string&)
-        (const std::string&)
-        (const std::string&),
-        (), HttpClientException)
+PIMPL_FORWARD_CONSTRUCTOR(HttpResource, (CURLM*)(std::string)(std::unique_ptr<std::streambuf>)(HttpRequestOptions), (), HttpClientException)
 PIMPL_FORWARD_METHOD(HttpResource, std::streamsize, read, (char*)(std::streamsize), (), HttpClientException)
 
 } // namespace

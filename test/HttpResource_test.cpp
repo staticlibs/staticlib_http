@@ -7,15 +7,18 @@
 
 #include "staticlib/httpclient/HttpResource.hpp"
 
+#include <array>
 #include <iostream>
 #include <string>
 
 #include "staticlib/config/assert.hpp"
+#include "staticlib/io.hpp"
 
 #include "staticlib/httpclient/HttpSession.hpp"
 
 
 namespace hc = staticlib::httpclient;
+namespace io = staticlib::io;
 
 void test_get() {
     hc::HttpSession session{};
@@ -25,6 +28,11 @@ void test_get() {
     std::streamsize res = src.read(std::addressof(out.front()), 12);
     slassert(12 == res);
     slassert("<HTML><HEAD>" == out);
+    
+//    io::string_sink sink{};
+//    std::array<char, 4096> buf;
+//    auto res_all = io::copy_all(src, sink, buf.data(), buf.size());
+//    std::cout << res_all << std::endl;
 }
 
 int main() {

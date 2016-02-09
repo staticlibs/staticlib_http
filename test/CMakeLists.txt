@@ -38,6 +38,7 @@ if ( NOT STATICLIB_TOOLCHAIN MATCHES "linux_[^_]+_[^_]+" )
     staticlib_add_subdirectory ( ${STATICLIB_DEPS}/external_curl )
 endif ( )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_config )
+staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_io )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_pimpl )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_httpserver ) # testonly
 staticlib_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../../staticlib_httpclient )

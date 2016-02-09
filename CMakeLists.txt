@@ -62,6 +62,7 @@ endif ( )
 # deps
 set ( ${PROJECT_NAME}_OPTIONS "" )
 set ( ${PROJECT_NAME}_DEPS_PUBLIC
+        staticlib_io
         staticlib_pimpl )
 set ( ${PROJECT_NAME}_DEPS_PRIVATE 
         libcurl )
