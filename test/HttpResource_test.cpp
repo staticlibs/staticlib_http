@@ -55,10 +55,10 @@ const icu::UnicodeString URL = icu::UnicodeString() + "https://127.0.0.1:" + icu
 #else
 const std::string URL = std::string() + "https://127.0.0.1:" + sc::to_string(TCP_PORT) + "/";
 #endif // STATICLIB_WITH_ICU
-const std::string GET_RESPONSE =    "Hello from GET\n";
-const std::string POSTPUT_DATA =   "Hello to POST\n";
-const std::string POST_RESPONSE =   "Hello from POST\n";
-const std::string PUT_RESPONSE =    "Hello from PUT\n";
+const std::string GET_RESPONSE = "Hello from GET\n";
+const std::string POSTPUT_DATA = "Hello to POST\n";
+const std::string POST_RESPONSE = "Hello from POST\n";
+const std::string PUT_RESPONSE = "Hello from PUT\n";
 const std::string DELETE_RESPONSE = "Hello from DELETE\n";
 const std::string SERVER_CERT_PATH = "../test/certificates/server/localhost.pem";
 const std::string CLIENT_CERT_PATH = "../test/certificates/client/testclient.pem";
@@ -137,11 +137,11 @@ void delete_handler(pion::http::request_ptr& req, pion::tcp::connection_ptr& con
 
 void test_get() {
     // server
-    pion::http::streaming_server server(1, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
+    pion::http::streaming_server server(2, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
     server.add_handler("GET", "/", get_handler);
     server.start();
     // client
-    {
+    try {
         hc::HttpSession session{};
         hc::HttpRequestOptions opts{};
         opts.headers = {{"User-Agent", "test"}, {"X-Method", "GET"}};
@@ -155,6 +155,9 @@ void test_get() {
         std::streamsize res = io::read_all(src, std::addressof(out.front()), out.size());
         slassert(out.size() == static_cast<size_t>(res));
         slassert(GET_RESPONSE == out);
+    } catch (const std::exception&) {
+        server.stop(true);
+        throw;
     }
     // stop server
     server.stop(true);
@@ -162,12 +165,12 @@ void test_get() {
 
 void test_post() {
     // server
-    pion::http::streaming_server server(1, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
+    pion::http::streaming_server server(2, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
     server.add_handler("POST", "/", post_handler);
     server.add_payload_handler("POST", "/", [](pion::http::request_ptr&) { return PayloadReceiver{}; });
     server.start();
     // client
-    {
+    try {
         hc::HttpSession session{};
         hc::HttpRequestOptions opts{};
         opts.headers = {{"User-Agent", "test"}, {"X-Method", "POST"}};
@@ -177,10 +180,13 @@ void test_post() {
         hc::HttpResource src = session.open_url(URL, post_data, opts);
         // check
         std::string out{};
-        out.resize(POST_RESPONSE.size());
-        std::streamsize res = io::read_all(src, std::addressof(out.front()), out.size());
+        out.resize(POST_RESPONSE.size());        
+        std::streamsize res = io::read_all(src, std::addressof(out.front()), out.size());        
         slassert(out.size() == static_cast<size_t> (res));
         slassert(POST_RESPONSE == out);
+    } catch (const std::exception&) {
+        server.stop(true);
+        throw;
     }
     // stop server
     server.stop(true);
@@ -188,13 +194,13 @@ void test_post() {
 
 void test_put() {
     // server
-    pion::http::streaming_server server(1, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
+    pion::http::streaming_server server(2, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
     server.add_handler("PUT", "/", put_handler);
     server.add_payload_handler("PUT", "/", [](pion::http::request_ptr&) {
         return PayloadReceiver{}; });
     server.start();
     // client
-    {
+    try {
         hc::HttpSession session{};
         hc::HttpRequestOptions opts{};
         opts.headers = {{"User-Agent", "test"}, {"X-Method", "PUT"}};
@@ -208,6 +214,9 @@ void test_put() {
         std::streamsize res = io::read_all(src, std::addressof(out.front()), out.size());
         slassert(out.size() == static_cast<size_t> (res));
         slassert(PUT_RESPONSE == out);
+    } catch (const std::exception&) {
+        server.stop(true);
+        throw;
     }
     // stop server
     server.stop(true);
@@ -215,11 +224,11 @@ void test_put() {
 
 void test_delete() {
     // server
-    pion::http::streaming_server server(1, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
+    pion::http::streaming_server server(2, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
     server.add_handler("DELETE", "/", delete_handler);
     server.start();
     // client
-    {
+    try {
         hc::HttpSession session{};
         hc::HttpRequestOptions opts{};
         opts.headers = {{"User-Agent", "test"}, {"X-Method", "DELETE"}};
@@ -233,6 +242,9 @@ void test_delete() {
         std::streamsize res = io::read_all(src, std::addressof(out.front()), out.size());
         slassert(out.size() == static_cast<size_t> (res));
         slassert(DELETE_RESPONSE == out);
+    } catch (const std::exception&) {
+        server.stop(true);
+        throw;
     }
     // stop server
     server.stop(true);
@@ -240,10 +252,13 @@ void test_delete() {
 
 int main() {
     try {
+        //auto start = std::chrono::system_clock::now();
         test_get();
         test_post();
         test_put();
         test_delete();
+        //auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start);
+        //std::cout << elapsed.count() << std::endl;
     } catch (const std::exception& e) {
         std::cout << e.what() << std::endl;
         return 1;

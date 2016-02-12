@@ -46,9 +46,14 @@ struct HttpRequestOptions {
      */
     std::string method = "";
     /**
-     * Timeout for reading the whole response from server
+     * HttpException will be thrown from read method on HTTP response code >= 400
      */
-    uint32_t read_timeout_millis = 10000;
+    bool abort_on_response_error = true;
+    /**
+     * Timeout for reading the whole response from server,
+     * HttpException exception will be thrown from read method on timeout 
+     */
+    uint32_t read_timeout_millis = 15000;
     /**
      * Timeout to wait for when reading data unsuccessfully
      */
@@ -159,7 +164,7 @@ struct HttpRequestOptions {
     /**
      * https://curl.haxx.se/libcurl/c/CURLOPT_SSLVERSION.html
      */
-    std::string sslversion = "";
+    bool require_tls = false;
     /**
      * https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYHOST.html
      */

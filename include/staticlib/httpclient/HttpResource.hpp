@@ -79,7 +79,7 @@ public:
      * 
      * @return 
      */
-    HttpResourceInfo& get_info();
+    const HttpResourceInfo& get_info() const;
 
 private:
     /**

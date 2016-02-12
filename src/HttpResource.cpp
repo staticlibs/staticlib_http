@@ -163,6 +163,10 @@ public:
         buf_idx += reslen;
         return static_cast<std::streamsize>(reslen);
     }
+
+    const HttpResourceInfo& get_info(const HttpResource&) const {
+        return info;
+    }
     
 private:
     static size_t headers_callback(char* buffer, size_t size, size_t nitems, void* userp) STATICLIB_NOEXCEPT {
@@ -185,6 +189,10 @@ private:
 
     // http://stackoverflow.com/a/9681122/314015
     size_t write_headers(char *buffer, size_t size, size_t nitems) {
+        if (-1 == info.response_code) {
+            info.effective_url = getinfo_string(CURLINFO_EFFECTIVE_URL);        
+            info.response_code = getinfo_long(CURLINFO_RESPONSE_CODE);
+        }
         size_t len = size*nitems;
         std::string name{};
         for (size_t i = 0; i < len; i++) {
@@ -261,14 +269,22 @@ private:
                         "cURL multi_perform error: [" + sc::to_string(err) + "], url: [" + url + "]"));
                 open = (1 == active);
             }
-            
+
+            // check for response code
+            if (options.abort_on_response_error && info.response_code >= 400) {
+                throw HttpClientException(TRACEMSG(std::string() +
+                    "HTTP error returned from server, url: [" + url + "]," +
+                    " response_code: [" + sc::to_string(info.response_code) + "]"));
+            }
+          
             // check for timeout
-            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-                    std::chrono::system_clock::now() - start);
-            if (elapsed.count() > options.read_timeout_millis) throw HttpClientException(TRACEMSG(std::string() +
-                    "Request timeout for url: [" + url + "]," + 
+            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start);
+            if (elapsed.count() > options.read_timeout_millis) {
+                throw HttpClientException(TRACEMSG(std::string() +
+                    "Request timeout for url: [" + url + "]," +
                     " elapsed time (millis): [" + sc::to_string(elapsed.count()) + "]," +
                     " limit: [" + sc::to_string(options.read_timeout_millis) + "]"));
+            }
         }
     }
 
@@ -323,7 +339,8 @@ private:
     void fill_info() {
         if (info.ready) throw HttpClientException(TRACEMSG(std::string() +
                 "Resource info is already initialized, url: [" + url + "]"));
-        info.effective_url = getinfo_string(CURLINFO_EFFECTIVE_URL);
+        // should be alreade set from headers callback, but won't harm here
+        info.effective_url = getinfo_string(CURLINFO_EFFECTIVE_URL);        
         info.response_code = getinfo_long(CURLINFO_RESPONSE_CODE);
         info.total_time_secs = getinfo_double(CURLINFO_TOTAL_TIME);
         info.namelookup_time_secs = getinfo_double(CURLINFO_NAMELOOKUP_TIME);
@@ -469,7 +486,11 @@ private:
         setopt_string(CURLOPT_SSLKEY, options.sslkey_filename);
         setopt_string(CURLOPT_SSLKEYTYPE, options.ssl_key_type);
         setopt_string(CURLOPT_KEYPASSWD, options.ssl_keypasswd);
-        setopt_string(CURLOPT_SSLVERSION, options.sslversion);
+        if (options.require_tls) {
+            CURLcode err = curl_easy_setopt(handle.get(), CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1);
+            if (err != CURLE_OK) throw HttpClientException(TRACEMSG(std::string() +
+                "Error setting option: [CURLOPT_SSLVERSION], url: [" + url + "]"));
+        }
         setopt_bool(CURLOPT_SSL_VERIFYHOST, options.ssl_verifyhost);
         setopt_bool(CURLOPT_SSL_VERIFYPEER, options.ssl_verifypeer);
 //        setopt_bool(CURLOPT_SSL_VERIFYSTATUS, options.ssl_verifystatus);
@@ -487,6 +508,7 @@ PIMPL_FORWARD_CONSTRUCTOR(HttpResource, (CURLM*)(icu::UnicodeString)(std::unique
 PIMPL_FORWARD_CONSTRUCTOR(HttpResource, (CURLM*)(std::string)(std::unique_ptr<std::streambuf>)(HttpRequestOptions), (), HttpClientException)
 #endif // STATICLIB_WITH_ICU
 PIMPL_FORWARD_METHOD(HttpResource, std::streamsize, read, (char*)(std::streamsize), (), HttpClientException)
+PIMPL_FORWARD_METHOD(HttpResource, const HttpResourceInfo&, get_info, (), (const), HttpClientException)
 
 } // namespace
 }

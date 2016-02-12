@@ -87,6 +87,9 @@ target_compile_options ( ${PROJECT_NAME} PRIVATE
         ${${PROJECT_NAME}_DEPS_PUBLIC_PC_CFLAGS_OTHER}
         ${${PROJECT_NAME}_DEPS_PRIVATE_PC_CFLAGS_OTHER}
         ${${PROJECT_NAME}_OPTIONS} )
+if ( ${CMAKE_CXX_COMPILER_ID}x MATCHES "MSVCx" )
+    target_compile_definitions ( ${PROJECT_NAME} PRIVATE -DNOMINMAX )        
+endif ( )
 
 # pkg-config
 staticlib_httpclient_list_to_string ( ${PROJECT_NAME}_PC_CFLAGS_OPTS "" ${PROJECT_NAME}_OPTIONS )
