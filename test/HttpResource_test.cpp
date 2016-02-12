@@ -46,9 +46,11 @@ namespace sc = staticlib::config;
 namespace hc = staticlib::httpclient;
 
 const uint16_t TCP_PORT = 8443;
-const std::string GET_RESPONSE =    "Hello from GET\n   ";
-const std::string POST_RESPONSE =   "Hello from POST\n  ";
-const std::string PUT_RESPONSE =    "Hello from PUT\n   ";
+const std::string URL = std::string() + "https://127.0.0.1:" + sc::to_string(TCP_PORT) + "/";
+const std::string GET_RESPONSE =    "Hello from GET\n";
+const std::string POSTPUT_DATA =   "Hello to POST\n";
+const std::string POST_RESPONSE =   "Hello from POST\n";
+const std::string PUT_RESPONSE =    "Hello from PUT\n";
 const std::string DELETE_RESPONSE = "Hello from DELETE\n";
 const std::string SERVER_CERT_PATH = "../test/certificates/server/localhost.pem";
 const std::string CLIENT_CERT_PATH = "../test/certificates/client/testclient.pem";
@@ -62,12 +64,66 @@ bool verifier(bool, asio::ssl::verify_context&) {
     return true;
 };
 
+void enrich_opts_ssl(hc::HttpRequestOptions& opts) {
+    opts.sslcert_filename = CLIENT_CERT_PATH;
+    opts.sslcertype = "PEM";
+    opts.sslkey_filename = CLIENT_CERT_PATH;
+    opts.ssl_key_type = "PEM";
+    opts.ssl_keypasswd = "test";
+}
+
 void get_handler(pion::http::request_ptr& req, pion::tcp::connection_ptr& conn) {
     slassert("test" == req->get_header("User-Agent"));
     slassert("GET" == req->get_header("X-Method"));
     auto finfun = std::bind(&pion::tcp::connection::finish, conn);
     auto writer = pion::http::response_writer::create(conn, *req, finfun);
     writer->write(GET_RESPONSE);
+    writer->send();
+}
+
+class PayloadReceiver {
+    bool received;
+public:
+    void operator()(const char* s, size_t n) {
+        slassert(POSTPUT_DATA == std::string(s, n));
+        received = true;
+    }
+    
+    bool is_received() {
+        return received;
+    }
+};
+
+void post_handler(pion::http::request_ptr& req, pion::tcp::connection_ptr& conn) {
+    slassert("test" == req->get_header("User-Agent"));
+    slassert("POST" == req->get_header("X-Method"));
+    auto ph = req->get_payload_handler<PayloadReceiver>();
+    slassert(nullptr != ph);
+    slassert(ph->is_received());
+    auto finfun = std::bind(&pion::tcp::connection::finish, conn);
+    auto writer = pion::http::response_writer::create(conn, *req, finfun);
+    writer->write(POST_RESPONSE);
+    writer->send();
+}
+
+void put_handler(pion::http::request_ptr& req, pion::tcp::connection_ptr& conn) {
+    slassert("test" == req->get_header("User-Agent"));
+    slassert("PUT" == req->get_header("X-Method"));
+    auto ph = req->get_payload_handler<PayloadReceiver>();
+    slassert(nullptr != ph);
+    slassert(ph->is_received());
+    auto finfun = std::bind(&pion::tcp::connection::finish, conn);
+    auto writer = pion::http::response_writer::create(conn, *req, finfun);
+    writer->write(PUT_RESPONSE);
+    writer->send();
+}
+
+void delete_handler(pion::http::request_ptr& req, pion::tcp::connection_ptr& conn) {
+    slassert("test" == req->get_header("User-Agent"));
+    slassert("DELETE" == req->get_header("X-Method"));
+    auto finfun = std::bind(&pion::tcp::connection::finish, conn);
+    auto writer = pion::http::response_writer::create(conn, *req, finfun);
+    writer->write(DELETE_RESPONSE);
     writer->send();
 }
 
@@ -81,13 +137,10 @@ void test_get() {
         hc::HttpSession session{};
         hc::HttpRequestOptions opts{};
         opts.headers = {{"User-Agent", "test"}, {"X-Method", "GET"}};
-        opts.sslcert_filename = CLIENT_CERT_PATH;
-        opts.sslcertype = "PEM";
-        opts.sslkey_filename = CLIENT_CERT_PATH;
-        opts.ssl_key_type = "PEM";
-        opts.ssl_keypasswd = "test";
+        enrich_opts_ssl(opts);
+        opts.method = "GET";
     
-        hc::HttpResource src = session.open_url(std::string() + "https://127.0.0.1:" + sc::to_string(TCP_PORT) + "/", opts);
+        hc::HttpResource src = session.open_url(URL, opts);
         // check
         std::string out{};
         out.resize(GET_RESPONSE.size());
@@ -99,9 +152,90 @@ void test_get() {
     server.stop(true);
 }
 
+void test_post() {
+    // server
+    pion::http::streaming_server server(1, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
+    server.add_handler("POST", "/", post_handler);
+    server.add_payload_handler("POST", "/", [](pion::http::request_ptr&) { return PayloadReceiver{}; });
+    server.start();
+    // client
+    {
+        hc::HttpSession session{};
+        hc::HttpRequestOptions opts{};
+        opts.headers = {{"User-Agent", "test"}, {"X-Method", "POST"}};
+        opts.method = "POST";
+        enrich_opts_ssl(opts);
+        io::string_source post_data{POSTPUT_DATA};
+        hc::HttpResource src = session.open_url(URL, post_data, opts);
+        // check
+        std::string out{};
+        out.resize(POST_RESPONSE.size());
+        std::streamsize res = io::read_all(src, std::addressof(out.front()), out.size());
+        slassert(out.size() == static_cast<size_t> (res));
+        slassert(POST_RESPONSE == out);
+    }
+    // stop server
+    server.stop(true);
+}
+
+void test_put() {
+    // server
+    pion::http::streaming_server server(1, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
+    server.add_handler("PUT", "/", put_handler);
+    server.add_payload_handler("PUT", "/", [](pion::http::request_ptr&) {
+        return PayloadReceiver{}; });
+    server.start();
+    // client
+    {
+        hc::HttpSession session{};
+        hc::HttpRequestOptions opts{};
+        opts.headers = {{"User-Agent", "test"}, {"X-Method", "PUT"}};
+        opts.method = "PUT";
+        enrich_opts_ssl(opts);
+        io::string_source post_data{POSTPUT_DATA};
+        hc::HttpResource src = session.open_url(URL, std::move(post_data), opts);
+        // check
+        std::string out{};
+        out.resize(PUT_RESPONSE.size());
+        std::streamsize res = io::read_all(src, std::addressof(out.front()), out.size());
+        slassert(out.size() == static_cast<size_t> (res));
+        slassert(PUT_RESPONSE == out);
+    }
+    // stop server
+    server.stop(true);
+}
+
+void test_delete() {
+    // server
+    pion::http::streaming_server server(1, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
+    server.add_handler("DELETE", "/", delete_handler);
+    server.start();
+    // client
+    {
+        hc::HttpSession session{};
+        hc::HttpRequestOptions opts{};
+        opts.headers = {{"User-Agent", "test"}, {"X-Method", "DELETE"}};
+        enrich_opts_ssl(opts);
+        opts.method = "DELETE";
+
+        hc::HttpResource src = session.open_url(URL, opts);
+        // check
+        std::string out{};
+        out.resize(DELETE_RESPONSE.size());
+        std::streamsize res = io::read_all(src, std::addressof(out.front()), out.size());
+        slassert(out.size() == static_cast<size_t> (res));
+        slassert(DELETE_RESPONSE == out);
+    }
+    // stop server
+    server.stop(true);
+}
+
 int main() {
     try {
         test_get();
+        test_post();
+        test_put();
+        test_delete();
     } catch (const std::exception& e) {
         std::cout << e.what() << std::endl;
         return 1;

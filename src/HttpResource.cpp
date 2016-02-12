@@ -385,9 +385,11 @@ private:
         if ("GET" == options.method) {
             setopt_bool(CURLOPT_HTTPGET, true);
         } else if("POST" == options.method) {
-            setopt_bool(CURLOPT_HTTPPOST, true);
-        } else if ("PUT" == options.method || "DELETE" == options.method) {
-            setopt_string(CURLOPT_CUSTOMREQUEST, options.method);
+            setopt_bool(CURLOPT_POST, true);
+        } else if ("PUT" == options.method) {
+            setopt_bool(CURLOPT_PUT, true);
+        } else if ("DELETE" == options.method) {
+            setopt_string(CURLOPT_CUSTOMREQUEST, "DELETE");
         } else throw HttpClientException(TRACEMSG(std::string() +
                     "Unsupported HTTP method: [" + options.method + "], url: [" + url + "]"));
         if (nullptr != post_data.get() && ("POST" == options.method || "PUT" == options.method)) {
@@ -395,6 +397,7 @@ private:
             CURLcode err_wf = curl_easy_setopt(handle.get(), CURLOPT_READFUNCTION, HttpResource::Impl::read_callback);
             if (err_wf != CURLE_OK) throw HttpClientException(TRACEMSG(std::string() +
                     "Error setting option: [CURLOPT_READFUNCTION], url: [" + url + "]"));
+            options.headers.emplace_back("Transfer-Encoding", "chunked");
         }
     }
     

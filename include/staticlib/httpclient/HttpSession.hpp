@@ -70,15 +70,25 @@ public:
     HttpResource open_url(std::string url, 
             std::unique_ptr<std::streambuf> post_data,
             HttpRequestOptions options = HttpRequestOptions{});
-
-    template<typename PostDataSource>
+            
+    template<typename PostDataSource,
+            class = typename std::enable_if<!std::is_lvalue_reference<PostDataSource>::value>::type>
     HttpResource open_url(std::string url,
             PostDataSource&& post_data,
             HttpRequestOptions options = HttpRequestOptions{}) {
         std::unique_ptr<std::streambuf> sbuf{
-            staticlib::io::make_unbuffered_istreambuf_ptr(std::forward(post_data))};
+            staticlib::io::make_unbuffered_istreambuf_ptr(std::move(post_data))};
         return open_url(std::move(url), std::move(sbuf), std::move(options));
     }
+
+    template<typename PostDataSource>
+    HttpResource open_url(std::string url,
+            PostDataSource& post_data,
+            HttpRequestOptions options = HttpRequestOptions{}) {
+        std::unique_ptr<std::streambuf> sbuf{
+            staticlib::io::make_unbuffered_istreambuf_ptr(post_data)};
+        return open_url(std::move(url), std::move(sbuf), std::move(options));
+    }            
     
 };
 
