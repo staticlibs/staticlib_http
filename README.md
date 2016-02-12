@@ -6,7 +6,7 @@ This project is a part of [Staticlibs](http://staticlibs.net/).
 This library is built on top of [libcurl](http://curl.haxx.se/libcurl/c/). 
 It uses `curl_multi` API to implement streaming access to HTTP resources.
 
-TODO: Link to the [API documentation]().
+Link to the [API documentation](http://staticlibs.github.io/staticlib_httpclient/docs/html/namespacestaticlib_1_1httpclient.html).
 
 How to build
 ------------
@@ -54,6 +54,10 @@ This project is released under the [Apache License 2.0](http://www.apache.org/li
 
 Changelog
 ---------
+
+**2016-01-12**
+
+ * version 1.0
 
 **2016-01-26**
 

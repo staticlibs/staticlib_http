@@ -32,6 +32,9 @@
 namespace staticlib {
 namespace httpclient {
 
+/**
+ * Metainformation about the opened HTTP resource
+ */
 struct HttpResourceInfo {
          
     /**
