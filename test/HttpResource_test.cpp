@@ -28,6 +28,10 @@
 #include <string>
 #include <cstdint>
 
+#ifdef STATICLIB_WITH_ICU
+#include <unicode/unistr.h>
+#endif // STATICLIB_WITH_ICU
+
 #include "asio.hpp"
 
 #include "pion/tcp/connection.hpp"
@@ -46,7 +50,11 @@ namespace sc = staticlib::config;
 namespace hc = staticlib::httpclient;
 
 const uint16_t TCP_PORT = 8443;
+#ifdef STATICLIB_WITH_ICU
+const icu::UnicodeString URL = icu::UnicodeString() + "https://127.0.0.1:" + icu::UnicodeString::fromUTF8(sc::to_string(TCP_PORT)) + "/";
+#else
 const std::string URL = std::string() + "https://127.0.0.1:" + sc::to_string(TCP_PORT) + "/";
+#endif // STATICLIB_WITH_ICU
 const std::string GET_RESPONSE =    "Hello from GET\n";
 const std::string POSTPUT_DATA =   "Hello to POST\n";
 const std::string POST_RESPONSE =   "Hello from POST\n";

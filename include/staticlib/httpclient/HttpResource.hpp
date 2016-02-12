@@ -27,9 +27,14 @@
 #include <ios>
 #include <memory>
 #include <streambuf>
-#include <string>
 #include <utility>
 #include <vector>
+
+#ifdef STATICLIB_WITH_ICU
+#include <unicode/unistr.h>
+#else
+#include <string>
+#endif // STATICLIB_WITH_ICU
 
 #include "staticlib/io/unbuffered_streambuf.hpp"
 #include "staticlib/pimpl.hpp"
@@ -41,6 +46,9 @@
 namespace staticlib {
 namespace httpclient {
 
+/**
+ * Remote HTTP resoure that can be read from as a `Source`
+ */
 class HttpResource : public staticlib::pimpl::PimplObject {
 friend class HttpSession;    
 protected:
@@ -56,19 +64,38 @@ public:
      * @param pimpl impl object
      */
     PIMPL_CONSTRUCTOR(HttpResource)
-            
+
+    /**
+     * Reads some data from a remote resource
+     * 
+     * @param buffer output buffer
+     * @param length number of bytes to process
+     * @return number of bytes processed
+     */
     std::streamsize read(char* buffer, std::streamsize length);
     
+    /**
+     * Accessor for the resource metainformation
+     * 
+     * @return 
+     */
     HttpResourceInfo& get_info();
 
 private:
     /**
      * Private constructor for implementation details
      * 
-     * @param impl_ptr implementation defined
+     * @param multi_handle implementation defined
+     * @param url target HTTP URL
+     * @param post_data data to upload
+     * @param options request options
      */
     HttpResource(/* CURLM */ void* multi_handle,
+#ifdef STATICLIB_WITH_ICU            
+            icu::UnicodeString url,
+#else
             std::string url,
+#endif // STATICLIB_WITH_ICU
             std::unique_ptr<std::streambuf> post_data,
             HttpRequestOptions options);
     

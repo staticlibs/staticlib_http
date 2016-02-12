@@ -29,12 +29,21 @@
 namespace staticlib {
 namespace httpclient {
 
+/**
+ * Configuration options for the HTTP Session
+ */
 struct HttpSessionOptions {
-    // https://curl.haxx.se/libcurl/c/CURLMOPT_MAX_HOST_CONNECTIONS.html
+    /**
+     * https://curl.haxx.se/libcurl/c/CURLMOPT_MAX_HOST_CONNECTIONS.html
+     */
     uint32_t max_host_connections = 0;
-    // https://curl.haxx.se/libcurl/c/CURLMOPT_MAX_TOTAL_CONNECTIONS.html
+    /**
+     * https://curl.haxx.se/libcurl/c/CURLMOPT_MAX_TOTAL_CONNECTIONS.html
+     */
     uint32_t max_total_connections = 0;
-    // https://curl.haxx.se/libcurl/c/CURLMOPT_MAXCONNECTS.html
+    /**
+     * https://curl.haxx.se/libcurl/c/CURLMOPT_MAXCONNECTS.html
+     */
     uint32_t maxconnects = 0;
 };
 

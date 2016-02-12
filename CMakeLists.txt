@@ -39,7 +39,7 @@ if ( STATICLIB_USE_DEPLIBS_CACHE )
     endif ( )
 endif ( )
 
-# options, use SET ( OPTNAME ON CACHE BOOL "") in parent to override
+# options, use set ( OPTNAME ON CACHE BOOL "") in parent to override
 option ( STATICLIB_WITH_ICU "Build with ICU support" OFF )
 
 # standalone build

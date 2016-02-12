@@ -33,56 +33,115 @@ namespace staticlib {
 namespace httpclient {
 
 struct HttpResourceInfo {
-            
+         
+    /**
+     * Flag indicates that object was filled after completing the request
+     */
     bool ready = false;
     
-    // https://curl.haxx.se/libcurl/c/CURLINFO_EFFECTIVE_URL.html
+    /**
+     * https://curl.haxx.se/libcurl/c/CURLINFO_EFFECTIVE_URL.html
+     */
     std::string effective_url = "";
-    // https://curl.haxx.se/libcurl/c/CURLINFO_RESPONSE_CODE.html
+    /**
+     * https://curl.haxx.se/libcurl/c/CURLINFO_RESPONSE_CODE.html
+     */
     long response_code = -1;
-    // https://curl.haxx.se/libcurl/c/CURLINFO_TOTAL_TIME.html
+    /**
+     * https://curl.haxx.se/libcurl/c/CURLINFO_TOTAL_TIME.html
+     */
     double total_time_secs = -1;
-    // https://curl.haxx.se/libcurl/c/CURLINFO_NAMELOOKUP_TIME.html
+    /**
+     * https://curl.haxx.se/libcurl/c/CURLINFO_NAMELOOKUP_TIME.html
+     */
     double namelookup_time_secs = -1;
-    // https://curl.haxx.se/libcurl/c/CURLINFO_CONNECT_TIME.html
+    /**
+     * https://curl.haxx.se/libcurl/c/CURLINFO_CONNECT_TIME.html
+     */
     double connect_time_secs = -1;
-    // https://curl.haxx.se/libcurl/c/CURLINFO_APPCONNECT_TIME.html
+    /**
+     * https://curl.haxx.se/libcurl/c/CURLINFO_APPCONNECT_TIME.html
+     */
     double appconnect_time_secs = -1;
-    // https://curl.haxx.se/libcurl/c/CURLINFO_PRETRANSFER_TIME.html
+    /**
+     * https://curl.haxx.se/libcurl/c/CURLINFO_PRETRANSFER_TIME.html
+     */
     double pretransfer_time_secs = -1;
-    // https://curl.haxx.se/libcurl/c/CURLINFO_STARTTRANSFER_TIME.html
+    /**
+     * https://curl.haxx.se/libcurl/c/CURLINFO_STARTTRANSFER_TIME.html
+     */
     double starttransfer_time_secs = -1;
-    // https://curl.haxx.se/libcurl/c/CURLINFO_REDIRECT_TIME.html
+    /**
+     * https://curl.haxx.se/libcurl/c/CURLINFO_REDIRECT_TIME.html
+     */
     double redirect_time_secs = -1;
-    // https://curl.haxx.se/libcurl/c/CURLINFO_REDIRECT_COUNT.html
+    /**
+     * https://curl.haxx.se/libcurl/c/CURLINFO_REDIRECT_COUNT.html
+     */
     long redirect_count = -1;
-    // https://curl.haxx.se/libcurl/c/CURLINFO_SPEED_DOWNLOAD.html
+    /**
+     * https://curl.haxx.se/libcurl/c/CURLINFO_SPEED_DOWNLOAD.html
+     */
     double speed_download_bytes_secs = -1;
-    // https://curl.haxx.se/libcurl/c/CURLINFO_SPEED_UPLOAD.html
+    /**
+     * https://curl.haxx.se/libcurl/c/CURLINFO_SPEED_UPLOAD.html
+     */
     double speed_upload_bytes_secs = -1;
-    // https://curl.haxx.se/libcurl/c/CURLINFO_HEADER_SIZE.html
+    /**
+     * https://curl.haxx.se/libcurl/c/CURLINFO_HEADER_SIZE.html
+     */
     long header_size_bytes = -1;
-    // https://curl.haxx.se/libcurl/c/CURLINFO_REQUEST_SIZE.html
+    /**
+     * https://curl.haxx.se/libcurl/c/CURLINFO_REQUEST_SIZE.html
+     */
     long request_size_bytes = -1;
-    // https://curl.haxx.se/libcurl/c/CURLINFO_SSL_VERIFYRESULT.html
+    /**
+     * https://curl.haxx.se/libcurl/c/CURLINFO_SSL_VERIFYRESULT.html
+     */
     long ssl_verifyresult = -1;
-    // https://curl.haxx.se/libcurl/c/CURLINFO_OS_ERRNO.html
+    /**
+     * https://curl.haxx.se/libcurl/c/CURLINFO_OS_ERRNO.html
+     */
     long os_errno = -1;
-    // https://curl.haxx.se/libcurl/c/CURLINFO_NUM_CONNECTS.html
+    /**
+     * https://curl.haxx.se/libcurl/c/CURLINFO_NUM_CONNECTS.html
+     */
     long num_connects = -1;
-    // https://curl.haxx.se/libcurl/c/CURLINFO_PRIMARY_IP.html
+    /**
+     * https://curl.haxx.se/libcurl/c/CURLINFO_PRIMARY_IP.html
+     */
     std::string primary_ip = "";
-    // https://curl.haxx.se/libcurl/c/CURLINFO_PRIMARY_PORT.html
+    /**
+     * https://curl.haxx.se/libcurl/c/CURLINFO_PRIMARY_PORT.html
+     */
     long primary_port = -1;
     
+    /**
+     * Adds a header received from a server
+     * 
+     * @param name header name
+     * @param value header value
+     */
     void add_header(std::string&& name, std::string&& value) {
         headers.emplace_back(std::move(name), std::move(value));
     }
     
+    /**
+     * Accessor for received headers
+     * 
+     * @return received headers
+     */
     std::vector<std::pair<std::string, std::string>>& get_headers() {
         return headers;
     }
     
+    /**
+     * Returns a value for the specified header, received from server.
+     * Uses linear search over headers array.
+     * 
+     * @param name header name
+     * @return header value, empty string if specified header not found
+     */
     std::string& get_header(const std::string name) {
         for (auto& en : headers) {
             if (name == en.first) {

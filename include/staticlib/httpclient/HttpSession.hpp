@@ -27,10 +27,15 @@
 #include <memory>
 #include <sstream>
 #include <streambuf>
-#include <string>
 #include <type_traits>
 #include <utility>
 #include <vector>
+
+#ifdef STATICLIB_WITH_ICU
+#include <unicode/unistr.h>
+#else
+#include <string>
+#endif // STATICLIB_WITH_ICU
 
 #include "staticlib/config.hpp"
 #include "staticlib/io.hpp"
@@ -44,6 +49,9 @@
 namespace staticlib {
 namespace httpclient {
 
+/**
+ * Context object for one or more HTTP requests. Caches TCP connections.
+ */
 class HttpSession : public staticlib::pimpl::PimplObject {
     /**
      * Implementation class
@@ -58,22 +66,78 @@ public:
      */
     PIMPL_CONSTRUCTOR(HttpSession)
     
+    /**
+     * Constructor
+     * 
+     * @param options session options
+     */
     HttpSession(HttpSessionOptions options = HttpSessionOptions{});
 
-    HttpResource open_url(std::string url,
+    /**
+     * Opens specified HTTP url as a Source
+     * 
+     * @param url HTTP URL
+     * @param options request options
+     * @return HTTP resource
+     */
+    HttpResource open_url(
+#ifdef STATICLIB_WITH_ICU            
+            icu::UnicodeString url,
+#else
+            std::string url,
+#endif // STATICLIB_WITH_ICU
             HttpRequestOptions options = HttpRequestOptions{});
     
-    HttpResource open_url(std::string url, 
+    /**
+     * Opens specified HTTP url as a Source using POST method
+     * 
+     * @param url HTTP URL
+     * @param post_data data to upload
+     * @param options request options
+     * @return HTTP resource
+     */
+    HttpResource open_url(
+#ifdef STATICLIB_WITH_ICU            
+            icu::UnicodeString url,
+#else
+            std::string url,
+#endif // STATICLIB_WITH_ICU
             std::streambuf* post_data = nullptr,
             HttpRequestOptions options = HttpRequestOptions{});
 
-    HttpResource open_url(std::string url, 
+    /**
+     * Opens specified HTTP url as a Source using POST method
+     * 
+     * @param url HTTP URL
+     * @param post_data data to upload
+     * @param options request options
+     * @return HTTP resource
+     */
+    HttpResource open_url(
+#ifdef STATICLIB_WITH_ICU            
+            icu::UnicodeString url,
+#else
+            std::string url,
+#endif // STATICLIB_WITH_ICU 
             std::unique_ptr<std::streambuf> post_data,
             HttpRequestOptions options = HttpRequestOptions{});
-            
+
+    /**
+     * Opens specified HTTP url as a Source using POST method
+     * 
+     * @param url HTTP URL
+     * @param post_data data to upload
+     * @param options request options
+     * @return HTTP resource
+     */
     template<typename PostDataSource,
             class = typename std::enable_if<!std::is_lvalue_reference<PostDataSource>::value>::type>
-    HttpResource open_url(std::string url,
+    HttpResource open_url(
+#ifdef STATICLIB_WITH_ICU            
+            icu::UnicodeString url,
+#else
+            std::string url,
+#endif // STATICLIB_WITH_ICU
             PostDataSource&& post_data,
             HttpRequestOptions options = HttpRequestOptions{}) {
         std::unique_ptr<std::streambuf> sbuf{
@@ -81,8 +145,21 @@ public:
         return open_url(std::move(url), std::move(sbuf), std::move(options));
     }
 
+    /**
+     * Opens specified HTTP url as a Source using POST method
+     * 
+     * @param url HTTP URL
+     * @param post_data data to upload
+     * @param options request options
+     * @return HTTP resource
+     */            
     template<typename PostDataSource>
-    HttpResource open_url(std::string url,
+    HttpResource open_url(
+#ifdef STATICLIB_WITH_ICU            
+            icu::UnicodeString url,
+#else
+            std::string url,
+#endif // STATICLIB_WITH_ICU
             PostDataSource& post_data,
             HttpRequestOptions options = HttpRequestOptions{}) {
         std::unique_ptr<std::streambuf> sbuf{
