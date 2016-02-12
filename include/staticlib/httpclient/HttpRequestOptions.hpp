@@ -36,8 +36,9 @@ struct HttpRequestOptions {
     
     std::vector<std::pair<std::string, std::string>> headers;
     std::string method = "";
-    uint32_t read_timeout_millis = 1000;
+    uint32_t read_timeout_millis = 10000;
     uint32_t fdset_timeout_millis = 100;
+    // todo: implementme
     uint32_t min_sent_speed_bytes_per_second = 0;
     uint32_t min_recv_speed_bytes_per_second = 0;
     
@@ -61,7 +62,7 @@ struct HttpRequestOptions {
     // https://curl.haxx.se/libcurl/c/CURLOPT_TCP_KEEPIDLE.html
     uint32_t tcp_keepidle_secs = 300;
     // https://curl.haxx.se/libcurl/c/CURLOPT_TCP_KEEPINTVL.html
-    uint32_t tcp_keepintvl = 300;
+    uint32_t tcp_keepintvl_secs = 300;
     // https://curl.haxx.se/libcurl/c/CURLOPT_CONNECTTIMEOUT_MS.html
     uint32_t connecttimeout_millis = 10000;
     
@@ -82,9 +83,9 @@ struct HttpRequestOptions {
     // throttling options
     
     // https://curl.haxx.se/libcurl/c/CURLOPT_MAX_SEND_SPEED_LARGE.html
-    uint64_t max_sent_speed_large_bytes_per_second = 0;
+    uint32_t max_sent_speed_large_bytes_per_second = 0;
     // https://curl.haxx.se/libcurl/c/CURLOPT_MAX_RECV_SPEED_LARGE.html
-    uint64_t max_recv_speed_large_bytes_per_second = 0;
+    uint32_t max_recv_speed_large_bytes_per_second = 0;
     
     // SSL options
     

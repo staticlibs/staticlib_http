@@ -24,6 +24,7 @@
 #include "staticlib/httpclient/HttpResource.hpp"
 
 #include <chrono>
+#include <limits>
 #include <memory>
 #include <thread>
 #include <cstring>
@@ -31,6 +32,7 @@
 #include "curl/curl.h"
 
 #include "staticlib/config.hpp"
+#include "staticlib/io.hpp"
 #include "staticlib/pimpl/pimpl_forward_macros.hpp"
 #include "staticlib/httpclient/HttpResourceInfo.hpp"
 
@@ -56,15 +58,50 @@ public:
     }
 };
 
+class CurlSListDeleter {
+public:
+    void operator()(struct curl_slist* list) {
+        curl_slist_free_all(list);
+    }
+};
+
+class AppliedHeaders {
+    std::vector<std::string> headers;
+    std::unique_ptr<struct curl_slist, CurlSListDeleter> slist;
+    
+public:
+    AppliedHeaders() { }
+    
+    AppliedHeaders(const AppliedHeaders&) = delete;
+    
+    AppliedHeaders& operator=(const AppliedHeaders&) = delete;
+
+    void add_header(std::string header) {
+        headers.emplace_back(std::move(header));
+    }
+    
+    const std::string& get_last_header() {
+        return headers.back();
+    }
+
+    void set_slist(struct curl_slist* slist_ptr) {
+        slist.release();
+        slist = std::unique_ptr<struct curl_slist, CurlSListDeleter>{slist_ptr, CurlSListDeleter{}};
+    }
+};
+
 } // namespace
 
 
 class HttpResource::Impl : public staticlib::pimpl::PimplObject::Impl {
+    // holds data passed to curl
+    HttpRequestOptions options;
+    AppliedHeaders applied_headers;
+    
     CURLM* multi_handle;
     std::unique_ptr<CURL, CurlEasyDeleter> handle;
     std::string url;
     std::unique_ptr<std::streambuf> post_data;
-    HttpRequestOptions options;
     
     HttpResourceInfo info;
     std::vector<char> buf;
@@ -76,23 +113,16 @@ public:
             std::string url,
             std::unique_ptr<std::streambuf> post_data,
             HttpRequestOptions options) :
+    options(std::move(options)),
     multi_handle(multi_handle),
     handle(curl_easy_init(), CurlEasyDeleter{multi_handle}),
     url(std::move(url)),
-    post_data(std::move(post_data)),
-    options(std::move(options)) {
+    post_data(std::move(post_data)) {
         if (nullptr == handle.get()) throw HttpClientException(TRACEMSG("Error initializing cURL handle"));
         CURLMcode errm = curl_multi_add_handle(multi_handle, handle.get());
         if (errm != CURLM_OK) throw HttpClientException(TRACEMSG(std::string() +
                 "cURL multi_add error: [" + sc::to_string(errm) + "], url: [" + this->url + "]"));
-        curl_easy_setopt(handle.get(), CURLOPT_URL, this->url.c_str());
-        curl_easy_setopt(handle.get(), CURLOPT_WRITEDATA, this);
-        curl_easy_setopt(handle.get(), CURLOPT_WRITEFUNCTION, HttpResource::Impl::write_callback);
-        curl_easy_setopt(handle.get(), CURLOPT_HEADERDATA, this);
-        curl_easy_setopt(handle.get(), CURLOPT_HEADERFUNCTION, HttpResource::Impl::headers_callback);
-
-        curl_easy_setopt(handle.get(), CURLOPT_SSL_VERIFYHOST, false);
-        curl_easy_setopt(handle.get(), CURLOPT_SSL_VERIFYPEER, false);
+        apply_options();
         open = true;
     }
     
@@ -124,6 +154,18 @@ private:
         return ptr->write_headers(buffer, size, nitems);
     }
 
+    static size_t write_callback(char* buffer, size_t size, size_t nitems, void* userp) STATICLIB_NOEXCEPT {
+        if (nullptr == userp) return static_cast<size_t> (-1);
+        HttpResource::Impl* ptr = static_cast<HttpResource::Impl*> (userp);
+        return ptr->write_data(buffer, size, nitems);
+    }
+
+    static size_t read_callback(char *buffer, size_t size, size_t nitems, void *userp) STATICLIB_NOEXCEPT {
+        if (nullptr == userp) return static_cast<size_t> (-1);
+        HttpResource::Impl* ptr = static_cast<HttpResource::Impl*> (userp);
+        return ptr->read_data(buffer, size, nitems);
+    }
+
     // http://stackoverflow.com/a/9681122/314015
     size_t write_headers(char *buffer, size_t size, size_t nitems) {
         size_t len = size*nitems;
@@ -146,12 +188,6 @@ private:
         return len;
     }
 
-    static size_t write_callback(char* buffer, size_t size, size_t nitems, void* userp) STATICLIB_NOEXCEPT {
-        if (nullptr == userp) return static_cast<size_t>(-1);
-        HttpResource::Impl* ptr = static_cast<HttpResource::Impl*> (userp);
-        return ptr->write_data(buffer, size, nitems);
-    }
-
     size_t write_data(char *buffer, size_t size, size_t nitems) {
         size_t len = size*nitems;
         buf.resize(len);
@@ -159,12 +195,20 @@ private:
         return len;
     } 
     
+    size_t read_data(char* buffer, size_t size, size_t nitems) {        
+        std::streamsize len = static_cast<std::streamsize>(size * nitems);
+        io::streambuf_source src{post_data.get()};
+        std::streamsize read = io::read_all(src, buffer, len);
+        return static_cast<size_t>(read);
+    }
+    
     // curl_multi_socket_action may be used instead of fdset
     void fill_buffer() {
         // some data in buffer
         if (buf_idx < buf.size()) return;
         buf_idx = 0;
         buf.resize(0);
+        auto start = std::chrono::system_clock::now();
         // attempt to fill buffer
         while (open && 0 == buf.size()) {            
             long timeo = -1;
@@ -186,7 +230,7 @@ private:
             // wait or select
             int err_select = 0;
             if (maxfd == -1) {
-                std::this_thread::sleep_for(std::chrono::milliseconds{100});
+                std::this_thread::sleep_for(std::chrono::milliseconds{options.fdset_timeout_millis});
             } else {
                 err_select = select(maxfd + 1, std::addressof(fdread), std::addressof(fdwrite), 
                         std::addressof(fdexcep), std::addressof(timeout));
@@ -200,6 +244,14 @@ private:
                         "cURL multi_perform error: [" + sc::to_string(err) + "], url: [" + url + "]"));
                 open = (1 == active);
             }
+            
+            // check for timeout
+            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::system_clock::now() - start);
+            if (elapsed.count() > options.read_timeout_millis) throw HttpClientException(TRACEMSG(std::string() +
+                    "Request timeout for url: [" + url + "]," + 
+                    " elapsed time (millis): [" + sc::to_string(elapsed.count()) + "]," +
+                    " limit: [" + sc::to_string(options.read_timeout_millis) + "]"));
         }
     }
 
@@ -233,7 +285,7 @@ private:
         return out;
     }
     
-    long getinfo_double(CURLINFO opt) {
+    double getinfo_double(CURLINFO opt) {
         double out = -1;
         CURLcode err = curl_easy_getinfo(handle.get(), opt, std::addressof(out));
         if (err != CURLE_OK) throw HttpClientException(TRACEMSG(std::string() +
@@ -275,6 +327,137 @@ private:
         info.primary_port = getinfo_long(CURLINFO_PRIMARY_PORT);
         info.ready = true;
     }
+
+    // note: think about integer overflow 
+    void setopt_uint32(CURLoption opt, uint32_t value) {
+        if (0 == value) return;
+        if (value > static_cast<uint32_t>(std::numeric_limits<int32_t>::max())) throw HttpClientException(TRACEMSG(std::string() +
+                "Error setting option: [" + sc::to_string(opt) + "]," +
+                " to invalid overflow value: [" + sc::to_string(value) + "], url: [" + url + "]"));
+        CURLcode err = curl_easy_setopt(handle.get(), opt, static_cast<long>(value));
+        if (err != CURLE_OK) throw HttpClientException(TRACEMSG(std::string() +
+                "Error setting option: [" + sc::to_string(opt) + "]," +
+                " to value: [" + sc::to_string(value) + "], url: [" + url + "]"));
+    }
+
+    void setopt_bool(CURLoption opt, bool value) {
+        CURLcode err = curl_easy_setopt(handle.get(), opt, value);
+        if (err != CURLE_OK) throw HttpClientException(TRACEMSG(std::string() +
+                "Error setting option: [" + sc::to_string(opt) + "]," +
+                " to value: [" + sc::to_string(value) + "], url: [" + url + "]"));
+    }
+
+    void setopt_string(CURLoption opt, const std::string& value) {
+        if ("" == value) return;
+        CURLcode err = curl_easy_setopt(handle.get(), opt, value.c_str());
+        if (err != CURLE_OK) throw HttpClientException(TRACEMSG(std::string() +
+                "Error setting option: [" + sc::to_string(opt) + "]," +
+                " to value: [" + value + "], url: [" + url + "]"));
+    }
+
+    void setopt_object(CURLoption opt, void* value) {
+        if (nullptr == value) return;
+        CURLcode err = curl_easy_setopt(handle.get(), opt, value);
+        if (err != CURLE_OK) throw HttpClientException(TRACEMSG(std::string() +
+                "Error setting option: [" + sc::to_string(opt) + "], url: [" + url + "]"));
+    }
+    
+    struct curl_slist* append_header(struct curl_slist* slist, const std::string& header) {
+        struct curl_slist* res = curl_slist_append(slist, header.c_str());
+        if (nullptr == res) throw HttpClientException(TRACEMSG(std::string() +
+                "Error appending header: [" + header + "], url: [" + url + "]"));
+        return res;
+    }
+    
+    void apply_headers() {
+        if (options.headers.empty()) return;
+        struct curl_slist* slist = nullptr;
+        for (auto& en : options.headers) {
+            applied_headers.add_header(en.first + ": " + en.second);
+            slist = append_header(slist, applied_headers.get_last_header());
+            applied_headers.set_slist(slist);
+        }
+        setopt_object(CURLOPT_HTTPHEADER, static_cast<void*>(slist));
+    }
+    
+    void appply_method() {
+        if ("" == options.method) return;
+        if ("GET" == options.method) {
+            setopt_bool(CURLOPT_HTTPGET, true);
+        } else if("POST" == options.method) {
+            setopt_bool(CURLOPT_HTTPPOST, true);
+        } else if ("PUT" == options.method || "DELETE" == options.method) {
+            setopt_string(CURLOPT_CUSTOMREQUEST, options.method);
+        } else throw HttpClientException(TRACEMSG(std::string() +
+                    "Unsupported HTTP method: [" + options.method + "], url: [" + url + "]"));
+        if (nullptr != post_data.get() && ("POST" == options.method || "PUT" == options.method)) {
+            setopt_object(CURLOPT_READDATA, this);
+            CURLcode err_wf = curl_easy_setopt(handle.get(), CURLOPT_READFUNCTION, HttpResource::Impl::read_callback);
+            if (err_wf != CURLE_OK) throw HttpClientException(TRACEMSG(std::string() +
+                    "Error setting option: [CURLOPT_READFUNCTION], url: [" + url + "]"));
+        }
+    }
+    
+    // todo: curl version checking
+    void apply_options() {
+        // url
+        setopt_string(CURLOPT_URL, url);
+        
+        // method
+        appply_method();
+        
+        // headers
+        apply_headers();
+        
+        // callbacks
+        setopt_object(CURLOPT_WRITEDATA, this);
+        CURLcode err_wf = curl_easy_setopt(handle.get(), CURLOPT_WRITEFUNCTION, HttpResource::Impl::write_callback);
+        if (err_wf != CURLE_OK) throw HttpClientException(TRACEMSG(std::string() +
+                "Error setting option: [CURLOPT_WRITEFUNCTION], url: [" + url + "]"));
+        setopt_object(CURLOPT_HEADERDATA, this);
+        CURLcode err_hf = curl_easy_setopt(handle.get(), CURLOPT_HEADERFUNCTION, HttpResource::Impl::headers_callback);
+        if (err_hf != CURLE_OK) throw HttpClientException(TRACEMSG(std::string() +
+                "Error setting option: [CURLOPT_HEADERFUNCTION], url: [" + url + "]"));
+       
+        // general behavior options
+        setopt_bool(CURLOPT_NOPROGRESS, options.noprogress);
+        setopt_bool(CURLOPT_NOSIGNAL, options.nosignal);
+        setopt_bool(CURLOPT_FAILONERROR, options.failonerror);
+//        setopt_bool(CURLOPT_PATH_AS_IS, options.path_as_is);
+
+        // TCP options
+        setopt_bool(CURLOPT_TCP_NODELAY, options.tcp_nodelay);
+        setopt_bool(CURLOPT_TCP_KEEPALIVE, options.tcp_keepalive);
+        setopt_uint32(CURLOPT_TCP_KEEPIDLE, options.tcp_keepidle_secs);
+        setopt_uint32(CURLOPT_TCP_KEEPINTVL, options.tcp_keepintvl_secs);
+        setopt_uint32(CURLOPT_CONNECTTIMEOUT_MS, options.connecttimeout_millis);
+
+        // HTTP options
+        setopt_uint32(CURLOPT_BUFFERSIZE, options.buffersize_bytes);
+        setopt_string(CURLOPT_ACCEPT_ENCODING, options.accept_encoding);
+        setopt_bool(CURLOPT_FOLLOWLOCATION, options.followlocation);
+        setopt_uint32(CURLOPT_MAXREDIRS, options.maxredirs);
+        setopt_string(CURLOPT_USERAGENT, options.useragent);
+
+        // throttling options
+        setopt_uint32(CURLOPT_MAX_SEND_SPEED_LARGE, options.max_sent_speed_large_bytes_per_second);
+        setopt_uint32(CURLOPT_MAX_RECV_SPEED_LARGE, options.max_recv_speed_large_bytes_per_second);
+
+        // SSL options
+        setopt_string(CURLOPT_SSLCERT, options.sslcert_filename);
+        setopt_string(CURLOPT_SSLCERTTYPE, options.sslcertype);
+        setopt_string(CURLOPT_SSLKEY, options.sslkey_filename);
+        setopt_string(CURLOPT_SSLKEYTYPE, options.ssl_key_type);
+        setopt_string(CURLOPT_KEYPASSWD, options.ssl_keypasswd);
+        setopt_string(CURLOPT_SSLVERSION, options.sslversion);
+        setopt_bool(CURLOPT_SSL_VERIFYHOST, options.ssl_verifyhost);
+        setopt_bool(CURLOPT_SSL_VERIFYPEER, options.ssl_verifypeer);
+//        setopt_bool(CURLOPT_SSL_VERIFYSTATUS, options.ssl_verifystatus);
+        setopt_string(CURLOPT_CAINFO, options.cainfo_filename);
+        setopt_string(CURLOPT_CRLFILE, options.crlfile_filename);
+        setopt_string(CURLOPT_SSL_CIPHER_LIST, options.ssl_cipher_list);
+    }
+
     
 };
 PIMPL_FORWARD_CONSTRUCTOR(HttpResource, (CURLM*)(std::string)(std::unique_ptr<std::streambuf>)(HttpRequestOptions), (), HttpClientException)

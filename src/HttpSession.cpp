@@ -57,16 +57,18 @@ public:
     Impl(HttpSessionOptions options) :
     handle(curl_multi_init(), CurlMultiDeleter{}) { 
         if (nullptr == handle.get()) throw HttpClientException(TRACEMSG("Error initializing cURL multi handle"));
-//        CURLMcode err = curl_multi_setopt(handle.get(), CURLMOPT_MAXCONNECTS, conn_cache_size);
-//        if (err != CURLM_OK) throw HttpClientException(TRACEMSG(std::string() +
-//                "CURLMOPT_MAXCONNECTS error: [" + sc::to_string(err) + "]," +
-//                " size: [" + sc::to_string(conn_cache_size) + "]"));
-        // todo options
-        (void) options;
+//        available since 7.30.0, todo: curl version checking
+//        setopt_uint32(CURLMOPT_MAX_HOST_CONNECTIONS, options.max_host_connections);
+//        setopt_uint32(CURLMOPT_MAX_TOTAL_CONNECTIONS, options.max_total_connections);
+        setopt_uint32(CURLMOPT_MAXCONNECTS, options.maxconnects);
     }
     
     ~Impl() STATICLIB_NOEXCEPT { }
 
+    HttpResource open_url(HttpSession& frontend, std::string url, HttpRequestOptions options) {
+        return open_url(frontend, std::move(url), nullptr, std::move(options));
+    }
+    
     HttpResource open_url(HttpSession& frontend, std::string url, std::streambuf* post_data, HttpRequestOptions options) {
         auto sbuf_ptr = nullptr != post_data ? post_data : EMPTY_STREAM.rdbuf();
         std::unique_ptr<std::streambuf> sbuf{
@@ -78,8 +80,18 @@ public:
         return HttpResource(handle.get(), std::move(url), std::move(post_data), std::move(options));
     }
     
+private:
+    void setopt_uint32(CURLMoption opt, uint32_t value) {
+        if (0 == value) return;
+        CURLMcode err = curl_multi_setopt(handle.get(), opt, value);
+        if (err != CURLM_OK) throw HttpClientException(TRACEMSG(std::string() +
+                "Error setting session option: [" + sc::to_string(opt) + "]," +
+                " to value: [" + sc::to_string(value) + "]"));
+    }
+    
 };
 PIMPL_FORWARD_CONSTRUCTOR(HttpSession, (HttpSessionOptions), (), HttpClientException)
+PIMPL_FORWARD_METHOD(HttpSession, HttpResource, open_url, (std::string)(HttpRequestOptions), (), HttpClientException)        
 PIMPL_FORWARD_METHOD(HttpSession, HttpResource, open_url, (std::string)(std::streambuf*)(HttpRequestOptions), (), HttpClientException)        
 PIMPL_FORWARD_METHOD(HttpSession, HttpResource, open_url, (std::string)(std::unique_ptr<std::streambuf>)(HttpRequestOptions), (), HttpClientException)        
 

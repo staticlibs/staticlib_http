@@ -60,6 +60,9 @@ public:
     
     HttpSession(HttpSessionOptions options = HttpSessionOptions{});
 
+    HttpResource open_url(std::string url,
+            HttpRequestOptions options = HttpRequestOptions{});
+    
     HttpResource open_url(std::string url, 
             std::streambuf* post_data = nullptr,
             HttpRequestOptions options = HttpRequestOptions{});
