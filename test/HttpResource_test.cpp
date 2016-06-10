@@ -34,10 +34,10 @@
 
 #include "asio.hpp"
 
-#include "pion/tcp/connection.hpp"
-#include "pion/http/request.hpp"
-#include "pion/http/response_writer.hpp"
-#include "pion/http/streaming_server.hpp"
+#include "staticlib/httpserver/tcp_connection.hpp"
+#include "staticlib/httpserver/http_request.hpp"
+#include "staticlib/httpserver/http_response_writer.hpp"
+#include "staticlib/httpserver/http_server.hpp"
 
 #include "staticlib/config/assert.hpp"
 #include "staticlib/io.hpp"
@@ -48,6 +48,7 @@
 namespace io = staticlib::io;
 namespace sc = staticlib::config;
 namespace hc = staticlib::httpclient;
+namespace hs = staticlib::httpserver;
 
 const uint16_t TCP_PORT = 8443;
 #ifdef STATICLIB_WITH_ICU
@@ -80,11 +81,11 @@ void enrich_opts_ssl(hc::HttpRequestOptions& opts) {
     opts.ssl_keypasswd = "test";
 }
 
-void get_handler(pion::http::request_ptr& req, pion::tcp::connection_ptr& conn) {
+void get_handler(hs::http_request_ptr& req, hs::tcp_connection_ptr& conn) {
     slassert("test" == req->get_header("User-Agent"));
     slassert("GET" == req->get_header("X-Method"));
-    auto finfun = std::bind(&pion::tcp::connection::finish, conn);
-    auto writer = pion::http::response_writer::create(conn, *req, finfun);
+    auto finfun = std::bind(&hs::tcp_connection::finish, conn);
+    auto writer = hs::http_response_writer::create(conn, *req, finfun);
     writer->write(GET_RESPONSE);
     writer->send();
 }
@@ -102,42 +103,42 @@ public:
     }
 };
 
-void post_handler(pion::http::request_ptr& req, pion::tcp::connection_ptr& conn) {
+void post_handler(hs::http_request_ptr& req, hs::tcp_connection_ptr& conn) {
     slassert("test" == req->get_header("User-Agent"));
     slassert("POST" == req->get_header("X-Method"));
     auto ph = req->get_payload_handler<PayloadReceiver>();
     slassert(nullptr != ph);
     slassert(ph->is_received());
-    auto finfun = std::bind(&pion::tcp::connection::finish, conn);
-    auto writer = pion::http::response_writer::create(conn, *req, finfun);
+    auto finfun = std::bind(&hs::tcp_connection::finish, conn);
+    auto writer = hs::http_response_writer::create(conn, *req, finfun);
     writer->write(POST_RESPONSE);
     writer->send();
 }
 
-void put_handler(pion::http::request_ptr& req, pion::tcp::connection_ptr& conn) {
+void put_handler(hs::http_request_ptr& req, hs::tcp_connection_ptr& conn) {
     slassert("test" == req->get_header("User-Agent"));
     slassert("PUT" == req->get_header("X-Method"));
     auto ph = req->get_payload_handler<PayloadReceiver>();
     slassert(nullptr != ph);
     slassert(ph->is_received());
-    auto finfun = std::bind(&pion::tcp::connection::finish, conn);
-    auto writer = pion::http::response_writer::create(conn, *req, finfun);
+    auto finfun = std::bind(&hs::tcp_connection::finish, conn);
+    auto writer = hs::http_response_writer::create(conn, *req, finfun);
     writer->write(PUT_RESPONSE);
     writer->send();
 }
 
-void delete_handler(pion::http::request_ptr& req, pion::tcp::connection_ptr& conn) {
+void delete_handler(hs::http_request_ptr& req, hs::tcp_connection_ptr& conn) {
     slassert("test" == req->get_header("User-Agent"));
     slassert("DELETE" == req->get_header("X-Method"));
-    auto finfun = std::bind(&pion::tcp::connection::finish, conn);
-    auto writer = pion::http::response_writer::create(conn, *req, finfun);
+    auto finfun = std::bind(&hs::tcp_connection::finish, conn);
+    auto writer = hs::http_response_writer::create(conn, *req, finfun);
     writer->write(DELETE_RESPONSE);
     writer->send();
 }
 
 void test_get() {
     // server
-    pion::http::streaming_server server(2, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
+    hs::http_server server(2, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
     server.add_handler("GET", "/", get_handler);
     server.start();
     // client
@@ -165,9 +166,9 @@ void test_get() {
 
 void test_post() {
     // server
-    pion::http::streaming_server server(2, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
+    hs::http_server server(2, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
     server.add_handler("POST", "/", post_handler);
-    server.add_payload_handler("POST", "/", [](pion::http::request_ptr&) { return PayloadReceiver{}; });
+    server.add_payload_handler("POST", "/", [](hs::http_request_ptr&) { return PayloadReceiver{}; });
     server.start();
     // client
     try {
@@ -194,9 +195,9 @@ void test_post() {
 
 void test_put() {
     // server
-    pion::http::streaming_server server(2, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
+    hs::http_server server(2, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
     server.add_handler("PUT", "/", put_handler);
-    server.add_payload_handler("PUT", "/", [](pion::http::request_ptr&) {
+    server.add_payload_handler("PUT", "/", [](hs::http_request_ptr&) {
         return PayloadReceiver{}; });
     server.start();
     // client
@@ -224,7 +225,7 @@ void test_put() {
 
 void test_delete() {
     // server
-    pion::http::streaming_server server(2, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
+    hs::http_server server(2, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
     server.add_handler("DELETE", "/", delete_handler);
     server.start();
     // client
