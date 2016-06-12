@@ -24,6 +24,7 @@
 #ifndef STATICLIB_HTTPCLIENT_HTTPSESSION_HPP
 #define	STATICLIB_HTTPCLIENT_HTTPSESSION_HPP
 
+#include <istream>
 #include <memory>
 #include <sstream>
 #include <streambuf>
@@ -119,7 +120,7 @@ public:
 #else
             std::string url,
 #endif // STATICLIB_WITH_ICU 
-            std::unique_ptr<std::streambuf> post_data,
+            std::unique_ptr<std::istream> post_data,
             HttpRequestOptions options = HttpRequestOptions{});
 
     /**
@@ -140,8 +141,8 @@ public:
 #endif // STATICLIB_WITH_ICU
             PostDataSource&& post_data,
             HttpRequestOptions options = HttpRequestOptions{}) {
-        std::unique_ptr<std::streambuf> sbuf{
-            staticlib::io::make_unbuffered_istreambuf_ptr(std::move(post_data))};
+        std::unique_ptr<std::istream> sbuf{
+            staticlib::io::make_source_istream_ptr(std::move(post_data))};
         return open_url(std::move(url), std::move(sbuf), std::move(options));
     }
 
@@ -162,8 +163,8 @@ public:
 #endif // STATICLIB_WITH_ICU
             PostDataSource& post_data,
             HttpRequestOptions options = HttpRequestOptions{}) {
-        std::unique_ptr<std::streambuf> sbuf{
-            staticlib::io::make_unbuffered_istreambuf_ptr(post_data)};
+        std::unique_ptr<std::istream> sbuf{
+            staticlib::io::make_source_istream_ptr(post_data)};
         return open_url(std::move(url), std::move(sbuf), std::move(options));
     }            
     

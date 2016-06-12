@@ -25,8 +25,8 @@
 #define	STATICLIB_HTTPCLIENT_HTTPRESOURCE_HPP
 
 #include <ios>
+#include <istream>
 #include <memory>
-#include <streambuf>
 #include <utility>
 #include <vector>
 
@@ -96,7 +96,7 @@ private:
 #else
             std::string url,
 #endif // STATICLIB_WITH_ICU
-            std::unique_ptr<std::streambuf> post_data,
+            std::unique_ptr<std::istream> post_data,
             HttpRequestOptions options);
     
 };

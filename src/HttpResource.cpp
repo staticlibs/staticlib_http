@@ -110,7 +110,7 @@ class HttpResource::Impl : public staticlib::pimpl::PimplObject::Impl {
     CURLM* multi_handle;
     std::unique_ptr<CURL, CurlEasyDeleter> handle;
     std::string url;
-    std::unique_ptr<std::streambuf> post_data;
+    std::unique_ptr<std::istream> post_data;
     
     HttpResourceInfo info;
     std::vector<char> buf;
@@ -124,7 +124,7 @@ public:
 #else
             std::string url,
 #endif // STATICLIB_WITH_ICU
-            std::unique_ptr<std::streambuf> post_data,
+            std::unique_ptr<std::istream> post_data,
             HttpRequestOptions options) :
     options(std::move(options)),
     multi_handle(multi_handle),
@@ -222,7 +222,7 @@ private:
     
     size_t read_data(char* buffer, size_t size, size_t nitems) {        
         std::streamsize len = static_cast<std::streamsize>(size * nitems);
-        io::streambuf_source src{post_data.get()};
+        io::streambuf_source src{post_data->rdbuf()};
         std::streamsize read = io::read_all(src, buffer, len);
         return static_cast<size_t>(read);
     }
@@ -503,9 +503,9 @@ private:
 };
 
 #ifdef STATICLIB_WITH_ICU            
-PIMPL_FORWARD_CONSTRUCTOR(HttpResource, (CURLM*)(icu::UnicodeString)(std::unique_ptr<std::streambuf>)(HttpRequestOptions), (), HttpClientException)
+PIMPL_FORWARD_CONSTRUCTOR(HttpResource, (CURLM*)(icu::UnicodeString)(std::unique_ptr<std::istream>)(HttpRequestOptions), (), HttpClientException)
 #else
-PIMPL_FORWARD_CONSTRUCTOR(HttpResource, (CURLM*)(std::string)(std::unique_ptr<std::streambuf>)(HttpRequestOptions), (), HttpClientException)
+PIMPL_FORWARD_CONSTRUCTOR(HttpResource, (CURLM*)(std::string)(std::unique_ptr<std::istream>)(HttpRequestOptions), (), HttpClientException)
 #endif // STATICLIB_WITH_ICU
 PIMPL_FORWARD_METHOD(HttpResource, std::streamsize, read, (char*)(std::streamsize), (), HttpClientException)
 PIMPL_FORWARD_METHOD(HttpResource, const HttpResourceInfo&, get_info, (), (const), HttpClientException)
