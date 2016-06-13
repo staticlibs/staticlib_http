@@ -25,6 +25,8 @@
 #define	STATICLIB_HTTPCLIENT_HTTPREQUESTOPTIONS_HPP
 
 #include <string>
+#include <vector>
+#include <utility>
 #include <cstdint>
 
 namespace staticlib {
