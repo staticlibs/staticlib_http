@@ -134,7 +134,7 @@ struct HttpResourceInfo {
      * 
      * @return received headers
      */
-    std::vector<std::pair<std::string, std::string>>& get_headers() {
+    const std::vector<std::pair<std::string, std::string>>& get_headers() const {
         return headers;
     }
     
