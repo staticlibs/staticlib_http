@@ -457,6 +457,11 @@ private:
                 "Error setting option: [CURLOPT_HEADERFUNCTION], url: [" + url + "]"));
        
         // general behavior options
+        if (options.force_http_10) {
+            CURLcode err = curl_easy_setopt(handle.get(), CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
+            if (err != CURLE_OK) throw HttpClientException(TRACEMSG(std::string() +
+                    "Error setting option: [CURLOPT_HTTP_VERSION], url: [" + url + "]"));
+        }
         setopt_bool(CURLOPT_NOPROGRESS, options.noprogress);
         setopt_bool(CURLOPT_NOSIGNAL, options.nosignal);
         setopt_bool(CURLOPT_FAILONERROR, options.failonerror);

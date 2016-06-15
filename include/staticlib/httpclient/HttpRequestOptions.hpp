@@ -67,6 +67,10 @@ struct HttpRequestOptions {
     // general behavior options
     
     /**
+     * https://curl.haxx.se/libcurl/c/CURLOPT_HTTP_VERSION.html
+     */
+    bool force_http_10 = false;
+    /**
      * https://curl.haxx.se/libcurl/c/CURLOPT_NOPROGRESS.html
      */
     bool noprogress = true;
