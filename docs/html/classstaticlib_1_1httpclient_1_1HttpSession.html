@@ -23,7 +23,7 @@
   <td id="projectlogo"><img alt="Logo" src="logo.png"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">staticlib_httpclient
-   &#160;<span id="projectnumber">1.0</span>
+   &#160;<span id="projectnumber">1.1</span>
    </div>
   </td>
  </tr>
@@ -107,8 +107,8 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a987eb7296f6401479b7f2b8f2fd76cff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Opens specified HTTP url as a Source.  <a href="#a987eb7296f6401479b7f2b8f2fd76cff"></a><br/></td></tr>
 <tr class="memitem:a0995de0c6301c3ba8bcd795d67a5c1d8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classstaticlib_1_1httpclient_1_1HttpResource.html">HttpResource</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classstaticlib_1_1httpclient_1_1HttpSession.html#a0995de0c6301c3ba8bcd795d67a5c1d8">open_url</a> (std::string url, std::streambuf *post_data=nullptr, <a class="el" href="structstaticlib_1_1httpclient_1_1HttpRequestOptions.html">HttpRequestOptions</a> options=<a class="el" href="structstaticlib_1_1httpclient_1_1HttpRequestOptions.html">HttpRequestOptions</a>{})</td></tr>
 <tr class="memdesc:a0995de0c6301c3ba8bcd795d67a5c1d8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Opens specified HTTP url as a Source using POST method.  <a href="#a0995de0c6301c3ba8bcd795d67a5c1d8"></a><br/></td></tr>
-<tr class="memitem:aa583bc706af21daba31d240a88bcd0ab"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classstaticlib_1_1httpclient_1_1HttpResource.html">HttpResource</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classstaticlib_1_1httpclient_1_1HttpSession.html#aa583bc706af21daba31d240a88bcd0ab">open_url</a> (std::string url, std::unique_ptr&lt; std::streambuf &gt; post_data, <a class="el" href="structstaticlib_1_1httpclient_1_1HttpRequestOptions.html">HttpRequestOptions</a> options=<a class="el" href="structstaticlib_1_1httpclient_1_1HttpRequestOptions.html">HttpRequestOptions</a>{})</td></tr>
-<tr class="memdesc:aa583bc706af21daba31d240a88bcd0ab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Opens specified HTTP url as a Source using POST method.  <a href="#aa583bc706af21daba31d240a88bcd0ab"></a><br/></td></tr>
+<tr class="memitem:ac3b1b5cd20832f815ed891693bf04077"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classstaticlib_1_1httpclient_1_1HttpResource.html">HttpResource</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classstaticlib_1_1httpclient_1_1HttpSession.html#ac3b1b5cd20832f815ed891693bf04077">open_url</a> (std::string url, std::unique_ptr&lt; std::istream &gt; post_data, <a class="el" href="structstaticlib_1_1httpclient_1_1HttpRequestOptions.html">HttpRequestOptions</a> options=<a class="el" href="structstaticlib_1_1httpclient_1_1HttpRequestOptions.html">HttpRequestOptions</a>{})</td></tr>
+<tr class="memdesc:ac3b1b5cd20832f815ed891693bf04077"><td class="mdescLeft">&#160;</td><td class="mdescRight">Opens specified HTTP url as a Source using POST method.  <a href="#ac3b1b5cd20832f815ed891693bf04077"></a><br/></td></tr>
 <tr class="memitem:aa1a86dcd4cb5064f3d54093d403f79da"><td class="memTemplParams" colspan="2">template&lt;typename PostDataSource , class  = typename std::enable_if&lt;!std::is_lvalue_reference&lt;PostDataSource&gt;::value&gt;::type&gt; </td></tr>
 <tr class="memitem:aa1a86dcd4cb5064f3d54093d403f79da"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classstaticlib_1_1httpclient_1_1HttpResource.html">HttpResource</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classstaticlib_1_1httpclient_1_1HttpSession.html#aa1a86dcd4cb5064f3d54093d403f79da">open_url</a> (std::string url, PostDataSource &amp;&amp;post_data, <a class="el" href="structstaticlib_1_1httpclient_1_1HttpRequestOptions.html">HttpRequestOptions</a> options=<a class="el" href="structstaticlib_1_1httpclient_1_1HttpRequestOptions.html">HttpRequestOptions</a>{})</td></tr>
 <tr class="memdesc:aa1a86dcd4cb5064f3d54093d403f79da"><td class="mdescLeft">&#160;</td><td class="mdescRight">Opens specified HTTP url as a Source using POST method.  <a href="#aa1a86dcd4cb5064f3d54093d403f79da"></a><br/></td></tr>
@@ -208,7 +208,7 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="aa583bc706af21daba31d240a88bcd0ab"></a>
+<a class="anchor" id="ac3b1b5cd20832f815ed891693bf04077"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -221,7 +221,7 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::unique_ptr&lt; std::streambuf &gt;&#160;</td>
+          <td class="paramtype">std::unique_ptr&lt; std::istream &gt;&#160;</td>
           <td class="paramname"><em>post_data</em>&#160;</td>
         </tr>
         <tr>
@@ -345,7 +345,7 @@ template&lt;typename PostDataSource &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Feb 12 2016 19:58:12 for staticlib_httpclient by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Jun 29 2016 09:09:54 for staticlib_httpclient by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.1.2
 </small></address>

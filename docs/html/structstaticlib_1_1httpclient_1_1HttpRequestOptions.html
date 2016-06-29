@@ -23,7 +23,7 @@
   <td id="projectlogo"><img alt="Logo" src="logo.png"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">staticlib_httpclient
-   &#160;<span id="projectnumber">1.0</span>
+   &#160;<span id="projectnumber">1.1</span>
    </div>
   </td>
  </tr>
@@ -106,10 +106,14 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:a1e9639596963127df0c60dc8ace8be58"><td class="mdescLeft">&#160;</td><td class="mdescRight">Headers to send with a request.  <a href="#a1e9639596963127df0c60dc8ace8be58"></a><br/></td></tr>
 <tr class="memitem:a5dd27b65d4a7f8d11af251c2cc695805"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structstaticlib_1_1httpclient_1_1HttpRequestOptions.html#a5dd27b65d4a7f8d11af251c2cc695805">method</a> = &quot;&quot;</td></tr>
 <tr class="memdesc:a5dd27b65d4a7f8d11af251c2cc695805"><td class="mdescLeft">&#160;</td><td class="mdescRight">HTTP method to use.  <a href="#a5dd27b65d4a7f8d11af251c2cc695805"></a><br/></td></tr>
-<tr class="memitem:a17267cab2d72d4e3ef057e7aa75ee1bb"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structstaticlib_1_1httpclient_1_1HttpRequestOptions.html#a17267cab2d72d4e3ef057e7aa75ee1bb">read_timeout_millis</a> = 10000</td></tr>
-<tr class="memdesc:a17267cab2d72d4e3ef057e7aa75ee1bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Timeout for reading the whole response from server.  <a href="#a17267cab2d72d4e3ef057e7aa75ee1bb"></a><br/></td></tr>
+<tr class="memitem:a595691ca68989c5760a420c18e580836"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structstaticlib_1_1httpclient_1_1HttpRequestOptions.html#a595691ca68989c5760a420c18e580836">abort_on_response_error</a> = true</td></tr>
+<tr class="memdesc:a595691ca68989c5760a420c18e580836"><td class="mdescLeft">&#160;</td><td class="mdescRight">HttpException will be thrown from read method on HTTP response code &gt;= 400.  <a href="#a595691ca68989c5760a420c18e580836"></a><br/></td></tr>
+<tr class="memitem:a17267cab2d72d4e3ef057e7aa75ee1bb"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structstaticlib_1_1httpclient_1_1HttpRequestOptions.html#a17267cab2d72d4e3ef057e7aa75ee1bb">read_timeout_millis</a> = 15000</td></tr>
+<tr class="memdesc:a17267cab2d72d4e3ef057e7aa75ee1bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Timeout for reading the whole response from server, HttpException exception will be thrown from read method on timeout.  <a href="#a17267cab2d72d4e3ef057e7aa75ee1bb"></a><br/></td></tr>
 <tr class="memitem:a82c344629b10764e2705fb85b2b0971a"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structstaticlib_1_1httpclient_1_1HttpRequestOptions.html#a82c344629b10764e2705fb85b2b0971a">fdset_timeout_millis</a> = 100</td></tr>
 <tr class="memdesc:a82c344629b10764e2705fb85b2b0971a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Timeout to wait for when reading data unsuccessfully.  <a href="#a82c344629b10764e2705fb85b2b0971a"></a><br/></td></tr>
+<tr class="memitem:a019831931375853d4a52bb0ae9a9c70f"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structstaticlib_1_1httpclient_1_1HttpRequestOptions.html#a019831931375853d4a52bb0ae9a9c70f">force_http_10</a> = false</td></tr>
+<tr class="memdesc:a019831931375853d4a52bb0ae9a9c70f"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a href="https://curl.haxx.se/libcurl/c/CURLOPT_HTTP_VERSION.html">https://curl.haxx.se/libcurl/c/CURLOPT_HTTP_VERSION.html</a>  <a href="#a019831931375853d4a52bb0ae9a9c70f"></a><br/></td></tr>
 <tr class="memitem:addcafe3f2cdfc1f43dc1fa1954bd48f8"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structstaticlib_1_1httpclient_1_1HttpRequestOptions.html#addcafe3f2cdfc1f43dc1fa1954bd48f8">noprogress</a> = true</td></tr>
 <tr class="memdesc:addcafe3f2cdfc1f43dc1fa1954bd48f8"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a href="https://curl.haxx.se/libcurl/c/CURLOPT_NOPROGRESS.html">https://curl.haxx.se/libcurl/c/CURLOPT_NOPROGRESS.html</a>  <a href="#addcafe3f2cdfc1f43dc1fa1954bd48f8"></a><br/></td></tr>
 <tr class="memitem:a05a38fa68f0410216a23a1806186f7df"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structstaticlib_1_1httpclient_1_1HttpRequestOptions.html#a05a38fa68f0410216a23a1806186f7df">nosignal</a> = true</td></tr>
@@ -152,8 +156,8 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:a6001bfbca9591fa4c46dd7aa51b46b3c"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a href="https://curl.haxx.se/libcurl/c/CURLOPT_SSLKEYTYPE.html">https://curl.haxx.se/libcurl/c/CURLOPT_SSLKEYTYPE.html</a>  <a href="#a6001bfbca9591fa4c46dd7aa51b46b3c"></a><br/></td></tr>
 <tr class="memitem:a7ef7123251cbecaf5c13c578f5b5d05e"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structstaticlib_1_1httpclient_1_1HttpRequestOptions.html#a7ef7123251cbecaf5c13c578f5b5d05e">ssl_keypasswd</a> = &quot;&quot;</td></tr>
 <tr class="memdesc:a7ef7123251cbecaf5c13c578f5b5d05e"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a href="https://curl.haxx.se/libcurl/c/CURLOPT_KEYPASSWD.html">https://curl.haxx.se/libcurl/c/CURLOPT_KEYPASSWD.html</a>  <a href="#a7ef7123251cbecaf5c13c578f5b5d05e"></a><br/></td></tr>
-<tr class="memitem:a86b2906115b40bab63b68fe51ace1b80"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structstaticlib_1_1httpclient_1_1HttpRequestOptions.html#a86b2906115b40bab63b68fe51ace1b80">sslversion</a> = &quot;&quot;</td></tr>
-<tr class="memdesc:a86b2906115b40bab63b68fe51ace1b80"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a href="https://curl.haxx.se/libcurl/c/CURLOPT_SSLVERSION.html">https://curl.haxx.se/libcurl/c/CURLOPT_SSLVERSION.html</a>  <a href="#a86b2906115b40bab63b68fe51ace1b80"></a><br/></td></tr>
+<tr class="memitem:a8a7f164637df95bb44f12878fa3e28fe"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structstaticlib_1_1httpclient_1_1HttpRequestOptions.html#a8a7f164637df95bb44f12878fa3e28fe">require_tls</a> = false</td></tr>
+<tr class="memdesc:a8a7f164637df95bb44f12878fa3e28fe"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a href="https://curl.haxx.se/libcurl/c/CURLOPT_SSLVERSION.html">https://curl.haxx.se/libcurl/c/CURLOPT_SSLVERSION.html</a>  <a href="#a8a7f164637df95bb44f12878fa3e28fe"></a><br/></td></tr>
 <tr class="memitem:ac8b3af9e2ab84c1dd608cbda3af8b15c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structstaticlib_1_1httpclient_1_1HttpRequestOptions.html#ac8b3af9e2ab84c1dd608cbda3af8b15c">ssl_verifyhost</a> = false</td></tr>
 <tr class="memdesc:ac8b3af9e2ab84c1dd608cbda3af8b15c"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a href="https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYHOST.html">https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYHOST.html</a>  <a href="#ac8b3af9e2ab84c1dd608cbda3af8b15c"></a><br/></td></tr>
 <tr class="memitem:a76c7c3b094b33584495ffc9b0cec7680"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structstaticlib_1_1httpclient_1_1HttpRequestOptions.html#a76c7c3b094b33584495ffc9b0cec7680">ssl_verifypeer</a> = false</td></tr>
@@ -170,6 +174,20 @@ Public Attributes</h2></td></tr>
 <a name="details" id="details"></a><h2>Detailed Description</h2>
 <div class="textblock"><p>Configuration options for the HTTP request. </p>
 </div><h2>Member Data Documentation</h2>
+<a class="anchor" id="a595691ca68989c5760a420c18e580836"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool staticlib::httpclient::HttpRequestOptions::abort_on_response_error = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>HttpException will be thrown from read method on HTTP response code &gt;= 400. </p>
+
+</div>
+</div>
 <a class="anchor" id="adef20a76504d4821464f4b7f3c613d1b"></a>
 <div class="memitem">
 <div class="memproto">
@@ -279,6 +297,20 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p><a href="https://curl.haxx.se/libcurl/c/CURLOPT_FOLLOWLOCATION.html">https://curl.haxx.se/libcurl/c/CURLOPT_FOLLOWLOCATION.html</a> </p>
+
+</div>
+</div>
+<a class="anchor" id="a019831931375853d4a52bb0ae9a9c70f"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool staticlib::httpclient::HttpRequestOptions::force_http_10 = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p><a href="https://curl.haxx.se/libcurl/c/CURLOPT_HTTP_VERSION.html">https://curl.haxx.se/libcurl/c/CURLOPT_HTTP_VERSION.html</a> </p>
 
 </div>
 </div>
@@ -399,12 +431,26 @@ Public Attributes</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">uint32_t staticlib::httpclient::HttpRequestOptions::read_timeout_millis = 10000</td>
+          <td class="memname">uint32_t staticlib::httpclient::HttpRequestOptions::read_timeout_millis = 15000</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>Timeout for reading the whole response from server. </p>
+<p>Timeout for reading the whole response from server, HttpException exception will be thrown from read method on timeout. </p>
+
+</div>
+</div>
+<a class="anchor" id="a8a7f164637df95bb44f12878fa3e28fe"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool staticlib::httpclient::HttpRequestOptions::require_tls = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p><a href="https://curl.haxx.se/libcurl/c/CURLOPT_SSLVERSION.html">https://curl.haxx.se/libcurl/c/CURLOPT_SSLVERSION.html</a> </p>
 
 </div>
 </div>
@@ -534,20 +580,6 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a86b2906115b40bab63b68fe51ace1b80"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::string staticlib::httpclient::HttpRequestOptions::sslversion = &quot;&quot;</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p><a href="https://curl.haxx.se/libcurl/c/CURLOPT_SSLVERSION.html">https://curl.haxx.se/libcurl/c/CURLOPT_SSLVERSION.html</a> </p>
-
-</div>
-</div>
 <a class="anchor" id="a48add4179dbfc82d6278f615d4e4386c"></a>
 <div class="memitem">
 <div class="memproto">
@@ -624,7 +656,7 @@ Public Attributes</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Feb 12 2016 19:58:12 for staticlib_httpclient by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Jun 29 2016 09:09:54 for staticlib_httpclient by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.1.2
 </small></address>

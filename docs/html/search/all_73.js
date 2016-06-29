@@ -13,7 +13,6 @@ var searchData=
   ['sslcert_5ffilename',['sslcert_filename',['../structstaticlib_1_1httpclient_1_1HttpRequestOptions.html#ae013e19bd379188fec694f1ac08520b1',1,'staticlib::httpclient::HttpRequestOptions']]],
   ['sslcertype',['sslcertype',['../structstaticlib_1_1httpclient_1_1HttpRequestOptions.html#a4732919f47e15e3ba5a00a283b40c629',1,'staticlib::httpclient::HttpRequestOptions']]],
   ['sslkey_5ffilename',['sslkey_filename',['../structstaticlib_1_1httpclient_1_1HttpRequestOptions.html#ad7b7bbbcde4993cb91ab079809a25d14',1,'staticlib::httpclient::HttpRequestOptions']]],
-  ['sslversion',['sslversion',['../structstaticlib_1_1httpclient_1_1HttpRequestOptions.html#a86b2906115b40bab63b68fe51ace1b80',1,'staticlib::httpclient::HttpRequestOptions']]],
   ['starttransfer_5ftime_5fsecs',['starttransfer_time_secs',['../structstaticlib_1_1httpclient_1_1HttpResourceInfo.html#a9b96fd5424491d0a4354138c2c729338',1,'staticlib::httpclient::HttpResourceInfo']]],
   ['staticlib',['staticlib',['../namespacestaticlib.html',1,'']]]
 ];
