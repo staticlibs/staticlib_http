@@ -66,21 +66,13 @@ public:
     ~Impl() STATICLIB_NOEXCEPT { }
 
     HttpResource open_url(HttpSession& frontend,
-#ifdef STATICLIB_WITH_ICU
-            icu::UnicodeString url,
-#else
             std::string url,
-#endif // STATICLIB_WITH_ICU
             HttpRequestOptions options) {
         return open_url(frontend, std::move(url), nullptr, std::move(options));
     }
     
     HttpResource open_url(HttpSession& frontend,
-#ifdef STATICLIB_WITH_ICU
-            icu::UnicodeString url,
-#else
             std::string url,
-#endif // STATICLIB_WITH_ICU
             std::streambuf* post_data, HttpRequestOptions options) {
         auto sbuf_ptr = nullptr != post_data ? post_data : EMPTY_STREAM.rdbuf();
         if ("" == options.method) {
@@ -92,11 +84,7 @@ public:
     }
     
     HttpResource open_url(HttpSession&,
-#ifdef STATICLIB_WITH_ICU
-            icu::UnicodeString url,
-#else
             std::string url,
-#endif // STATICLIB_WITH_ICU
             std::unique_ptr<std::istream> post_data, HttpRequestOptions options) {
         if ("" == options.method) {
             options.method = "POST";
@@ -115,15 +103,9 @@ private:
     
 };
 PIMPL_FORWARD_CONSTRUCTOR(HttpSession, (HttpSessionOptions), (), HttpClientException)
-#ifdef STATICLIB_WITH_ICU
-PIMPL_FORWARD_METHOD(HttpSession, HttpResource, open_url, (icu::UnicodeString)(HttpRequestOptions), (), HttpClientException)
-PIMPL_FORWARD_METHOD(HttpSession, HttpResource, open_url, (icu::UnicodeString)(std::streambuf*)(HttpRequestOptions), (), HttpClientException)
-PIMPL_FORWARD_METHOD(HttpSession, HttpResource, open_url, (icu::UnicodeString)(std::unique_ptr<std::istream>)(HttpRequestOptions), (), HttpClientException)        
-#else
 PIMPL_FORWARD_METHOD(HttpSession, HttpResource, open_url, (std::string)(HttpRequestOptions), (), HttpClientException)
 PIMPL_FORWARD_METHOD(HttpSession, HttpResource, open_url, (std::string)(std::streambuf*)(HttpRequestOptions), (), HttpClientException)
 PIMPL_FORWARD_METHOD(HttpSession, HttpResource, open_url, (std::string)(std::unique_ptr<std::istream>)(HttpRequestOptions), (), HttpClientException)        
-#endif // STATICLIB_WITH_ICU
 
 } // namespace
 }

@@ -46,15 +46,6 @@ namespace io = staticlib::io;
 
 typedef const std::vector<std::pair<std::string, std::string>>& headers_type;
 
-#ifdef STATICLIB_WITH_ICU
-std::string resource_to_utf8(const icu::UnicodeString& str) {
-    std::string bytes;
-    icu::StringByteSink<std::string> sbs{std::addressof(bytes)};
-    str.toUTF8(sbs);
-    return bytes;
-}
-#endif // STATICLIB_WITH_ICU
-
 class CurlEasyDeleter {
     CURLM* multi_handle;
 public:
@@ -119,21 +110,13 @@ class HttpResource::Impl : public staticlib::pimpl::PimplObject::Impl {
     
 public:
     Impl(CURLM* multi_handle,
-#ifdef STATICLIB_WITH_ICU
-            icu::UnicodeString url,
-#else
             std::string url,
-#endif // STATICLIB_WITH_ICU
             std::unique_ptr<std::istream> post_data,
             HttpRequestOptions options) :
     options(std::move(options)),
     multi_handle(multi_handle),
     handle(curl_easy_init(), CurlEasyDeleter{multi_handle}),
-#ifdef STATICLIB_WITH_ICU
-    url(resource_to_utf8(url)),
-#else
     url(std::move(url)),
-#endif // STATICLIB_WITH_ICU    
     post_data(std::move(post_data)) {
         if (nullptr == handle.get()) throw HttpClientException(TRACEMSG("Error initializing cURL handle"));
         CURLMcode errm = curl_multi_add_handle(multi_handle, handle.get());
@@ -507,11 +490,7 @@ private:
     
 };
 
-#ifdef STATICLIB_WITH_ICU            
-PIMPL_FORWARD_CONSTRUCTOR(HttpResource, (CURLM*)(icu::UnicodeString)(std::unique_ptr<std::istream>)(HttpRequestOptions), (), HttpClientException)
-#else
 PIMPL_FORWARD_CONSTRUCTOR(HttpResource, (CURLM*)(std::string)(std::unique_ptr<std::istream>)(HttpRequestOptions), (), HttpClientException)
-#endif // STATICLIB_WITH_ICU
 PIMPL_FORWARD_METHOD(HttpResource, std::streamsize, read, (char*)(std::streamsize), (), HttpClientException)
 PIMPL_FORWARD_METHOD(HttpResource, const HttpResourceInfo&, get_info, (), (const), HttpClientException)
 

@@ -16,7 +16,7 @@ cmake_minimum_required ( VERSION 2.8.12 )
 
 # project
 project ( staticlib_httpclient CXX )
-set ( ${PROJECT_NAME}_STATICLIB_VERSION 1.0 )
+set ( ${PROJECT_NAME}_STATICLIB_VERSION 1.1 )
 set ( ${PROJECT_NAME}_DESCRIPTION "Staticlibs HTTP client library" )
 set ( ${PROJECT_NAME}_URL https://github.com/staticlibs/staticlib_httpclient )
 include ( ${CMAKE_CURRENT_LIST_DIR}/resources/macros.cmake )
@@ -39,9 +39,6 @@ if ( STATICLIB_USE_DEPLIBS_CACHE )
     endif ( )
 endif ( )
 
-# options, use set ( OPTNAME ON CACHE BOOL "") in parent to override
-option ( STATICLIB_WITH_ICU "Build with ICU support" OFF )
-
 # standalone build
 if ( NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY )
     set ( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR} )
@@ -50,9 +47,6 @@ endif ( )
 if ( NOT DEFINED STATICLIB_TOOLCHAIN )
     if ( NOT ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" ) 
         staticlib_httpclient_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../external_curl )
-        if ( STATICLIB_WITH_ICU )
-            staticlib_httpclient_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../external_icu )
-        endif ( )
     endif (  )
     staticlib_httpclient_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../staticlib_config )
     staticlib_httpclient_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../staticlib_io )
@@ -66,10 +60,6 @@ set ( ${PROJECT_NAME}_DEPS_PUBLIC
         staticlib_pimpl )
 set ( ${PROJECT_NAME}_DEPS_PRIVATE 
         libcurl )
-if ( STATICLIB_WITH_ICU )
-    set ( ${PROJECT_NAME}_DEPS_PUBLIC ${${PROJECT_NAME}_DEPS_PUBLIC} icu-uc )
-    set ( ${PROJECT_NAME}_OPTIONS -DSTATICLIB_WITH_ICU )
-endif ( )
 staticlib_httpclient_pkg_check_modules ( ${PROJECT_NAME}_DEPS_PUBLIC_PC REQUIRED ${PROJECT_NAME}_DEPS_PUBLIC )
 staticlib_httpclient_pkg_check_modules ( ${PROJECT_NAME}_DEPS_PRIVATE_PC REQUIRED ${PROJECT_NAME}_DEPS_PRIVATE )
 

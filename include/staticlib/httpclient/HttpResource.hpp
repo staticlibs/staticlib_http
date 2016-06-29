@@ -27,14 +27,9 @@
 #include <ios>
 #include <istream>
 #include <memory>
+#include <string>
 #include <utility>
 #include <vector>
-
-#ifdef STATICLIB_WITH_ICU
-#include <unicode/unistr.h>
-#else
-#include <string>
-#endif // STATICLIB_WITH_ICU
 
 #include "staticlib/io/unbuffered_streambuf.hpp"
 #include "staticlib/pimpl.hpp"
@@ -91,11 +86,7 @@ private:
      * @param options request options
      */
     HttpResource(/* CURLM */ void* multi_handle,
-#ifdef STATICLIB_WITH_ICU            
-            icu::UnicodeString url,
-#else
             std::string url,
-#endif // STATICLIB_WITH_ICU
             std::unique_ptr<std::istream> post_data,
             HttpRequestOptions options);
     

@@ -28,15 +28,10 @@
 #include <memory>
 #include <sstream>
 #include <streambuf>
+#include <string>
 #include <type_traits>
 #include <utility>
 #include <vector>
-
-#ifdef STATICLIB_WITH_ICU
-#include <unicode/unistr.h>
-#else
-#include <string>
-#endif // STATICLIB_WITH_ICU
 
 #include "staticlib/config.hpp"
 #include "staticlib/io.hpp"
@@ -82,11 +77,7 @@ public:
      * @return HTTP resource
      */
     HttpResource open_url(
-#ifdef STATICLIB_WITH_ICU            
-            icu::UnicodeString url,
-#else
             std::string url,
-#endif // STATICLIB_WITH_ICU
             HttpRequestOptions options = HttpRequestOptions{});
     
     /**
@@ -98,11 +89,7 @@ public:
      * @return HTTP resource
      */
     HttpResource open_url(
-#ifdef STATICLIB_WITH_ICU            
-            icu::UnicodeString url,
-#else
             std::string url,
-#endif // STATICLIB_WITH_ICU
             std::streambuf* post_data = nullptr,
             HttpRequestOptions options = HttpRequestOptions{});
 
@@ -115,11 +102,7 @@ public:
      * @return HTTP resource
      */
     HttpResource open_url(
-#ifdef STATICLIB_WITH_ICU            
-            icu::UnicodeString url,
-#else
             std::string url,
-#endif // STATICLIB_WITH_ICU 
             std::unique_ptr<std::istream> post_data,
             HttpRequestOptions options = HttpRequestOptions{});
 
@@ -134,11 +117,7 @@ public:
     template<typename PostDataSource,
             class = typename std::enable_if<!std::is_lvalue_reference<PostDataSource>::value>::type>
     HttpResource open_url(
-#ifdef STATICLIB_WITH_ICU            
-            icu::UnicodeString url,
-#else
             std::string url,
-#endif // STATICLIB_WITH_ICU
             PostDataSource&& post_data,
             HttpRequestOptions options = HttpRequestOptions{}) {
         std::unique_ptr<std::istream> sbuf{
@@ -156,11 +135,7 @@ public:
      */            
     template<typename PostDataSource>
     HttpResource open_url(
-#ifdef STATICLIB_WITH_ICU            
-            icu::UnicodeString url,
-#else
             std::string url,
-#endif // STATICLIB_WITH_ICU
             PostDataSource& post_data,
             HttpRequestOptions options = HttpRequestOptions{}) {
         std::unique_ptr<std::istream> sbuf{
