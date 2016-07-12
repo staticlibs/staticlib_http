@@ -44,7 +44,7 @@ namespace { // anonymous
 namespace sc = staticlib::config;
 namespace io = staticlib::io;
 
-typedef const std::vector<std::pair<std::string, std::string>>& headers_type;
+using headers_type = const std::vector<std::pair<std::string, std::string>>&;
 
 class CurlEasyDeleter {
     CURLM* multi_handle;
