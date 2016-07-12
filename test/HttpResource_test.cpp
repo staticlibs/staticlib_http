@@ -84,8 +84,7 @@ void enrich_opts_ssl(hc::HttpRequestOptions& opts) {
 void get_handler(hs::http_request_ptr& req, hs::tcp_connection_ptr& conn) {
     slassert("test" == req->get_header("User-Agent"));
     slassert("GET" == req->get_header("X-Method"));
-    auto finfun = std::bind(&hs::tcp_connection::finish, conn);
-    auto writer = hs::http_response_writer::create(conn, *req, finfun);
+    auto writer = hs::http_response_writer::create(conn, req);
     writer->write(GET_RESPONSE);
     writer->send();
 }
@@ -109,8 +108,7 @@ void post_handler(hs::http_request_ptr& req, hs::tcp_connection_ptr& conn) {
     auto ph = req->get_payload_handler<PayloadReceiver>();
     slassert(nullptr != ph);
     slassert(ph->is_received());
-    auto finfun = std::bind(&hs::tcp_connection::finish, conn);
-    auto writer = hs::http_response_writer::create(conn, *req, finfun);
+    auto writer = hs::http_response_writer::create(conn, req);
     writer->write(POST_RESPONSE);
     writer->send();
 }
@@ -121,8 +119,7 @@ void put_handler(hs::http_request_ptr& req, hs::tcp_connection_ptr& conn) {
     auto ph = req->get_payload_handler<PayloadReceiver>();
     slassert(nullptr != ph);
     slassert(ph->is_received());
-    auto finfun = std::bind(&hs::tcp_connection::finish, conn);
-    auto writer = hs::http_response_writer::create(conn, *req, finfun);
+    auto writer = hs::http_response_writer::create(conn, req);
     writer->write(PUT_RESPONSE);
     writer->send();
 }
@@ -130,8 +127,7 @@ void put_handler(hs::http_request_ptr& req, hs::tcp_connection_ptr& conn) {
 void delete_handler(hs::http_request_ptr& req, hs::tcp_connection_ptr& conn) {
     slassert("test" == req->get_header("User-Agent"));
     slassert("DELETE" == req->get_header("X-Method"));
-    auto finfun = std::bind(&hs::tcp_connection::finish, conn);
-    auto writer = hs::http_response_writer::create(conn, *req, finfun);
+    auto writer = hs::http_response_writer::create(conn, req);
     writer->write(DELETE_RESPONSE);
     writer->send();
 }
