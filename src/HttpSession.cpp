@@ -68,6 +68,9 @@ public:
     HttpResource open_url(HttpSession& frontend,
             std::string url,
             HttpRequestOptions options) {
+        if ("" == options.method) {
+            options.method = "GET";
+        }
         return open_url(frontend, std::move(url), nullptr, std::move(options));
     }
     
