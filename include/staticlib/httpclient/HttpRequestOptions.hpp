@@ -46,7 +46,7 @@ struct HttpRequestOptions {
     /**
      * HTTP method to use
      */
-    std::string method = "GET";
+    std::string method = "";
     /**
      * HttpException will be thrown from read method on HTTP response code >= 400
      */
