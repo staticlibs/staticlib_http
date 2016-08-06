@@ -479,7 +479,7 @@ private:
             if (err != CURLE_OK) throw HttpClientException(TRACEMSG(std::string() +
                 "Error setting option: [CURLOPT_SSLVERSION], url: [" + url + "]"));
         }
-        setopt_bool(CURLOPT_SSL_VERIFYHOST, options.ssl_verifyhost);
+        setopt_uint32(CURLOPT_SSL_VERIFYHOST, options.ssl_verifyhost ? 2 : 0);
         setopt_bool(CURLOPT_SSL_VERIFYPEER, options.ssl_verifypeer);
 //        setopt_bool(CURLOPT_SSL_VERIFYSTATUS, options.ssl_verifystatus);
         setopt_string(CURLOPT_CAINFO, options.cainfo_filename);
