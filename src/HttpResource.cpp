@@ -358,7 +358,7 @@ private:
     }
 
     void setopt_bool(CURLoption opt, bool value) {
-        CURLcode err = curl_easy_setopt(handle.get(), opt, value);
+        CURLcode err = curl_easy_setopt(handle.get(), opt, value ? 1 : 0);
         if (err != CURLE_OK) throw HttpClientException(TRACEMSG(std::string() +
                 "Error setting option: [" + sc::to_string(opt) + "]," +
                 " to value: [" + sc::to_string(value) + "], url: [" + url + "]"));
