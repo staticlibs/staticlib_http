@@ -167,7 +167,7 @@ struct HttpResourceInfo {
      *         response code has been received, 'false' otherwise
      */
     bool connection_success() const {
-        return -1 != response_code;
+        return response_code > 0;
     }
     
 private:
