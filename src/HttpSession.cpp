@@ -99,7 +99,7 @@ private:
     void setopt_uint32(CURLMoption opt, uint32_t value) {
         if (0 == value) return;
         CURLMcode err = curl_multi_setopt(handle.get(), opt, value);
-        if (err != CURLM_OK) throw HttpClientException(TRACEMSG(std::string() +
+        if (err != CURLM_OK) throw HttpClientException(TRACEMSG(
                 "Error setting session option: [" + sc::to_string(opt) + "]," +
                 " to value: [" + sc::to_string(value) + "]"));
     }

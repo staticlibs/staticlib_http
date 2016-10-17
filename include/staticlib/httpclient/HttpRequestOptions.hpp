@@ -48,6 +48,11 @@ struct HttpRequestOptions {
      */
     std::string method = "";
     /**
+     * HttpException will be thrown from read method on unsuccessful connection attempt,
+     * see also 'connecttimeout_millis'
+     */
+    bool abort_on_connect_error = true;
+    /**
      * HttpException will be thrown from read method on HTTP response code >= 400
      */
     bool abort_on_response_error = true;
@@ -60,9 +65,6 @@ struct HttpRequestOptions {
      * Timeout to wait for when reading data unsuccessfully
      */
     uint32_t fdset_timeout_millis = 100;
-    // todo: implementme
-//    uint32_t min_sent_speed_bytes_per_second = 0;
-//    uint32_t min_recv_speed_bytes_per_second = 0;
     
     // general behavior options
     

@@ -120,7 +120,7 @@ public:
     post_data(std::move(post_data)) {
         if (nullptr == handle.get()) throw HttpClientException(TRACEMSG("Error initializing cURL handle"));
         CURLMcode errm = curl_multi_add_handle(multi_handle, handle.get());
-        if (errm != CURLM_OK) throw HttpClientException(TRACEMSG(std::string() +
+        if (errm != CURLM_OK) throw HttpClientException(TRACEMSG(
                 "cURL multi_add error: [" + sc::to_string(errm) + "], url: [" + this->url + "]"));
         apply_options();
         open = true;
@@ -172,9 +172,10 @@ private:
 
     // http://stackoverflow.com/a/9681122/314015
     size_t write_headers(char *buffer, size_t size, size_t nitems) {
-        if (-1 == info.response_code) {
+        if (HttpResourceInfo::State::CREATED == info.state) {
             info.effective_url = getinfo_string(CURLINFO_EFFECTIVE_URL);        
             info.response_code = getinfo_long(CURLINFO_RESPONSE_CODE);
+            info.state = HttpResourceInfo::State::WRITING_HEADERS;
         }
         size_t len = size*nitems;
         std::string name{};
@@ -221,7 +222,7 @@ private:
         while (open && 0 == buf.size()) {            
             long timeo = -1;
             CURLMcode err_timeout = curl_multi_timeout(multi_handle, std::addressof(timeo));
-            if (err_timeout != CURLM_OK) throw HttpClientException(TRACEMSG(std::string() +
+            if (err_timeout != CURLM_OK) throw HttpClientException(TRACEMSG(
                     "cURL timeout error: [" + sc::to_string(err_timeout) + "], url: [" + url + "]"));
             struct timeval timeout = create_timeout_struct(timeo);
 
@@ -232,7 +233,7 @@ private:
             int maxfd = -1;
             CURLMcode err_fdset = curl_multi_fdset(multi_handle, std::addressof(fdread), 
                     std::addressof(fdwrite), std::addressof(fdexcep), std::addressof(maxfd));
-            if (err_fdset != CURLM_OK) throw HttpClientException(TRACEMSG(std::string() + 
+            if (err_fdset != CURLM_OK) throw HttpClientException(TRACEMSG( 
                     "cURL fdset error: [" + sc::to_string(err_fdset) + "], url: [" + url + "]"));
 
             // wait or select
@@ -248,26 +249,36 @@ private:
             if (-1 != err_select) {
                 int active = -1;
                 CURLMcode err = curl_multi_perform(multi_handle, std::addressof(active));
-                if (err != CURLM_OK) throw HttpClientException(TRACEMSG(std::string() +
+                if (err != CURLM_OK) throw HttpClientException(TRACEMSG(
                         "cURL multi_perform error: [" + sc::to_string(err) + "], url: [" + url + "]"));
                 open = (1 == active);
             }
+            
+            check_state_after_perform(start);
+        }
+    }
+    
+    void check_state_after_perform(std::chrono::time_point<std::chrono::system_clock> start) {
+        // check whether connection was successful
+        if (options.abort_on_connect_error && !open && HttpResourceInfo::State::CREATED == info.state) {
+            throw HttpClientException(TRACEMSG(
+                    "Connection error for url: [" + url + "]"));
+        }
 
-            // check for response code
-            if (options.abort_on_response_error && info.response_code >= 400) {
-                throw HttpClientException(TRACEMSG(std::string() +
+        // check for response code
+        if (options.abort_on_response_error && info.response_code >= 400) {
+            throw HttpClientException(TRACEMSG(
                     "HTTP error returned from server, url: [" + url + "]," +
                     " response_code: [" + sc::to_string(info.response_code) + "]"));
-            }
-          
-            // check for timeout
-            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start);
-            if (elapsed.count() > options.read_timeout_millis) {
-                throw HttpClientException(TRACEMSG(std::string() +
+        }
+
+        // check for timeout
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start);
+        if (elapsed.count() > options.read_timeout_millis) {
+            throw HttpClientException(TRACEMSG(
                     "Request timeout for url: [" + url + "]," +
                     " elapsed time (millis): [" + sc::to_string(elapsed.count()) + "]," +
                     " limit: [" + sc::to_string(options.read_timeout_millis) + "]"));
-            }
         }
     }
 
@@ -295,7 +306,7 @@ private:
     long getinfo_long(CURLINFO opt) {
         long out = -1;
         CURLcode err = curl_easy_getinfo(handle.get(), opt, std::addressof(out));
-        if (err != CURLE_OK) throw HttpClientException(TRACEMSG(std::string() +
+        if (err != CURLE_OK) throw HttpClientException(TRACEMSG(
                 "cURL curl_easy_getinfo error: [" + sc::to_string(err) + "]," +
                 " option: [" + sc::to_string(opt) + "]"));
         return out;
@@ -304,7 +315,7 @@ private:
     double getinfo_double(CURLINFO opt) {
         double out = -1;
         CURLcode err = curl_easy_getinfo(handle.get(), opt, std::addressof(out));
-        if (err != CURLE_OK) throw HttpClientException(TRACEMSG(std::string() +
+        if (err != CURLE_OK) throw HttpClientException(TRACEMSG(
                 "cURL curl_easy_getinfo error: [" + sc::to_string(err) + "]," +
                 " option: [" + sc::to_string(opt) + "]"));
         return out;
@@ -313,16 +324,16 @@ private:
     std::string getinfo_string(CURLINFO opt) {
         char* out = nullptr;
         CURLcode err = curl_easy_getinfo(handle.get(), opt, std::addressof(out));
-        if (err != CURLE_OK) throw HttpClientException(TRACEMSG(std::string() +
+        if (err != CURLE_OK) throw HttpClientException(TRACEMSG(
                 "cURL curl_easy_getinfo error: [" + sc::to_string(err) + "]," +
                 " option: [" + sc::to_string(opt) + "]"));
         return std::string(out);
     }
     
     void fill_info() {
-        if (info.ready) throw HttpClientException(TRACEMSG(std::string() +
-                "Resource info is already initialized, url: [" + url + "]"));
-        // should be alreade set from headers callback, but won't harm here
+        if (HttpResourceInfo::State::RESPONSE_INFO_FILLED == info.state) throw HttpClientException(TRACEMSG(
+                "Resource info is already filled, url: [" + url + "]"));
+        // should be already set from headers callback, but won't harm here
         info.effective_url = getinfo_string(CURLINFO_EFFECTIVE_URL);        
         info.response_code = getinfo_long(CURLINFO_RESPONSE_CODE);
         info.total_time_secs = getinfo_double(CURLINFO_TOTAL_TIME);
@@ -342,24 +353,24 @@ private:
         info.num_connects = getinfo_long(CURLINFO_NUM_CONNECTS);
         info.primary_ip = getinfo_string(CURLINFO_PRIMARY_IP);
         info.primary_port = getinfo_long(CURLINFO_PRIMARY_PORT);
-        info.ready = true;
+        info.state = HttpResourceInfo::State::RESPONSE_INFO_FILLED;
     }
 
     // note: think about integer overflow 
     void setopt_uint32(CURLoption opt, uint32_t value) {
         if (0 == value) return;
-        if (value > static_cast<uint32_t>(std::numeric_limits<int32_t>::max())) throw HttpClientException(TRACEMSG(std::string() +
+        if (value > static_cast<uint32_t>(std::numeric_limits<int32_t>::max())) throw HttpClientException(TRACEMSG(
                 "Error setting option: [" + sc::to_string(opt) + "]," +
                 " to invalid overflow value: [" + sc::to_string(value) + "], url: [" + url + "]"));
         CURLcode err = curl_easy_setopt(handle.get(), opt, static_cast<long>(value));
-        if (err != CURLE_OK) throw HttpClientException(TRACEMSG(std::string() +
+        if (err != CURLE_OK) throw HttpClientException(TRACEMSG(
                 "Error setting option: [" + sc::to_string(opt) + "]," +
                 " to value: [" + sc::to_string(value) + "], url: [" + url + "]"));
     }
 
     void setopt_bool(CURLoption opt, bool value) {
         CURLcode err = curl_easy_setopt(handle.get(), opt, value ? 1 : 0);
-        if (err != CURLE_OK) throw HttpClientException(TRACEMSG(std::string() +
+        if (err != CURLE_OK) throw HttpClientException(TRACEMSG(
                 "Error setting option: [" + sc::to_string(opt) + "]," +
                 " to value: [" + sc::to_string(value) + "], url: [" + url + "]"));
     }
@@ -367,7 +378,7 @@ private:
     void setopt_string(CURLoption opt, const std::string& value) {
         if ("" == value) return;
         CURLcode err = curl_easy_setopt(handle.get(), opt, value.c_str());
-        if (err != CURLE_OK) throw HttpClientException(TRACEMSG(std::string() +
+        if (err != CURLE_OK) throw HttpClientException(TRACEMSG(
                 "Error setting option: [" + sc::to_string(opt) + "]," +
                 " to value: [" + value + "], url: [" + url + "]"));
     }
@@ -375,13 +386,13 @@ private:
     void setopt_object(CURLoption opt, void* value) {
         if (nullptr == value) return;
         CURLcode err = curl_easy_setopt(handle.get(), opt, value);
-        if (err != CURLE_OK) throw HttpClientException(TRACEMSG(std::string() +
+        if (err != CURLE_OK) throw HttpClientException(TRACEMSG(
                 "Error setting option: [" + sc::to_string(opt) + "], url: [" + url + "]"));
     }
     
     struct curl_slist* append_header(struct curl_slist* slist, const std::string& header) {
         struct curl_slist* res = curl_slist_append(slist, header.c_str());
-        if (nullptr == res) throw HttpClientException(TRACEMSG(std::string() +
+        if (nullptr == res) throw HttpClientException(TRACEMSG(
                 "Error appending header: [" + header + "], url: [" + url + "]"));
         return res;
     }
@@ -407,12 +418,12 @@ private:
             setopt_bool(CURLOPT_PUT, true);
         } else if ("DELETE" == options.method) {
             setopt_string(CURLOPT_CUSTOMREQUEST, "DELETE");
-        } else throw HttpClientException(TRACEMSG(std::string() +
+        } else throw HttpClientException(TRACEMSG(
                     "Unsupported HTTP method: [" + options.method + "], url: [" + url + "]"));
         if (nullptr != post_data.get() && ("POST" == options.method || "PUT" == options.method)) {
             setopt_object(CURLOPT_READDATA, this);
             CURLcode err_wf = curl_easy_setopt(handle.get(), CURLOPT_READFUNCTION, HttpResource::Impl::read_callback);
-            if (err_wf != CURLE_OK) throw HttpClientException(TRACEMSG(std::string() +
+            if (err_wf != CURLE_OK) throw HttpClientException(TRACEMSG(
                     "Error setting option: [CURLOPT_READFUNCTION], url: [" + url + "]"));
             options.headers.emplace_back("Transfer-Encoding", "chunked");
         }
@@ -432,17 +443,17 @@ private:
         // callbacks
         setopt_object(CURLOPT_WRITEDATA, this);
         CURLcode err_wf = curl_easy_setopt(handle.get(), CURLOPT_WRITEFUNCTION, HttpResource::Impl::write_callback);
-        if (err_wf != CURLE_OK) throw HttpClientException(TRACEMSG(std::string() +
+        if (err_wf != CURLE_OK) throw HttpClientException(TRACEMSG(
                 "Error setting option: [CURLOPT_WRITEFUNCTION], url: [" + url + "]"));
         setopt_object(CURLOPT_HEADERDATA, this);
         CURLcode err_hf = curl_easy_setopt(handle.get(), CURLOPT_HEADERFUNCTION, HttpResource::Impl::headers_callback);
-        if (err_hf != CURLE_OK) throw HttpClientException(TRACEMSG(std::string() +
+        if (err_hf != CURLE_OK) throw HttpClientException(TRACEMSG(
                 "Error setting option: [CURLOPT_HEADERFUNCTION], url: [" + url + "]"));
        
         // general behavior options
         if (options.force_http_10) {
             CURLcode err = curl_easy_setopt(handle.get(), CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
-            if (err != CURLE_OK) throw HttpClientException(TRACEMSG(std::string() +
+            if (err != CURLE_OK) throw HttpClientException(TRACEMSG(
                     "Error setting option: [CURLOPT_HTTP_VERSION], url: [" + url + "]"));
         }
         setopt_bool(CURLOPT_NOPROGRESS, options.noprogress);
@@ -476,7 +487,7 @@ private:
         setopt_string(CURLOPT_KEYPASSWD, options.ssl_keypasswd);
         if (options.require_tls) {
             CURLcode err = curl_easy_setopt(handle.get(), CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1);
-            if (err != CURLE_OK) throw HttpClientException(TRACEMSG(std::string() +
+            if (err != CURLE_OK) throw HttpClientException(TRACEMSG(
                 "Error setting option: [CURLOPT_SSLVERSION], url: [" + url + "]"));
         }
         if (options.ssl_verifyhost) {

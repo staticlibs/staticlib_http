@@ -247,6 +247,17 @@ void test_delete() {
     server.stop(true);
 }
 
+void test_connectfail() {
+    hc::HttpSession session{};
+    hc::HttpRequestOptions opts{};
+    opts.abort_on_connect_error = false;
+    opts.connecttimeout_millis = 100;
+    hc::HttpResource src = session.open_url(URL, opts);
+    auto res = src.read(nullptr, 0);
+    slassert(std::char_traits<char>::eof() == res);
+    slassert(!src.get_info().connection_success());
+}
+
 int main() {
     try {
         //auto start = std::chrono::system_clock::now();
@@ -254,6 +265,7 @@ int main() {
         test_post();
         test_put();
         test_delete();
+        test_connectfail();
         //auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start);
         //std::cout << elapsed.count() << std::endl;
     } catch (const std::exception& e) {

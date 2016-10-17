@@ -36,11 +36,17 @@ namespace httpclient {
  * Metainformation about the opened HTTP resource
  */
 struct HttpResourceInfo {
-         
+
+    enum class State { 
+        CREATED, 
+        WRITING_HEADERS, 
+        RESPONSE_INFO_FILLED
+    };
+    
     /**
      * Flag indicates that object was filled after completing the request
      */
-    bool ready = false;
+    State state = State::CREATED;
     
     /**
      * https://curl.haxx.se/libcurl/c/CURLINFO_EFFECTIVE_URL.html
@@ -152,6 +158,16 @@ struct HttpResourceInfo {
             }
         }
         return empty;
+    }
+    
+    /**
+     * Inspect connection attempt results
+     * 
+     * @return 'true' if connection has been established successfully and
+     *         response code has been received, 'false' otherwise
+     */
+    bool connection_success() const {
+        return -1 != response_code;
     }
     
 private:
