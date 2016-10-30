@@ -90,7 +90,7 @@ public:
      */
     HttpResource open_url(
             std::string url,
-            std::streambuf* post_data = nullptr,
+            std::streambuf* post_data,
             HttpRequestOptions options = HttpRequestOptions{});
 
     /**
