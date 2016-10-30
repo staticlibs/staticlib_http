@@ -151,7 +151,7 @@ struct HttpResourceInfo {
      * @param name header name
      * @return header value, empty string if specified header not found
      */
-    std::string& get_header(const std::string& name) {
+    const std::string& get_header(const std::string& name) const {
         for (auto& en : headers) {
             if (name == en.first) {
                 return en.second;
