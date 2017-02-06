@@ -46,9 +46,11 @@ staticlib_pkg_check_modules ( ${PROJECT_NAME}_DEPS_PC REQUIRED ${PROJECT_NAME}_D
 
 # tests
 set ( ${PROJECT_NAME}_TEST_INCLUDES ${${PROJECT_NAME}_DEPS_PC_INCLUDE_DIRS} )
-set ( ${PROJECT_NAME}_TEST_LIBS ${${PROJECT_NAME}_DEPS_PC_LIBRARIES} curl openssl z )
-if ( STATICLIB_TOOLCHAIN MATCHES "windows_[^_]+_[^_]+" )
-    list ( APPEND ${PROJECT_NAME}_TEST_LIBS ws2_32 )
+set ( ${PROJECT_NAME}_TEST_LIBS ${${PROJECT_NAME}_DEPS_PC_LIBRARIES} curl z )
+if ( STATICLIB_TOOLCHAIN MATCHES "linux_[^_]+_[^_]+" )
+    list ( APPEND ${PROJECT_NAME}_TEST_LIBS ssl crypto )
+else ( )
+    list ( APPEND ${PROJECT_NAME}_TEST_LIBS ws2_32 openssl )
 endif ( )
 
 set ( ${PROJECT_NAME}_TEST_OPTS ${${PROJECT_NAME}_DEPS_PC_CFLAGS_OTHER} )
