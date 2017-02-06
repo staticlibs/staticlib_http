@@ -149,7 +149,7 @@ void test_get() {
         // check
         std::string out{};
         out.resize(GET_RESPONSE.size());
-        std::streamsize res = io::read_all(src, std::addressof(out.front()), out.size());
+        std::streamsize res = io::read_all(src, out);
         slassert(out.size() == static_cast<size_t>(res));
         slassert(GET_RESPONSE == out);
     } catch (const std::exception&) {
@@ -178,7 +178,7 @@ void test_post() {
         // check
         std::string out{};
         out.resize(POST_RESPONSE.size());        
-        std::streamsize res = io::read_all(src, std::addressof(out.front()), out.size());        
+        std::streamsize res = io::read_all(src, out);
         slassert(out.size() == static_cast<size_t> (res));
         slassert(POST_RESPONSE == out);
     } catch (const std::exception&) {
@@ -208,7 +208,7 @@ void test_put() {
         // check
         std::string out{};
         out.resize(PUT_RESPONSE.size());
-        std::streamsize res = io::read_all(src, std::addressof(out.front()), out.size());
+        std::streamsize res = io::read_all(src, out);
         slassert(out.size() == static_cast<size_t> (res));
         slassert(PUT_RESPONSE == out);
     } catch (const std::exception&) {
@@ -236,7 +236,7 @@ void test_delete() {
         // check
         std::string out{};
         out.resize(DELETE_RESPONSE.size());
-        std::streamsize res = io::read_all(src, std::addressof(out.front()), out.size());
+        std::streamsize res = io::read_all(src, out);
         slassert(out.size() == static_cast<size_t> (res));
         slassert(DELETE_RESPONSE == out);
     } catch (const std::exception&) {
@@ -253,7 +253,8 @@ void test_connectfail() {
     opts.abort_on_connect_error = false;
     opts.connecttimeout_millis = 100;
     hc::HttpResource src = session.open_url(URL, opts);
-    auto res = src.read(nullptr, 0);
+    std::array<char, 1> buf;
+    auto res = src.read(buf);
     slassert(std::char_traits<char>::eof() == res);
     slassert(!src.get_info().connection_success());
 }

@@ -31,6 +31,7 @@
 #include <utility>
 #include <vector>
 
+#include "staticlib/config.hpp"
 #include "staticlib/io/unbuffered_streambuf.hpp"
 #include "staticlib/pimpl.hpp"
 
@@ -63,11 +64,10 @@ public:
     /**
      * Reads some data from a remote resource
      * 
-     * @param buffer output buffer
-     * @param length number of bytes to process
+     * @param span output span
      * @return number of bytes processed
      */
-    std::streamsize read(char* buffer, std::streamsize length);
+    std::streamsize read(staticlib::config::span<char> span);
     
     /**
      * Accessor for the resource metainformation

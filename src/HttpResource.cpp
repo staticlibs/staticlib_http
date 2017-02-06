@@ -128,8 +128,8 @@ public:
     
     virtual ~Impl() STATICLIB_NOEXCEPT { }
 
-    std::streamsize read(HttpResource&, char* buffer, std::streamsize length) {
-        size_t ulen = static_cast<size_t> (length);
+    std::streamsize read(HttpResource&, sc::span<char> span) {
+        size_t ulen = span.size();
         fill_buffer();
         if (0 == buf.size()) {
             if (open) {
@@ -142,7 +142,7 @@ public:
         // return from buffer
         size_t avail = buf.size() - buf_idx;
         size_t reslen = avail <= ulen ? avail : ulen;
-        std::memcpy(buffer, buf.data(), reslen);
+        std::memcpy(span.data(), buf.data(), reslen);
         buf_idx += reslen;
         return static_cast<std::streamsize>(reslen);
     }
@@ -207,7 +207,7 @@ private:
     size_t read_data(char* buffer, size_t size, size_t nitems) {        
         std::streamsize len = static_cast<std::streamsize>(size * nitems);
         io::streambuf_source src{post_data->rdbuf()};
-        std::streamsize read = io::read_all(src, buffer, len);
+        std::streamsize read = io::read_all(src, {buffer, len});
         return static_cast<size_t>(read);
     }
     
@@ -506,7 +506,7 @@ private:
 };
 
 PIMPL_FORWARD_CONSTRUCTOR(HttpResource, (CURLM*)(std::string)(std::unique_ptr<std::istream>)(HttpRequestOptions), (), HttpClientException)
-PIMPL_FORWARD_METHOD(HttpResource, std::streamsize, read, (char*)(std::streamsize), (), HttpClientException)
+PIMPL_FORWARD_METHOD(HttpResource, std::streamsize, read, (sc::span<char>), (), HttpClientException)
 PIMPL_FORWARD_METHOD(HttpResource, const HttpResourceInfo&, get_info, (), (const), HttpClientException)
 
 } // namespace
