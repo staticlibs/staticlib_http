@@ -15,13 +15,13 @@
  */
 
 /* 
- * File:   HttpSession_test.cpp
+ * File:   http_session_test.cpp
  * Author: alex
  *
  * Created on November 20, 2015, 8:44 AM
  */
 
-#include "staticlib/httpclient/HttpSession.hpp"
+#include "staticlib/httpclient/http_session.hpp"
 
 #include <iostream>
 
@@ -29,7 +29,7 @@
 
 void test_not_leaked() {
     // check not leaked
-    auto hs = staticlib::httpclient::HttpSession{};
+    auto hs = staticlib::httpclient::http_session{};
     (void) hs;
 }
 

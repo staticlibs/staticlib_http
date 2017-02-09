@@ -15,14 +15,14 @@
  */
 
 /* 
- * File:   HttpResourceInfo.hpp
+ * File:   http_resource_info.hpp
  * Author: alex
  *
  * Created on February 8, 2016, 2:51 PM
  */
 
-#ifndef STATICLIB_HTTPCLIENT_HTTPRESOURCEINFO_HPP
-#define	STATICLIB_HTTPCLIENT_HTTPRESOURCEINFO_HPP
+#ifndef STATICLIB_HTTPCLIENT_HTTP_RESOURCE_INFO_HPP
+#define	STATICLIB_HTTPCLIENT_HTTP_RESOURCE_INFO_HPP
 
 #include <string>
 #include <vector>
@@ -35,18 +35,18 @@ namespace httpclient {
 /**
  * Metainformation about the opened HTTP resource
  */
-struct HttpResourceInfo {
+struct http_resource_info {
 
     enum class State { 
-        CREATED, 
-        WRITING_HEADERS, 
-        RESPONSE_INFO_FILLED
+        created, 
+        writing_headers, 
+        response_info_filled
     };
     
     /**
      * Flag indicates that object was filled after completing the request
      */
-    State state = State::CREATED;
+    State state = State::created;
     
     /**
      * https://curl.haxx.se/libcurl/c/CURLINFO_EFFECTIVE_URL.html
@@ -178,5 +178,5 @@ private:
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTPCLIENT_HTTPRESOURCEINFO_HPP */
+#endif	/* STATICLIB_HTTPCLIENT_HTTP_RESOURCE_INFO_HPP */
 

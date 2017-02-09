@@ -15,13 +15,13 @@
  */
 
 /* 
- * File:   HttpResource_test.cpp
+ * File:   http_resource_test.cpp
  * Author: alex
  *
  * Created on November 20, 2015, 8:44 AM
  */
 
-#include "staticlib/httpclient/HttpResource.hpp"
+#include "staticlib/httpclient/http_resource.hpp"
 
 #include <array>
 #include <iostream>
@@ -42,7 +42,7 @@
 #include "staticlib/config/assert.hpp"
 #include "staticlib/io.hpp"
 
-#include "staticlib/httpclient/HttpSession.hpp"
+#include "staticlib/httpclient/http_session.hpp"
 
 
 namespace io = staticlib::io;
@@ -73,7 +73,7 @@ bool verifier(bool, asio::ssl::verify_context&) {
     return true;
 };
 
-void enrich_opts_ssl(hc::HttpRequestOptions& opts) {
+void enrich_opts_ssl(hc::http_request_options& opts) {
     opts.sslcert_filename = CLIENT_CERT_PATH;
     opts.sslcertype = "PEM";
     opts.sslkey_filename = CLIENT_CERT_PATH;
@@ -139,13 +139,13 @@ void test_get() {
     server.start();
     // client
     try {
-        hc::HttpSession session{};
-        hc::HttpRequestOptions opts{};
+        hc::http_session session{};
+        hc::http_request_options opts{};
         opts.headers = {{"User-Agent", "test"}, {"X-Method", "GET"}};
         enrich_opts_ssl(opts);
         opts.method = "GET";
     
-        hc::HttpResource src = session.open_url(URL, opts);
+        hc::http_resource src = session.open_url(URL, opts);
         // check
         std::string out{};
         out.resize(GET_RESPONSE.size());
@@ -168,13 +168,13 @@ void test_post() {
     server.start();
     // client
     try {
-        hc::HttpSession session{};
-        hc::HttpRequestOptions opts{};
+        hc::http_session session{};
+        hc::http_request_options opts{};
         opts.headers = {{"User-Agent", "test"}, {"X-Method", "POST"}};
         opts.method = "POST";
         enrich_opts_ssl(opts);
         io::string_source post_data{POSTPUT_DATA};
-        hc::HttpResource src = session.open_url(URL, post_data, opts);
+        hc::http_resource src = session.open_url(URL, post_data, opts);
         // check
         std::string out{};
         out.resize(POST_RESPONSE.size());        
@@ -198,13 +198,13 @@ void test_put() {
     server.start();
     // client
     try {
-        hc::HttpSession session{};
-        hc::HttpRequestOptions opts{};
+        hc::http_session session{};
+        hc::http_request_options opts{};
         opts.headers = {{"User-Agent", "test"}, {"X-Method", "PUT"}};
         opts.method = "PUT";
         enrich_opts_ssl(opts);
         io::string_source post_data{POSTPUT_DATA};
-        hc::HttpResource src = session.open_url(URL, std::move(post_data), opts);
+        hc::http_resource src = session.open_url(URL, std::move(post_data), opts);
         // check
         std::string out{};
         out.resize(PUT_RESPONSE.size());
@@ -226,13 +226,13 @@ void test_delete() {
     server.start();
     // client
     try {
-        hc::HttpSession session{};
-        hc::HttpRequestOptions opts{};
+        hc::http_session session{};
+        hc::http_request_options opts{};
         opts.headers = {{"User-Agent", "test"}, {"X-Method", "DELETE"}};
         enrich_opts_ssl(opts);
         opts.method = "DELETE";
 
-        hc::HttpResource src = session.open_url(URL, opts);
+        hc::http_resource src = session.open_url(URL, opts);
         // check
         std::string out{};
         out.resize(DELETE_RESPONSE.size());
@@ -248,11 +248,11 @@ void test_delete() {
 }
 
 void test_connectfail() {
-    hc::HttpSession session{};
-    hc::HttpRequestOptions opts{};
+    hc::http_session session{};
+    hc::http_request_options opts{};
     opts.abort_on_connect_error = false;
     opts.connecttimeout_millis = 100;
-    hc::HttpResource src = session.open_url(URL, opts);
+    hc::http_resource src = session.open_url(URL, opts);
     std::array<char, 1> buf;
     auto res = src.read(buf);
     slassert(std::char_traits<char>::eof() == res);

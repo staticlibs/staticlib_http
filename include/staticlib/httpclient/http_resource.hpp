@@ -15,14 +15,14 @@
  */
 
 /* 
- * File:   HttpResource.hpp
+ * File:   http_resource.hpp
  * Author: alex
  *
  * Created on November 20, 2015, 8:43 AM
  */
 
-#ifndef STATICLIB_HTTPCLIENT_HTTPRESOURCE_HPP
-#define	STATICLIB_HTTPCLIENT_HTTPRESOURCE_HPP
+#ifndef STATICLIB_HTTPCLIENT_HTTP_RESOURCE_HPP
+#define	STATICLIB_HTTPCLIENT_HTTP_RESOURCE_HPP
 
 #include <ios>
 #include <istream>
@@ -35,9 +35,9 @@
 #include "staticlib/io/unbuffered_streambuf.hpp"
 #include "staticlib/pimpl.hpp"
 
-#include "staticlib/httpclient/HttpClientException.hpp"
-#include "staticlib/httpclient/HttpRequestOptions.hpp"
-#include "staticlib/httpclient/HttpResourceInfo.hpp"
+#include "staticlib/httpclient/httpclient_exception.hpp"
+#include "staticlib/httpclient/http_request_options.hpp"
+#include "staticlib/httpclient/http_resource_info.hpp"
 
 namespace staticlib {
 namespace httpclient {
@@ -45,13 +45,13 @@ namespace httpclient {
 /**
  * Remote HTTP resoure that can be read from as a `Source`
  */
-class HttpResource : public staticlib::pimpl::PimplObject {
-friend class HttpSession;    
+class http_resource : public staticlib::pimpl::pimpl_object {
+friend class http_session;    
 protected:
     /**
-     * Implementation class
+     * implementation class
      */
-    class Impl;
+    class impl;
 
 public:
     /**
@@ -59,7 +59,7 @@ public:
      * 
      * @param pimpl impl object
      */
-    PIMPL_CONSTRUCTOR(HttpResource)
+    PIMPL_CONSTRUCTOR(http_resource)
 
     /**
      * Reads some data from a remote resource
@@ -74,7 +74,7 @@ public:
      * 
      * @return 
      */
-    const HttpResourceInfo& get_info() const;
+    const http_resource_info& get_info() const;
 
 private:
     /**
@@ -85,15 +85,15 @@ private:
      * @param post_data data to upload
      * @param options request options
      */
-    HttpResource(/* CURLM */ void* multi_handle,
+    http_resource(/* CURLM */ void* multi_handle,
             std::string url,
             std::unique_ptr<std::istream> post_data,
-            HttpRequestOptions options);
+            http_request_options options);
     
 };
 
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTPCLIENT_HTTPRESOURCE_HPP */
+#endif	/* STATICLIB_HTTPCLIENT_HTTP_RESOURCE_HPP */
 

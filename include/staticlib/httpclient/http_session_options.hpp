@@ -15,14 +15,14 @@
  */
 
 /* 
- * File:   HttpSessionOptions.hpp
+ * File:   http_session_options.hpp
  * Author: alex
  *
  * Created on February 8, 2016, 9:08 PM
  */
 
-#ifndef STATICLIB_HTTPCLIENT_HTTPSESSIONOPTIONS_HPP
-#define	STATICLIB_HTTPCLIENT_HTTPSESSIONOPTIONS_HPP
+#ifndef STATICLIB_HTTPCLIENT_HTTP_SESSION_OPTIONS_HPP
+#define	STATICLIB_HTTPCLIENT_HTTP_SESSION_OPTIONS_HPP
 
 #include <cstdint>
 
@@ -32,7 +32,7 @@ namespace httpclient {
 /**
  * Configuration options for the HTTP Session
  */
-struct HttpSessionOptions {
+struct http_session_options {
     /**
      * https://curl.haxx.se/libcurl/c/CURLMOPT_MAX_HOST_CONNECTIONS.html
      */
@@ -50,5 +50,5 @@ struct HttpSessionOptions {
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTPCLIENT_HTTPSESSIONOPTIONS_HPP */
+#endif	/* STATICLIB_HTTPCLIENT_HTTP_SESSION_OPTIONS_HPP */
 

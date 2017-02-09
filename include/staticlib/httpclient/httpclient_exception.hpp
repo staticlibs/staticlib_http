@@ -15,16 +15,16 @@
  */
 
 /* 
- * File:   HttpClientException.hpp
+ * File:   httpclient_exception.hpp
  * Author: alex
  *
  * Created on November 20, 2015, 8:48 AM
  */
 
-#ifndef STATICLIB_HTTPCLIENT_HTTPCLIENTEXCEPTION_HPP
-#define	STATICLIB_HTTPCLIENT_HTTPCLIENTEXCEPTION_HPP
+#ifndef STATICLIB_HTTPCLIENT_HTTP_CLIENT_EXCEPTION_HPP
+#define	STATICLIB_HTTPCLIENT_HTTP_CLIENT_EXCEPTION_HPP
 
-#include "staticlib/config/BaseException.hpp"
+#include "staticlib/config/staticlib_exception.hpp"
 
 namespace staticlib {
 namespace httpclient {
@@ -32,25 +32,25 @@ namespace httpclient {
 /**
  * Module specific exception
  */
-class HttpClientException : public staticlib::config::BaseException {
+class httpclient_exception : public staticlib::config::staticlib_exception {
 public:
     /**
      * Default constructor
      */
-    HttpClientException() = default;
+    httpclient_exception() = default;
 
     /**
      * Constructor with message
      * 
      * @param msg error message
      */
-    HttpClientException(const std::string& msg) :
-    staticlib::config::BaseException(msg) { }
+    httpclient_exception(const std::string& msg) :
+    staticlib::config::staticlib_exception(msg) { }
 
 };
 
 } //namespace
 }
 
-#endif	/* STATICLIB_HTTPCLIENT_HTTPCLIENTEXCEPTION_HPP */
+#endif	/* STATICLIB_HTTPCLIENT_HTTP_CLIENT_EXCEPTION_HPP */
 
