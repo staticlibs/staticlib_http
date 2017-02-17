@@ -72,7 +72,6 @@ public:
         if (avail > 0) {
             return read_from_current(span, avail);
         }
-        if (pipe->has_errors()) throw httpclient_exception(TRACEMSG(pipe->get_error_message()));
         start_idx = 0;
         bool success = pipe->receive_some_data(current_chunk);
         if (pipe->has_errors()) throw httpclient_exception(TRACEMSG(pipe->get_error_message()));

@@ -41,10 +41,18 @@ endif ( )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_config )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_containers )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_io )
+staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_crypto )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_pimpl )
+staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_utils )
+staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_tinydir )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_httpserver ) # testonly
 staticlib_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../../staticlib_httpclient )
-set ( ${PROJECT_NAME}_DEPS staticlib_httpclient staticlib_httpserver )
+set ( ${PROJECT_NAME}_DEPS 
+        staticlib_httpclient
+        staticlib_httpserver
+        staticlib_crypto
+        staticlib_tinydir
+        staticlib_utils )
 staticlib_pkg_check_modules ( ${PROJECT_NAME}_DEPS_PC REQUIRED ${PROJECT_NAME}_DEPS )
 
 # tests

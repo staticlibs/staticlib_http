@@ -61,6 +61,10 @@ namespace io = staticlib::io;
 } // namespace
 
 class http_session::impl : public staticlib::pimpl::pimpl_object::impl {
+    std::mutex paused_mutex;
+    std::condition_variable paused_cv;
+    std::atomic<bool> paused_flag;
+    
     http_session_options options;
     std::unique_ptr<CURLM, curl_multi_deleter> handle;
     
@@ -73,6 +77,7 @@ class http_session::impl : public staticlib::pimpl::pimpl_object::impl {
 
 public:
     impl(http_session_options options) :
+    paused_flag(false),
     options(options),
     handle(curl_multi_init(), curl_multi_deleter()),
     tickets(options.requests_queue_max_size),
@@ -96,6 +101,10 @@ public:
                 }
                 std::cout << "worker got real ticket" << std::endl;
                 enqueue_request(std::move(ticket));
+                
+                uint64_t spinwait_cycles = 0;
+                uint64_t spinwait_enter_cycles = 0;
+                uint64_t spinwait_exit_cycles = 0;
                 
                 // spin while has active transfers
                 while(requests.size() > 0) {
@@ -148,6 +157,10 @@ public:
                             if (req.get_options().abort_on_connect_error && CURLE_OK != result) {
                                 req.append_error(curl_easy_strerror(result));
                             }
+                            std::cout << "is due to finalize: " << req.get_url() << 
+                                    ", spinwait_cycles: " << spinwait_cycles << 
+                                    ", spinwait_exit_cycles: " << spinwait_exit_cycles <<
+                                    ", spinwait_enter_cycles: " << spinwait_enter_cycles << std::endl;
                             requests.erase(req_key);
                         } else {
                             auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - req.started_at());
@@ -162,6 +175,7 @@ public:
                     
                     // spin wait for paused
                     while (requests.size() > 0) {
+                        spinwait_enter_cycles += 1;
                         // unpause when possible
                         size_t num_paused = 0;
                         for (auto& pa : requests) {
@@ -178,14 +192,30 @@ public:
                         // check more tickets
                         auto newcomers = poll_enqueued_tickets();
                         for (request_ticket& ti : newcomers) {
-                            std::cout << "worker got newcomer ticket" << std::endl;
+                            std::cout << "worker newcomer" << std::endl;
                             enqueue_request(std::move(ti));
                         }
-                        
+                                                
                         // whether to end spinwait
                         if (newcomers.size() > 0 || requests.size() > num_paused) {
+                            spinwait_exit_cycles += 1;
+//                            std::cout << "--- spinwait exit ---" << std::endl;
                             break;
                         }
+                        
+//                        std::cout << "--- spinwait ---" << std::endl;
+//                        std::cout << "newcomers.size(): " << newcomers.size() << std::endl;
+//                        std::cout << "requests.size(): " << requests.size() << std::endl;
+//                        std::cout << "num_paused: " << num_paused << std::endl;
+//                        std::this_thread::yield();
+                        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                        spinwait_cycles += 1;
+//                        paused_flag.store(true);
+//                        auto timeout = std::chrono::milliseconds(this->options.all_requests_paused_timeout_millis);
+//                        std::unique_lock<std::mutex> guard{this->paused_mutex};
+//                        this->paused_cv.wait_for(guard, timeout, [this]{
+//                            return !paused_flag.load();
+//                        });
                     }
                 }
             }
@@ -236,7 +266,7 @@ public:
             options.method = "POST";
         }
         //  note: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=63736
-        auto pipe = std::make_shared<running_request_pipe>();
+        auto pipe = std::make_shared<running_request_pipe>(paused_cv, paused_flag);
         auto enqueued = tickets.emplace(url, std::move(options), std::move(post_data), pipe);
         if (!enqueued) throw httpclient_exception(TRACEMSG(
                 "Requests queue is full, size: [" + sc::to_string(tickets.size()) + "]"));

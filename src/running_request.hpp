@@ -123,6 +123,10 @@ public:
         }
     }
     
+    const std::string& get_url() const {
+        return url;
+    }
+    
     bool is_paused() {
         return paused;
     }

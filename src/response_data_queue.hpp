@@ -54,11 +54,11 @@ public:
 
     // consumer methods
 
+    bool poll(std::vector<char>& dest_buffer) {
+        return queue.poll(dest_buffer);
+    }
+    
     bool take(std::vector<char>& dest_buffer) {
-        bool prefilled = queue.poll(dest_buffer);
-        if (prefilled) {
-            return true;
-        }
         std::unique_lock<std::mutex> guard{mutex};
         cv.wait(guard, [this] {
             return !(!exhausted && queue.is_empty());

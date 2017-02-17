@@ -23,10 +23,11 @@
 
 #include "staticlib/httpclient/http_resource.hpp"
 
+#include <cstdint>
 #include <array>
 #include <iostream>
 #include <string>
-#include <cstdint>
+#include <thread>
 
 #include "asio.hpp"
 
@@ -36,7 +37,9 @@
 #include "staticlib/httpserver/http_server.hpp"
 
 #include "staticlib/config/assert.hpp"
+#include "staticlib/crypto.hpp"
 #include "staticlib/io.hpp"
+#include "staticlib/tinydir.hpp"
 
 #include "staticlib/httpclient/http_session.hpp"
 
@@ -45,6 +48,8 @@ namespace io = staticlib::io;
 namespace sc = staticlib::config;
 namespace hc = staticlib::httpclient;
 namespace hs = staticlib::httpserver;
+namespace cr = staticlib::crypto;
+namespace st = staticlib::tinydir;
 
 const uint16_t TCP_PORT = 8443;
 const std::string URL = std::string() + "https://127.0.0.1:" + sc::to_string(TCP_PORT) + "/";
@@ -81,7 +86,46 @@ void get_handler(hs::http_request_ptr& req, hs::tcp_connection_ptr& conn) {
     writer->send();
 }
 
-class PayloadReceiver {
+class response_sender : public std::enable_shared_from_this<response_sender> {
+    std::mutex mutex;
+    hs::http_response_writer_ptr writer;
+    std::unique_ptr<std::streambuf> stream;
+    std::array<char, 4096> buf;
+
+public:
+    response_sender(hs::http_response_writer_ptr writer,
+            std::unique_ptr<std::streambuf> stream) :
+    writer(writer),
+    stream(std::move(stream)) { }
+
+    void send() {
+        asio::error_code ec;
+        handle_write(ec, 0);
+    }
+
+    void handle_write(const asio::error_code& ec, std::size_t /* bytes_written */) {
+        std::lock_guard<std::mutex> lock{mutex};
+        if (!ec) {
+            auto src = io::streambuf_source(stream.get());
+            size_t read = io::read_all(src, buf);
+            writer->clear();
+            if (read > 0) {
+                writer->write_no_copy(buf.data(), read);
+                auto self = shared_from_this();
+                writer->send_chunk([self](const asio::error_code& ec, size_t bt) {
+                    self->handle_write(ec, bt);
+                });
+            } else {
+                writer->send_final_chunk();
+            }
+        } else {
+            // make sure it will get closed
+            writer->get_connection()->set_lifecycle(hs::tcp_connection::LIFECYCLE_CLOSE);
+        }
+    }
+};
+
+class payload_receiver {
     bool received;
 public:
     void operator()(const char* s, size_t n) {
@@ -97,7 +141,7 @@ public:
 void post_handler(hs::http_request_ptr& req, hs::tcp_connection_ptr& conn) {
     slassert("test" == req->get_header("User-Agent"));
     slassert("POST" == req->get_header("X-Method"));
-    auto ph = req->get_payload_handler<PayloadReceiver>();
+    auto ph = req->get_payload_handler<payload_receiver>();
     slassert(nullptr != ph);
     slassert(ph->is_received());
     auto writer = hs::http_response_writer::create(conn, req);
@@ -108,7 +152,7 @@ void post_handler(hs::http_request_ptr& req, hs::tcp_connection_ptr& conn) {
 void put_handler(hs::http_request_ptr& req, hs::tcp_connection_ptr& conn) {
     slassert("test" == req->get_header("User-Agent"));
     slassert("PUT" == req->get_header("X-Method"));
-    auto ph = req->get_payload_handler<PayloadReceiver>();
+    auto ph = req->get_payload_handler<payload_receiver>();
     slassert(nullptr != ph);
     slassert(ph->is_received());
     auto writer = hs::http_response_writer::create(conn, req);
@@ -122,6 +166,14 @@ void delete_handler(hs::http_request_ptr& req, hs::tcp_connection_ptr& conn) {
     auto writer = hs::http_response_writer::create(conn, req);
     writer->write(DELETE_RESPONSE);
     writer->send();
+}
+
+void large_handler(hs::http_request_ptr& req, hs::tcp_connection_ptr& conn) {
+    slassert("test" == req->get_header("User-Agent"));
+    auto writer = hs::http_response_writer::create(conn, req);
+    auto src = io::make_unbuffered_istreambuf_ptr(st::file_source("/home/alex/vbox/hd/Android-x86_4.4_r4.7z"));
+    auto sender = std::make_shared<response_sender>(writer, std::move(src));
+    sender->send();
 }
 
 void test_get() {
@@ -156,7 +208,7 @@ void test_post() {
     // server
     hs::http_server server(2, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
     server.add_handler("POST", "/", post_handler);
-    server.add_payload_handler("POST", "/", [](hs::http_request_ptr&) { return PayloadReceiver{}; });
+    server.add_payload_handler("POST", "/", [](hs::http_request_ptr&) { return payload_receiver{}; });
     server.start();
     // client
     try {
@@ -185,8 +237,7 @@ void test_put() {
     // server
     hs::http_server server(2, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
     server.add_handler("PUT", "/", put_handler);
-    server.add_payload_handler("PUT", "/", [](hs::http_request_ptr&) {
-        return PayloadReceiver{}; });
+    server.add_payload_handler("PUT", "/", [](hs::http_request_ptr&) {return payload_receiver{}; });
     server.start();
     // client
     try {
@@ -239,7 +290,7 @@ void test_delete() {
     server.stop(true);
 }
 
-void test_connectfail() {
+void test_connectfail() {    
     hc::http_session session{};
     hc::http_request_options opts{};
     opts.abort_on_connect_error = false;
@@ -251,14 +302,35 @@ void test_connectfail() {
     slassert(!src.connection_successful());
 }
 
+void test_stress() {
+    hc::http_session session;
+    
+    std::vector<std::thread> threads;
+    for (int i = 0; i < 16; i++) {
+        auto th = std::thread([&session]{
+            hc::http_resource src = session.open_url("http://127.0.0.1:80/data");
+            auto sink = cr::make_sha256_sink(io::null_sink());
+            std::streamsize res = io::copy_all(src, sink);
+            slassert(432515165 == res);
+            slassert("1dfa11d08c8e721385b4a3717d575ec5a7bf85a7a7b7494e1aaa8583504c574b" == sink.get_hash());
+        });
+        threads.emplace_back(std::move(th));
+    }
+    
+    for (auto& th : threads) {
+        th.join();
+    }
+}
+
 int main() {
     try {
         auto start = std::chrono::system_clock::now();
-        test_get();
-        test_post();
-        test_put();
-        test_delete();
-        test_connectfail();
+//        test_get();
+//        test_post();
+//        test_put();
+//        test_delete();
+//        test_connectfail();
+        test_stress();
         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start);
         std::cout << "millist elapsed: " << elapsed.count() << std::endl;
     } catch (const std::exception& e) {

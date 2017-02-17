@@ -8,12 +8,10 @@
 #ifndef STATICLIB_HTTPCLIENT_RUNNING_REQUEST_PIPE_HPP
 #define	STATICLIB_HTTPCLIENT_RUNNING_REQUEST_PIPE_HPP
 
-// TODO: removeme
-#include <iostream>
-// TODO: end removeme
-
 #include <cstdint>
 #include <atomic>
+#include <condition_variable>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -29,6 +27,9 @@ namespace staticlib {
 namespace httpclient {
 
 class running_request_pipe : public std::enable_shared_from_this<running_request_pipe> {
+    std::condition_variable& paused_cv;
+    std::atomic<bool>& paused_flag;
+    
     std::atomic<int16_t> response_code;
     staticlib::containers::producer_consumer_queue<http_resource_info> resource_info;
     response_data_queue data_queue;
@@ -37,10 +38,12 @@ class running_request_pipe : public std::enable_shared_from_this<running_request
     staticlib::containers::synchronized_queue<std::string> errors;
 
 public:    
-    running_request_pipe() :
+    running_request_pipe(std::condition_variable& paused_cv, std::atomic<bool>& paused_flag) :
+    paused_cv(paused_cv),
+    paused_flag(paused_flag),
     response_code(0),
     resource_info(1),
-    data_queue(8),
+    data_queue(16),
     headers_queue(std::numeric_limits<uint16_t>::max()),
     errors_non_empty(false),
     errors(std::numeric_limits<uint16_t>::max()) { }
@@ -82,6 +85,12 @@ public:
     }
     
     bool receive_some_data(std::vector<char>& dest_buffer) {
+        bool prefilled = data_queue.poll(dest_buffer);
+        if (prefilled) {
+            return true;
+        }
+//        paused_flag.exchange(false);
+//        paused_cv.notify_all();
         return data_queue.take(dest_buffer);
     }
     
