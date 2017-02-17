@@ -21,7 +21,6 @@
 #include "staticlib/httpclient/http_resource_info.hpp"
 
 #include "response_data_queue.hpp"
-#include "response_headers_queue.hpp"
 #include "all_requests_paused_latch.hpp"
 
 namespace staticlib {
@@ -31,7 +30,7 @@ class running_request_pipe : public std::enable_shared_from_this<running_request
     std::atomic<int16_t> response_code;
     staticlib::containers::producer_consumer_queue<http_resource_info> resource_info;
     response_data_queue data_queue;
-    response_headers_queue headers_queue;
+    staticlib::containers::producer_consumer_queue<std::pair<std::string, std::string>> headers_queue;
     std::atomic<bool> errors_non_empty;
     staticlib::containers::synchronized_queue<std::string> errors;
     
@@ -42,7 +41,7 @@ public:
     response_code(0),
     resource_info(1),
     data_queue(16),
-    headers_queue(std::numeric_limits<uint16_t>::max()),
+    headers_queue(128),
     errors_non_empty(false),
     errors(std::numeric_limits<uint16_t>::max()),
     pause_latch(std::move(pause_latch)) { }
@@ -110,14 +109,15 @@ public:
         bool emplaced = headers_queue.emplace(std::move(name), std::move(value));
         if (!emplaced) throw httpclient_exception(TRACEMSG(
                 "Error emplacing header to queue, " +
-                "queue size: [" + sc::to_string(headers_queue.size()) + "]"));        
+                "queue size: [" + sc::to_string(headers_queue.max_size()) + "]"));        
     }
     
     std::vector<std::pair<std::string, std::string>> consume_received_headers() {
         std::vector<std::pair<std::string, std::string>> res;
-        headers_queue.consume([&res](std::pair<std::string, std::string>&& pa) {
+        auto pa = std::pair<std::string, std::string>();
+        while (headers_queue.poll(pa)) {
             res.emplace_back(std::move(pa));
-        });
+        }
         return res;
     }
     

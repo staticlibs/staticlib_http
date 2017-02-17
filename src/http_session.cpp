@@ -88,15 +88,12 @@ public:
         setopt_uint32(CURLMOPT_MAXCONNECTS, options.maxconnects);
         worker = std::thread([this] {
             while (running.load()) {
-                std::cout << "worker enter" << std::endl;
                 // wait on queue
                 request_ticket ticket;
                 auto got_ticket = tickets.take(ticket);
                 if (!got_ticket) { // destruction in progress
-                    std::cout << "worker got poisoned ticket" << std::endl;
                     break; 
                 }
-                std::cout << "worker got real ticket" << std::endl;
                 enqueue_request(std::move(ticket));
                 
                 uint64_t spinwait_cycles = 0;
@@ -191,7 +188,6 @@ public:
                         // check more tickets
                         auto newcomers = poll_enqueued_tickets();
                         for (request_ticket& ti : newcomers) {
-                            std::cout << "worker newcomer" << std::endl;
                             enqueue_request(std::move(ti));
                         }
                                                 

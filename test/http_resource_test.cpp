@@ -310,6 +310,9 @@ void test_stress() {
         std::streamsize res = io::copy_all(src, sink);
         slassert(432515165 == res);
         slassert("1dfa11d08c8e721385b4a3717d575ec5a7bf85a7a7b7494e1aaa8583504c574b" == sink.get_hash());
+        for (auto& ha : src.get_headers()) {
+            std::cout << ha.first << ": " << ha.second << std::endl;
+        }
     };
     
     std::vector<std::thread> threads;
