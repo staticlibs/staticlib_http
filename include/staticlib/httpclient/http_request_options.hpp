@@ -61,10 +61,6 @@ struct http_request_options {
      * HttpException exception will be thrown from read method on timeout 
      */
     uint32_t read_timeout_millis = 15000;
-    /**
-     * Timeout to wait for when reading data unsuccessfully
-     */
-    uint32_t fdset_timeout_millis = 100;
     
     // general behavior options
     

@@ -23,12 +23,30 @@
 
 #include "staticlib/httpclient/http_session.hpp"
 
+// TODO: removeme
+#include <iostream>
+// TODO: end removeme
+
+#include <chrono>
+#include <condition_variable>
+#include <map>
 #include <memory>
+#include <mutex>
+#include <thread>
 
 #include "curl/curl.h"
 
+#include "staticlib/containers.hpp"
+#include "staticlib/io.hpp"
 #include "staticlib/pimpl/pimpl_forward_macros.hpp"
 
+#include "curl_deleters.hpp"
+#include "curl_headers.hpp"
+#include "response_data_queue.hpp"
+#include "running_request_pipe.hpp"
+#include "running_request.hpp"
+#include "request_tickets_queue.hpp"
+#include "http_resource_params.hpp"
 
 namespace staticlib {
 namespace httpclient {
@@ -38,61 +56,191 @@ namespace { // anonymous
 namespace sc = staticlib::config;
 namespace io = staticlib::io;
 
-const std::istringstream EMPTY_STREAM{""};
-
-class CurlMultiDeleter {
-public:
-    void operator()(CURLM* curlm) {
-        curl_multi_cleanup(curlm);
-    }   
-};
+//
 
 } // namespace
 
 class http_session::impl : public staticlib::pimpl::pimpl_object::impl {
-    std::unique_ptr<CURLM, CurlMultiDeleter> handle;
-    std::istringstream empty_stream;
+    http_session_options options;
+    std::unique_ptr<CURLM, curl_multi_deleter> handle;
+    
+    request_tickets_queue tickets;
+    // todo map int64_t -> running_request
+    std::map<int64_t, std::unique_ptr<running_request>> requests;
+
+    std::thread worker;
+    std::atomic<bool> running;
 
 public:
     impl(http_session_options options) :
-    handle(curl_multi_init(), CurlMultiDeleter{}) { 
+    options(options),
+    handle(curl_multi_init(), curl_multi_deleter()),
+    tickets(options.requests_queue_max_size),
+    running(true) { 
         if (nullptr == handle.get()) throw httpclient_exception(TRACEMSG("Error initializing cURL multi handle"));
-//        available since 7.30.0, todo: curl version checking
-//        setopt_uint32(CURLMOPT_MAX_HOST_CONNECTIONS, options.max_host_connections);
-//        setopt_uint32(CURLMOPT_MAX_TOTAL_CONNECTIONS, options.max_total_connections);
+        // available since 7.30.0        
+#if LIBCURL_VERSION_NUM >= 0x071e00
+        setopt_uint32(CURLMOPT_MAX_HOST_CONNECTIONS, options.max_host_connections);
+        setopt_uint32(CURLMOPT_MAX_TOTAL_CONNECTIONS, options.max_total_connections);
+#endif // LIBCURL_VERSION_NUM
         setopt_uint32(CURLMOPT_MAXCONNECTS, options.maxconnects);
+        worker = std::thread([this] {
+            while (running.load()) {
+                std::cout << "worker enter" << std::endl;
+                // wait on queue
+                request_ticket ticket;
+                auto got_ticket = tickets.take(ticket);
+                if (!got_ticket) { // destruction in progress
+                    std::cout << "worker got poisoned ticket" << std::endl;
+                    break; 
+                }
+                std::cout << "worker got real ticket" << std::endl;
+                enqueue_request(std::move(ticket));
+                
+                // spin while has active transfers
+                while(requests.size() > 0) {
+                    // timeout
+                    long timeo = -1;
+                    CURLMcode err_timeout = curl_multi_timeout(handle.get(), std::addressof(timeo));
+                    if (check_and_abort_on_multi_error(err_timeout)) break;
+                    struct timeval timeout = create_timeout_struct(timeo);
+                    
+                    // fdset
+                    fd_set fdread = create_fd();
+                    fd_set fdwrite = create_fd();
+                    fd_set fdexcep = create_fd();
+                    int maxfd = -1;
+                    CURLMcode err_fdset = curl_multi_fdset(handle.get(), std::addressof(fdread),
+                            std::addressof(fdwrite), std::addressof(fdexcep), std::addressof(maxfd));
+                    if (check_and_abort_on_multi_error(err_fdset)) break;
+
+                    // wait or select
+                    int err_select = 0;
+                    if (maxfd == -1) {
+                        std::this_thread::sleep_for(std::chrono::milliseconds(this->options.fdset_timeout_millis));
+                    } else {
+                        err_select = select(maxfd + 1, std::addressof(fdread), std::addressof(fdwrite),
+                                std::addressof(fdexcep), std::addressof(timeout));
+                    }
+
+                    // do perform if no select error
+                    int active = -1;
+                    if (-1 != err_select) {
+                        CURLMcode err_perform = curl_multi_perform(handle.get(), std::addressof(active));
+                        if (check_and_abort_on_multi_error(err_perform)) break;
+                    }
+                    
+                    // pop completed or timeouted
+                    std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+                    for(;;) {
+                        int tmp = -1;
+                        CURLMsg* m = curl_multi_info_read(handle.get(), std::addressof(tmp));
+                        if (nullptr == m) break;
+                        int64_t req_key = reinterpret_cast<int64_t> (m->easy_handle);
+                        auto it = requests.find(req_key);
+                        if (requests.end() == it) {
+                            abort_running_on_multi_error(TRACEMSG("System error: inconsistent queue state, aborting"));
+                            break;
+                        }
+                        running_request& req = *it->second;
+                        if (CURLMSG_DONE == m->msg) {
+                            CURLcode result = m->data.result;
+                            if (req.get_options().abort_on_connect_error && CURLE_OK != result) {
+                                req.append_error(curl_easy_strerror(result));
+                            }
+                            requests.erase(req_key);
+                        } else {
+                            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - req.started_at());
+                            if (elapsed.count() > req.get_options().read_timeout_millis) {
+                                req.append_error(TRACEMSG("Request timeout error," +
+                                        " elapsed time (millis): [" + sc::to_string(elapsed.count()) + "]," +
+                                        " limit: [" + sc::to_string(req.get_options().read_timeout_millis) + "]"));
+                                requests.erase(req_key);
+                            }
+                        }
+                    }
+                    
+                    // spin wait for paused
+                    while (requests.size() > 0) {
+                        // unpause when possible
+                        size_t num_paused = 0;
+                        for (auto& pa : requests) {
+                            running_request& req = *pa.second;
+                            if (req.is_paused()) {
+                                if (!req.data_queue_is_full()) {
+                                    req.unpause();
+                                } else {
+                                    num_paused += 1;
+                                }
+                            }
+                        }
+
+                        // check more tickets
+                        auto newcomers = poll_enqueued_tickets();
+                        for (request_ticket& ti : newcomers) {
+                            enqueue_request(std::move(ti));
+                        }
+                        
+                        // whether to end spinwait
+                        if (newcomers.size() > 0 || requests.size() > num_paused) {
+                            break;
+                        }
+                    }
+                }
+            }
+        });
     }
     
-    ~impl() STATICLIB_NOEXCEPT { }
+    /**
+     * managed all handles inside this class
+     * 
+     */
+    
+    ~impl() STATICLIB_NOEXCEPT {
+        running.store(false);
+        tickets.unblock();
+        worker.join();
+    }
 
     http_resource open_url(http_session& frontend,
-            std::string url,
+            const std::string& url,
             http_request_options options) {
         if ("" == options.method) {
             options.method = "GET";
         }
-        return open_url(frontend, std::move(url), nullptr, std::move(options));
+        return open_url(frontend, url, nullptr, std::move(options));
     }
     
     http_resource open_url(http_session& frontend,
-            std::string url,
+            const std::string& url,
             std::streambuf* post_data, http_request_options options) {
-        auto sbuf_ptr = nullptr != post_data ? post_data : EMPTY_STREAM.rdbuf();
+        namespace si = staticlib::io;
+        auto sbuf_ptr = [post_data] () -> std::streambuf* {
+            if (nullptr != post_data) {
+                return post_data;
+            }
+            static std::istringstream empty_stream{""};
+            return empty_stream.rdbuf();
+        } ();
         if ("" == options.method) {
             options.method = "POST";
         }
-        std::unique_ptr<std::istream> sbuf{
-                io::make_source_istream_ptr(io::streambuf_source(sbuf_ptr))};
-        return open_url(frontend, std::move(url), std::move(sbuf), std::move(options));
+        auto sbuf = si::make_source_istream_ptr(si::streambuf_source(sbuf_ptr));
+        return open_url(frontend, url, std::move(sbuf), std::move(options));
     }
     
-    http_resource open_url(http_session&,
-            std::string url,
+    http_resource open_url(http_session&, const std::string& url,
             std::unique_ptr<std::istream> post_data, http_request_options options) {
         if ("" == options.method) {
             options.method = "POST";
         }
-        return http_resource(handle.get(), std::move(url), std::move(post_data), std::move(options));
+        //  note: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=63736
+        auto pipe = std::make_shared<running_request_pipe>();
+        auto enqueued = tickets.emplace(url, std::move(options), std::move(post_data), pipe);
+        if (!enqueued) throw httpclient_exception(TRACEMSG(
+                "Requests queue is full, size: [" + sc::to_string(tickets.size()) + "]"));
+        auto params = http_resource_params(url, std::move(pipe));
+        return http_resource(std::move(params));
     }
     
 private:
@@ -104,11 +252,73 @@ private:
                 " to value: [" + sc::to_string(value) + "]"));
     }
     
+    void enqueue_request(request_ticket&& ticket) {
+        // local copy                
+        auto pipe = ticket.pipe;
+        try {
+            auto req = std::unique_ptr<running_request>(new running_request(handle.get(), std::move(ticket)));
+            auto ha = req->easy_handle();
+            auto pa = std::make_pair(reinterpret_cast<int64_t> (ha), std::move(req));
+            requests.insert(std::move(pa));
+        } catch (const std::exception& e) {
+            // this two are normally called
+            // on requests queue pop, but here
+            // enqueue itself is failed
+            pipe->append_error(TRACEMSG(e.what()));
+            pipe->finalize_data_queue();
+        }
+    }
+    
+    std::vector<request_ticket> poll_enqueued_tickets() {
+        std::vector<request_ticket> vec;
+        tickets.consume([&vec](request_ticket&& ti){
+            vec.emplace_back(std::move(ti));
+        });
+        return vec;
+    }
+    
+    bool check_and_abort_on_multi_error(CURLMcode code) {
+        if (CURLM_OK == code) return false;
+        abort_running_on_multi_error(TRACEMSG("CURL engine error, transfer aborted," +
+                " code: [" + curl_multi_strerror(code) + "]"));
+        return true;
+    }
+    
+    void abort_running_on_multi_error(const std::string& error) {
+        for (auto& pa : requests) {
+            running_request& re = *pa.second;
+            re.append_error(error);
+        }
+        requests.clear();
+    }
+
+    // http://curl-library.cool.haxx.narkive.com/2sYifbgu/issue-with-curl-multi-timeout-while-doing-non-blocking-http-posts-in-vms
+    struct timeval create_timeout_struct(long timeo) {
+        struct timeval timeout;
+        std::memset(std::addressof(timeout), '\0', sizeof (timeout));
+        timeout.tv_sec = 10;
+        if (timeo > 0) {
+            long ctsecs = timeo / 1000;
+            if (ctsecs < 10) {
+                timeout.tv_sec = ctsecs;
+            }
+            timeout.tv_usec = (timeo % 1000) * 1000;
+        }
+        return timeout;
+    }
+
+    fd_set create_fd() {
+        fd_set res;
+        FD_ZERO(std::addressof(res));
+        return res;
+    }
+
+    
 };
 PIMPL_FORWARD_CONSTRUCTOR(http_session, (http_session_options), (), httpclient_exception)
-PIMPL_FORWARD_METHOD(http_session, http_resource, open_url, (std::string)(http_request_options), (), httpclient_exception)
-PIMPL_FORWARD_METHOD(http_session, http_resource, open_url, (std::string)(std::streambuf*)(http_request_options), (), httpclient_exception)
-PIMPL_FORWARD_METHOD(http_session, http_resource, open_url, (std::string)(std::unique_ptr<std::istream>)(http_request_options), (), httpclient_exception)        
+PIMPL_FORWARD_METHOD(http_session, http_resource, open_url, (const std::string&)(http_request_options), (), httpclient_exception)
+PIMPL_FORWARD_METHOD(http_session, http_resource, open_url, (const std::string&)(std::streambuf*)(http_request_options), (), httpclient_exception)
+PIMPL_FORWARD_METHOD(http_session, http_resource, open_url, (const std::string&)(std::unique_ptr<std::istream>)(http_request_options), (), httpclient_exception)        
 
 } // namespace
 }

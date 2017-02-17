@@ -42,6 +42,9 @@
 namespace staticlib {
 namespace httpclient {
 
+// forward decl
+class http_resource_params;
+
 /**
  * Remote HTTP resoure that can be read from as a `Source`
  */
@@ -70,25 +73,57 @@ public:
     std::streamsize read(staticlib::config::span<char> span);
     
     /**
+     * Returns URL of this resource
+     * 
+     * @return URL of this resource
+     */
+    const std::string& get_url() const;
+    
+    /**
+     * Returns HTTP status code
+     * 
+     * @return HTTP status code
+     */
+    uint16_t get_status_code() const;
+    
+    /**
      * Accessor for the resource metainformation
      * 
      * @return 
      */
-    const http_resource_info& get_info() const;
+    http_resource_info get_info() const;
 
+    /**
+     * Accessor for received headers
+     * 
+     * @return received headers
+     */
+    const std::vector<std::pair<std::string, std::string>>& get_headers() const;
+
+    /**
+     * Returns a value for the specified header, received from server.
+     * Uses linear search over headers array.
+     * 
+     * @param name header name
+     * @return header value, empty string if specified header not found
+     */
+    const std::string& get_header(const std::string& name) const;
+
+    /**
+     * Inspect connection attempt results
+     * 
+     * @return 'true' if connection has been established successfully and
+     *         response code has been received, 'false' otherwise
+     */
+    bool connection_successful() const;
+    
 private:
     /**
      * Private constructor for implementation details
      * 
-     * @param multi_handle implementation defined
-     * @param url target HTTP URL
-     * @param post_data data to upload
-     * @param options request options
+     * @param http_resource_params input parameterss
      */
-    http_resource(/* CURLM */ void* multi_handle,
-            std::string url,
-            std::unique_ptr<std::istream> post_data,
-            http_request_options options);
+    http_resource(http_resource_params&& params);
     
 };
 

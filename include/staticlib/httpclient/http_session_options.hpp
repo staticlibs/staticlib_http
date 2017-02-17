@@ -45,6 +45,22 @@ struct http_session_options {
      * https://curl.haxx.se/libcurl/c/CURLMOPT_MAXCONNECTS.html
      */
     uint32_t maxconnects = 0;
+    
+    /**
+     * Max number of the enqueued requests
+     */
+    uint32_t requests_queue_max_size = 1024;
+
+    /**
+     * Timeout to wait for when reading data unsuccessfully
+     */
+    uint32_t fdset_timeout_millis = 100;
+    
+    /**
+     * Timeout to wait for when requests queue is not empty, but all 
+     * running requests are paused.
+     */
+    uint32_t all_requests_paused_timeout_millis = 100;
 };
 
 } // namespace

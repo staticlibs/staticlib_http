@@ -77,7 +77,7 @@ public:
      * @return HTTP resource
      */
     http_resource open_url(
-            std::string url,
+            const std::string& url,
             http_request_options options = http_request_options{});
     
     /**
@@ -89,7 +89,7 @@ public:
      * @return HTTP resource
      */
     http_resource open_url(
-            std::string url,
+            const std::string& url,
             std::streambuf* post_data,
             http_request_options options = http_request_options{});
 
@@ -102,7 +102,7 @@ public:
      * @return HTTP resource
      */
     http_resource open_url(
-            std::string url,
+            const std::string& url,
             std::unique_ptr<std::istream> post_data,
             http_request_options options = http_request_options{});
 
@@ -117,12 +117,12 @@ public:
     template<typename PostDataSource,
             class = typename std::enable_if<!std::is_lvalue_reference<PostDataSource>::value>::type>
     http_resource open_url(
-            std::string url,
+            const std::string& url,
             PostDataSource&& post_data,
             http_request_options options = http_request_options{}) {
         std::unique_ptr<std::istream> sbuf{
             staticlib::io::make_source_istream_ptr(std::move(post_data))};
-        return open_url(std::move(url), std::move(sbuf), std::move(options));
+        return open_url(url, std::move(sbuf), std::move(options));
     }
 
     /**
@@ -135,12 +135,12 @@ public:
      */            
     template<typename PostDataSource>
     http_resource open_url(
-            std::string url,
+            const std::string& url,
             PostDataSource& post_data,
             http_request_options options = http_request_options{}) {
         std::unique_ptr<std::istream> sbuf{
             staticlib::io::make_source_istream_ptr(post_data)};
-        return open_url(std::move(url), std::move(sbuf), std::move(options));
+        return open_url(url, std::move(sbuf), std::move(options));
     }            
     
 };

@@ -28,10 +28,6 @@
 #include <string>
 #include <cstdint>
 
-#ifdef STATICLIB_WITH_ICU
-#include <unicode/unistr.h>
-#endif // STATICLIB_WITH_ICU
-
 #include "asio.hpp"
 
 #include "staticlib/httpserver/tcp_connection.hpp"
@@ -51,11 +47,7 @@ namespace hc = staticlib::httpclient;
 namespace hs = staticlib::httpserver;
 
 const uint16_t TCP_PORT = 8443;
-#ifdef STATICLIB_WITH_ICU
-const icu::UnicodeString URL = icu::UnicodeString() + "https://127.0.0.1:" + icu::UnicodeString::fromUTF8(sc::to_string(TCP_PORT)) + "/";
-#else
 const std::string URL = std::string() + "https://127.0.0.1:" + sc::to_string(TCP_PORT) + "/";
-#endif // STATICLIB_WITH_ICU
 const std::string GET_RESPONSE = "Hello from GET\n";
 const std::string POSTPUT_DATA = "Hello to POST\n";
 const std::string POST_RESPONSE = "Hello from POST\n";
@@ -146,10 +138,13 @@ void test_get() {
         opts.method = "GET";
     
         hc::http_resource src = session.open_url(URL, opts);
+//        std::this_thread::sleep_for(std::chrono::seconds{5});
         // check
         std::string out{};
         out.resize(GET_RESPONSE.size());
         std::streamsize res = io::read_all(src, out);
+        std::cout << res << std::endl;
+        std::cout << out << std::endl;
         slassert(out.size() == static_cast<size_t>(res));
         slassert(GET_RESPONSE == out);
     } catch (const std::exception&) {
@@ -256,19 +251,19 @@ void test_connectfail() {
     std::array<char, 1> buf;
     auto res = src.read(buf);
     slassert(std::char_traits<char>::eof() == res);
-    slassert(!src.get_info().connection_success());
+    slassert(!src.connection_successful());
 }
 
 int main() {
     try {
-        //auto start = std::chrono::system_clock::now();
+        auto start = std::chrono::system_clock::now();
         test_get();
-        test_post();
-        test_put();
-        test_delete();
-        test_connectfail();
-        //auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start);
-        //std::cout << elapsed.count() << std::endl;
+//        test_post();
+//        test_put();
+//        test_delete();
+//        test_connectfail();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start);
+        std::cout << elapsed.count() << std::endl;
     } catch (const std::exception& e) {
         std::cout << e.what() << std::endl;
         return 1;

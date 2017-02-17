@@ -37,25 +37,10 @@ namespace httpclient {
  */
 struct http_resource_info {
 
-    enum class State { 
-        created, 
-        writing_headers, 
-        response_info_filled
-    };
-    
-    /**
-     * Flag indicates that object was filled after completing the request
-     */
-    State state = State::created;
-    
     /**
      * https://curl.haxx.se/libcurl/c/CURLINFO_EFFECTIVE_URL.html
      */
     std::string effective_url = "";
-    /**
-     * https://curl.haxx.se/libcurl/c/CURLINFO_RESPONSE_CODE.html
-     */
-    long response_code = -1;
     /**
      * https://curl.haxx.se/libcurl/c/CURLINFO_TOTAL_TIME.html
      */
@@ -124,55 +109,6 @@ struct http_resource_info {
      * https://curl.haxx.se/libcurl/c/CURLINFO_PRIMARY_PORT.html
      */
     long primary_port = -1;
-    
-    /**
-     * Adds a header received from a server
-     * 
-     * @param name header name
-     * @param value header value
-     */
-    void add_header(std::string&& name, std::string&& value) {
-        headers.emplace_back(std::move(name), std::move(value));
-    }
-    
-    /**
-     * Accessor for received headers
-     * 
-     * @return received headers
-     */
-    const std::vector<std::pair<std::string, std::string>>& get_headers() const {
-        return headers;
-    }
-    
-    /**
-     * Returns a value for the specified header, received from server.
-     * Uses linear search over headers array.
-     * 
-     * @param name header name
-     * @return header value, empty string if specified header not found
-     */
-    const std::string& get_header(const std::string& name) const {
-        for (auto& en : headers) {
-            if (name == en.first) {
-                return en.second;
-            }
-        }
-        return empty;
-    }
-    
-    /**
-     * Inspect connection attempt results
-     * 
-     * @return 'true' if connection has been established successfully and
-     *         response code has been received, 'false' otherwise
-     */
-    bool connection_success() const {
-        return response_code > 0;
-    }
-    
-private:
-    std::vector<std::pair<std::string, std::string>> headers;
-    std::string empty = "";
 };
 
 } // namespace
