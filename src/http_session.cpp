@@ -47,6 +47,7 @@
 #include "running_request.hpp"
 #include "request_tickets_queue.hpp"
 #include "http_resource_params.hpp"
+#include "all_requests_paused_latch.hpp"
 
 namespace staticlib {
 namespace httpclient {
@@ -61,23 +62,19 @@ namespace io = staticlib::io;
 } // namespace
 
 class http_session::impl : public staticlib::pimpl::pimpl_object::impl {
-    std::mutex paused_mutex;
-    std::condition_variable paused_cv;
-    std::atomic<bool> paused_flag;
-    
     http_session_options options;
     std::unique_ptr<CURLM, curl_multi_deleter> handle;
     
     request_tickets_queue tickets;
-    // todo map int64_t -> running_request
     std::map<int64_t, std::unique_ptr<running_request>> requests;
 
     std::thread worker;
     std::atomic<bool> running;
+    
+    std::shared_ptr<all_requests_paused_latch> pause_latch = std::make_shared<all_requests_paused_latch>();
 
 public:
     impl(http_session_options options) :
-    paused_flag(false),
     options(options),
     handle(curl_multi_init(), curl_multi_deleter()),
     tickets(options.requests_queue_max_size),
@@ -201,24 +198,11 @@ public:
                         // whether to end spinwait
                         if (newcomers.size() > 0 || requests.size() > num_paused) {
                             spinwait_exit_cycles += 1;
-//                            std::cout << "--- spinwait exit ---" << std::endl;
                             break;
                         }
                         
-//                        std::cout << "--- spinwait ---" << std::endl;
-//                        std::cout << "newcomers.size(): " << newcomers.size() << std::endl;
-//                        std::cout << "requests.size(): " << requests.size() << std::endl;
-//                        std::cout << "num_paused: " << num_paused << std::endl;
-//                        std::this_thread::yield();
-//                        std::this_thread::sleep_for(std::chrono::milliseconds(10));
                         spinwait_cycles += 1;
-//                        
-//                        auto timeout = std::chrono::milliseconds(this->options.all_requests_paused_timeout_millis);
-                        std::unique_lock<std::mutex> guard{this->paused_mutex};
-                        paused_flag.store(true);
-                        this->paused_cv.wait(guard, [this]{
-                            return !paused_flag.load();
-                        });
+                        pause_latch->await();
                     }
                 }
             }
@@ -269,7 +253,7 @@ public:
             options.method = "POST";
         }
         //  note: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=63736
-        auto pipe = std::make_shared<running_request_pipe>(paused_mutex, paused_cv, paused_flag);
+        auto pipe = std::make_shared<running_request_pipe>(pause_latch);
         auto enqueued = tickets.emplace(url, std::move(options), std::move(post_data), pipe);
         if (!enqueued) throw httpclient_exception(TRACEMSG(
                 "Requests queue is full, size: [" + sc::to_string(tickets.size()) + "]"));

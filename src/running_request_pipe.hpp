@@ -22,33 +22,30 @@
 
 #include "response_data_queue.hpp"
 #include "response_headers_queue.hpp"
+#include "all_requests_paused_latch.hpp"
 
 namespace staticlib {
 namespace httpclient {
 
 class running_request_pipe : public std::enable_shared_from_this<running_request_pipe> {
-    std::mutex& paused_mutex;
-    std::condition_variable& paused_cv;
-    std::atomic<bool>& paused_flag;
-    
     std::atomic<int16_t> response_code;
     staticlib::containers::producer_consumer_queue<http_resource_info> resource_info;
     response_data_queue data_queue;
     response_headers_queue headers_queue;
     std::atomic<bool> errors_non_empty;
     staticlib::containers::synchronized_queue<std::string> errors;
+    
+    std::shared_ptr<all_requests_paused_latch> pause_latch;
 
 public:    
-    running_request_pipe(std::mutex& paused_mutex, std::condition_variable& paused_cv, std::atomic<bool>& paused_flag) :
-    paused_mutex(paused_mutex),
-    paused_cv(paused_cv),
-    paused_flag(paused_flag),
+    running_request_pipe(std::shared_ptr<all_requests_paused_latch> pause_latch) :
     response_code(0),
     resource_info(1),
     data_queue(16),
     headers_queue(std::numeric_limits<uint16_t>::max()),
     errors_non_empty(false),
-    errors(std::numeric_limits<uint16_t>::max()) { }
+    errors(std::numeric_limits<uint16_t>::max()),
+    pause_latch(std::move(pause_latch)) { }
     
     running_request_pipe(const running_request_pipe&) = delete;
     
@@ -95,11 +92,7 @@ public:
             res = data_queue.take(dest_buffer);
         }
         if (res && data_queue.is_empty()) {
-            {
-                std::lock_guard<std::mutex> guard{paused_mutex};
-                paused_flag.store(false);
-            }
-            paused_cv.notify_one();
+            pause_latch->unlock();
         }
         return res;
     }
