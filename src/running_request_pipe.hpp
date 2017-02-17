@@ -27,6 +27,7 @@ namespace staticlib {
 namespace httpclient {
 
 class running_request_pipe : public std::enable_shared_from_this<running_request_pipe> {
+    std::mutex& paused_mutex;
     std::condition_variable& paused_cv;
     std::atomic<bool>& paused_flag;
     
@@ -38,7 +39,8 @@ class running_request_pipe : public std::enable_shared_from_this<running_request
     staticlib::containers::synchronized_queue<std::string> errors;
 
 public:    
-    running_request_pipe(std::condition_variable& paused_cv, std::atomic<bool>& paused_flag) :
+    running_request_pipe(std::mutex& paused_mutex, std::condition_variable& paused_cv, std::atomic<bool>& paused_flag) :
+    paused_mutex(paused_mutex),
     paused_cv(paused_cv),
     paused_flag(paused_flag),
     response_code(0),
@@ -86,12 +88,20 @@ public:
     
     bool receive_some_data(std::vector<char>& dest_buffer) {
         bool prefilled = data_queue.poll(dest_buffer);
+        bool res;
         if (prefilled) {
-            return true;
+            res = true;
+        } else {
+            res = data_queue.take(dest_buffer);
         }
-//        paused_flag.exchange(false);
-//        paused_cv.notify_all();
-        return data_queue.take(dest_buffer);
+        if (res && data_queue.is_empty()) {
+            {
+                std::lock_guard<std::mutex> guard{paused_mutex};
+                paused_flag.store(false);
+            }
+            paused_cv.notify_one();
+        }
+        return res;
     }
     
     void finalize_data_queue() STATICLIB_NOEXCEPT {

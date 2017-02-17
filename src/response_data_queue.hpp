@@ -51,6 +51,10 @@ public:
     bool is_full() {
         return queue.is_full();
     }
+    
+    bool is_empty() {
+        return queue.is_empty();
+    }
 
     // consumer methods
 

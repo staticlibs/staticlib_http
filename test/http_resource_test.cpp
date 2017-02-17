@@ -304,22 +304,24 @@ void test_connectfail() {
 
 void test_stress() {
     hc::http_session session;
+    auto fun = [&session] {
+        hc::http_resource src = session.open_url("http://127.0.0.1:80/data");
+        auto sink = cr::make_sha256_sink(io::null_sink());
+        std::streamsize res = io::copy_all(src, sink);
+        slassert(432515165 == res);
+        slassert("1dfa11d08c8e721385b4a3717d575ec5a7bf85a7a7b7494e1aaa8583504c574b" == sink.get_hash());
+    };
     
     std::vector<std::thread> threads;
-    for (int i = 0; i < 16; i++) {
-        auto th = std::thread([&session]{
-            hc::http_resource src = session.open_url("http://127.0.0.1:80/data");
-            auto sink = cr::make_sha256_sink(io::null_sink());
-            std::streamsize res = io::copy_all(src, sink);
-            slassert(432515165 == res);
-            slassert("1dfa11d08c8e721385b4a3717d575ec5a7bf85a7a7b7494e1aaa8583504c574b" == sink.get_hash());
-        });
+    for (int i = 0; i < 7; i++) {
+        auto th = std::thread(fun);
         threads.emplace_back(std::move(th));
     }
     
     for (auto& th : threads) {
         th.join();
     }
+    fun();
 }
 
 int main() {

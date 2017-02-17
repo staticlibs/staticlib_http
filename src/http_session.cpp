@@ -173,8 +173,10 @@ public:
                         }
                     }
                     
+                    if (0 == requests.size()) break;
+                    
                     // spin wait for paused
-                    while (requests.size() > 0) {
+                    for(;;) {
                         spinwait_enter_cycles += 1;
                         // unpause when possible
                         size_t num_paused = 0;
@@ -208,14 +210,15 @@ public:
 //                        std::cout << "requests.size(): " << requests.size() << std::endl;
 //                        std::cout << "num_paused: " << num_paused << std::endl;
 //                        std::this_thread::yield();
-                        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+//                        std::this_thread::sleep_for(std::chrono::milliseconds(10));
                         spinwait_cycles += 1;
-//                        paused_flag.store(true);
+//                        
 //                        auto timeout = std::chrono::milliseconds(this->options.all_requests_paused_timeout_millis);
-//                        std::unique_lock<std::mutex> guard{this->paused_mutex};
-//                        this->paused_cv.wait_for(guard, timeout, [this]{
-//                            return !paused_flag.load();
-//                        });
+                        std::unique_lock<std::mutex> guard{this->paused_mutex};
+                        paused_flag.store(true);
+                        this->paused_cv.wait(guard, [this]{
+                            return !paused_flag.load();
+                        });
                     }
                 }
             }
@@ -266,7 +269,7 @@ public:
             options.method = "POST";
         }
         //  note: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=63736
-        auto pipe = std::make_shared<running_request_pipe>(paused_cv, paused_flag);
+        auto pipe = std::make_shared<running_request_pipe>(paused_mutex, paused_cv, paused_flag);
         auto enqueued = tickets.emplace(url, std::move(options), std::move(post_data), pipe);
         if (!enqueued) throw httpclient_exception(TRACEMSG(
                 "Requests queue is full, size: [" + sc::to_string(tickets.size()) + "]"));
