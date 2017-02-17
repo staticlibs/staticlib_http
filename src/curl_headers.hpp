@@ -24,32 +24,29 @@ namespace staticlib {
 namespace httpclient {
 
 class curl_headers {
-    std::vector<std::string> headers;
+    std::vector<std::string> stored_headers;
     std::unique_ptr<struct curl_slist, curl_slist_deleter> slist;
 
 public:
-    curl_headers(const http_request_options& options) {
-        namespace sc = staticlib::config;
-        if (options.headers.empty()) return;
-//        struct curl_slist* slist_ptr = nullptr;
-        for (auto& pa : options.headers) {
-            headers.emplace_back(pa.first + ": " + pa.second);
-            curl_slist* released = slist.release();
-            curl_slist* ptr = curl_slist_append(released, headers.back().c_str());
-            if (nullptr == ptr) throw httpclient_exception(TRACEMSG(
-                    "Error appending header, key: [" + pa.first + "]," +
-                    " value: [" + pa.second + "]," +
-                    " appended count: [" + sc::to_string(headers.size()) + "]"));
-            slist.reset(ptr);
-        }
-    }
+    curl_headers() { }   
     
     curl_headers(const curl_headers&) = delete;
 
     curl_headers& operator=(const curl_headers&) = delete;
 
-    staticlib::config::optional<curl_slist*> get_curl_slist() {
+    staticlib::config::optional<curl_slist*> wrap_into_slist(
+            const std::vector<std::pair<std::string, std::string>>& provided_headers) {
         namespace sc = staticlib::config;
+        for (auto& pa : provided_headers) {
+            stored_headers.emplace_back(pa.first + ": " + pa.second);
+            curl_slist* released = slist.release();
+            curl_slist* ptr = curl_slist_append(released, stored_headers.back().c_str());
+            if (nullptr == ptr) throw httpclient_exception(TRACEMSG(
+                    "Error appending header, key: [" + pa.first + "]," +
+                    " value: [" + pa.second + "]," +
+                    " appended count: [" + sc::to_string(stored_headers.size()) + "]"));
+            slist.reset(ptr);
+        }
         if (nullptr != slist.get()) {
             return sc::make_optional(slist.get());
         }

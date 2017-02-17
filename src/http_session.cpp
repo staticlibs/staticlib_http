@@ -178,6 +178,7 @@ public:
                         // check more tickets
                         auto newcomers = poll_enqueued_tickets();
                         for (request_ticket& ti : newcomers) {
+                            std::cout << "worker got newcomer ticket" << std::endl;
                             enqueue_request(std::move(ti));
                         }
                         

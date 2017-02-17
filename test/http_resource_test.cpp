@@ -138,13 +138,10 @@ void test_get() {
         opts.method = "GET";
     
         hc::http_resource src = session.open_url(URL, opts);
-//        std::this_thread::sleep_for(std::chrono::seconds{5});
         // check
         std::string out{};
         out.resize(GET_RESPONSE.size());
         std::streamsize res = io::read_all(src, out);
-        std::cout << res << std::endl;
-        std::cout << out << std::endl;
         slassert(out.size() == static_cast<size_t>(res));
         slassert(GET_RESPONSE == out);
     } catch (const std::exception&) {
@@ -258,12 +255,12 @@ int main() {
     try {
         auto start = std::chrono::system_clock::now();
         test_get();
-//        test_post();
-//        test_put();
-//        test_delete();
-//        test_connectfail();
+        test_post();
+        test_put();
+        test_delete();
+        test_connectfail();
         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start);
-        std::cout << elapsed.count() << std::endl;
+        std::cout << "millist elapsed: " << elapsed.count() << std::endl;
     } catch (const std::exception& e) {
         std::cout << e.what() << std::endl;
         return 1;

@@ -58,8 +58,7 @@ public:
     started_time_point(std::chrono::system_clock::now()),
     url(std::move(ticket.url)),
     options(std::move(ticket.options)),
-    post_data(std::move(ticket.post_data)),
-    headers(this->options),
+    post_data(std::move(ticket.post_data)),    
     handle(curl_easy_init(), curl_easy_deleter(multi_handle)),
     pipe(std::move(ticket.pipe)) {        
         if (nullptr == handle.get()) throw httpclient_exception(TRACEMSG("Error initializing cURL handle"));
@@ -221,7 +220,7 @@ private:
         appply_method();
 
         // headers
-        auto slist = headers.get_curl_slist();
+        auto slist = headers.wrap_into_slist(this->options.headers);
         if (slist.has_value()) {
             setopt_object(CURLOPT_HTTPHEADER, static_cast<void*> (slist.value()));
         }
