@@ -45,7 +45,6 @@
 #include "response_data_queue.hpp"
 #include "running_request_pipe.hpp"
 #include "running_request.hpp"
-#include "request_tickets_queue.hpp"
 #include "http_resource_params.hpp"
 #include "all_requests_paused_latch.hpp"
 
@@ -65,7 +64,8 @@ class http_session::impl : public staticlib::pimpl::pimpl_object::impl {
     http_session_options options;
     std::unique_ptr<CURLM, curl_multi_deleter> handle;
     
-    request_tickets_queue tickets;
+    staticlib::containers::synchronized_queue<request_ticket> tickets;
+    std::atomic<bool> new_tickets_arrived;
     std::map<int64_t, std::unique_ptr<running_request>> requests;
 
     std::thread worker;
@@ -78,6 +78,7 @@ public:
     options(options),
     handle(curl_multi_init(), curl_multi_deleter()),
     tickets(options.requests_queue_max_size),
+    new_tickets_arrived(false),
     running(true) { 
         if (nullptr == handle.get()) throw httpclient_exception(TRACEMSG("Error initializing cURL multi handle"));
         // available since 7.30.0        
@@ -253,6 +254,7 @@ public:
         auto enqueued = tickets.emplace(url, std::move(options), std::move(post_data), pipe);
         if (!enqueued) throw httpclient_exception(TRACEMSG(
                 "Requests queue is full, size: [" + sc::to_string(tickets.size()) + "]"));
+        new_tickets_arrived.exchange(true, std::memory_order_acq_rel);
         auto params = http_resource_params(url, std::move(pipe));
         return http_resource(std::move(params));
     }
@@ -284,10 +286,14 @@ private:
     }
     
     std::vector<request_ticket> poll_enqueued_tickets() {
+        bool has_new_tickets = new_tickets_arrived.load(std::memory_order_acquire);
         std::vector<request_ticket> vec;
-        tickets.consume([&vec](request_ticket&& ti){
-            vec.emplace_back(std::move(ti));
-        });
+        if (has_new_tickets) {
+            new_tickets_arrived.store(false, std::memory_order_release);
+            tickets.consume([&vec](request_ticket&& ti){
+                vec.emplace_back(std::move(ti));
+            });
+        }
         return vec;
     }
     
