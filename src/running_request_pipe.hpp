@@ -18,6 +18,7 @@
 #include "staticlib/config.hpp"
 
 #include "staticlib/httpclient/httpclient_exception.hpp"
+#include "staticlib/httpclient/http_request_options.hpp"
 #include "staticlib/httpclient/http_resource_info.hpp"
 
 #include "response_data_queue.hpp"
@@ -37,11 +38,11 @@ class running_request_pipe : public std::enable_shared_from_this<running_request
     std::shared_ptr<all_requests_paused_latch> pause_latch;
 
 public:    
-    running_request_pipe(std::shared_ptr<all_requests_paused_latch> pause_latch) :
+    running_request_pipe(http_request_options& opts, std::shared_ptr<all_requests_paused_latch> pause_latch) :
     response_code(0),
     resource_info(1),
-    data_queue(16),
-    headers_queue(128),
+    data_queue(opts.response_data_queue_size),
+    headers_queue(opts.max_number_of_response_headers),
     errors_non_empty(false),
     errors(std::numeric_limits<uint16_t>::max()),
     pause_latch(std::move(pause_latch)) { }

@@ -23,10 +23,6 @@
 
 #include "staticlib/httpclient/http_session.hpp"
 
-// TODO: removeme
-#include <iostream>
-// TODO: end removeme
-
 #include <chrono>
 #include <condition_variable>
 #include <map>
@@ -88,122 +84,12 @@ public:
 #endif // LIBCURL_VERSION_NUM
         setopt_uint32(CURLMOPT_MAXCONNECTS, options.maxconnects);
         worker = std::thread([this] {
-            while (running.load()) {
-                // wait on queue
-                request_ticket ticket;
-                auto got_ticket = tickets.take(ticket);
-                if (!got_ticket) { // destruction in progress
-                    break; 
-                }
-                enqueue_request(std::move(ticket));
-                
-                uint64_t spinwait_cycles = 0;
-                uint64_t spinwait_enter_cycles = 0;
-                uint64_t spinwait_exit_cycles = 0;
-                
-                // spin while has active transfers
-                while(requests.size() > 0) {
-                    // timeout
-                    long timeo = -1;
-                    CURLMcode err_timeout = curl_multi_timeout(handle.get(), std::addressof(timeo));
-                    if (check_and_abort_on_multi_error(err_timeout)) break;
-                    struct timeval timeout = create_timeout_struct(timeo);
-                    
-                    // fdset
-                    fd_set fdread = create_fd();
-                    fd_set fdwrite = create_fd();
-                    fd_set fdexcep = create_fd();
-                    int maxfd = -1;
-                    CURLMcode err_fdset = curl_multi_fdset(handle.get(), std::addressof(fdread),
-                            std::addressof(fdwrite), std::addressof(fdexcep), std::addressof(maxfd));
-                    if (check_and_abort_on_multi_error(err_fdset)) break;
-
-                    // wait or select
-                    int err_select = 0;
-                    if (maxfd == -1) {
-                        std::this_thread::sleep_for(std::chrono::milliseconds(this->options.fdset_timeout_millis));
-                    } else {
-                        err_select = select(maxfd + 1, std::addressof(fdread), std::addressof(fdwrite),
-                                std::addressof(fdexcep), std::addressof(timeout));
-                    }
-
-                    // do perform if no select error
-                    int active = -1;
-                    if (-1 != err_select) {
-                        CURLMcode err_perform = curl_multi_perform(handle.get(), std::addressof(active));
-                        if (check_and_abort_on_multi_error(err_perform)) break;
-                    }
-                    
-                    // pop completed
-                    for(;;) {
-                        int tmp = -1;
-                        CURLMsg* m = curl_multi_info_read(handle.get(), std::addressof(tmp));
-                        if (nullptr == m) break;
-                        int64_t req_key = reinterpret_cast<int64_t> (m->easy_handle);
-                        auto it = requests.find(req_key);
-                        if (requests.end() == it) {
-                            abort_running_on_multi_error(TRACEMSG("System error: inconsistent queue state, aborting"));
-                            break;
-                        }
-                        running_request& req = *it->second;
-                        if (CURLMSG_DONE == m->msg) {
-                            CURLcode result = m->data.result;
-                            if (req.get_options().abort_on_connect_error && CURLE_OK != result) {
-                                req.append_error(curl_easy_strerror(result));
-                            }
-                            std::cout << "is due to finalize: " << req.get_url() << 
-                                    ", spinwait_cycles: " << spinwait_cycles << 
-                                    ", spinwait_exit_cycles: " << spinwait_exit_cycles <<
-                                    ", spinwait_enter_cycles: " << spinwait_enter_cycles << std::endl;
-                            requests.erase(req_key);
-                        }
-                    }
-                    
-                    if (0 == requests.size()) break;
-                    
-                    // spin wait for paused
-                    for(;;) {
-                        spinwait_enter_cycles += 1;
-                        // unpause when possible
-                        size_t num_paused = 0;
-                        for (auto& pa : requests) {
-                            running_request& req = *pa.second;
-                            if (req.is_paused()) {
-                                if (!req.data_queue_is_full()) {
-                                    req.unpause();
-                                } else {
-                                    num_paused += 1;
-                                }
-                            }
-                        }
-
-                        // check more tickets
-                        auto newcomers = poll_enqueued_tickets();
-                        for (request_ticket& ti : newcomers) {
-                            enqueue_request(std::move(ti));
-                        }
-                                                
-                        // whether to end spinwait
-                        if (newcomers.size() > 0 || requests.size() > num_paused) {
-                            spinwait_exit_cycles += 1;
-                            break;
-                        }
-                        
-                        spinwait_cycles += 1;
-                        pause_latch->await();
-                    }
-                }
-            }
+            this->worker_proc();
         });
     }
     
-    /**
-     * managed all handles inside this class
-     * 
-     */
-    
     ~impl() STATICLIB_NOEXCEPT {
-        running.store(false);
+        running.store(false, std::memory_order_release);
         tickets.unblock();
         worker.join();
     }
@@ -241,7 +127,7 @@ public:
             options.method = "POST";
         }
         //  note: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=63736
-        auto pipe = std::make_shared<running_request_pipe>(pause_latch);
+        auto pipe = std::make_shared<running_request_pipe>(options, pause_latch);
         auto enqueued = tickets.emplace(url, std::move(options), std::move(post_data), pipe);
         if (!enqueued) throw httpclient_exception(TRACEMSG(
                 "Requests queue is full, size: [" + sc::to_string(tickets.size()) + "]"));
@@ -251,6 +137,138 @@ public:
     }
     
 private:
+    void worker_proc() {
+        while (running.load(std::memory_order_acquire)) {
+            // wait on queue
+            request_ticket ticket;
+            auto got_ticket = tickets.take(ticket);
+            if (!got_ticket) { // destruction in progress
+                break;
+            }
+            enqueue_request(std::move(ticket));
+
+            // spin while has active transfers
+            while (requests.size() > 0) {
+
+                // receive data
+                bool perform_success = curl_perform();
+                if (!perform_success) {
+                    break;
+                }
+
+                // pop completed
+                bool pop_success = pop_completed_requests();
+                if (!pop_success) {
+                    break;
+                }
+
+                if (0 == requests.size()) break;
+
+                // wait for paused
+                for (;;) {
+                    // unpause when possible
+                    size_t num_paused = unpause_enqueued_requests();
+
+                    // check more tickets
+                    auto newcomers = poll_enqueued_tickets();
+                    for (request_ticket& ti : newcomers) {
+                        enqueue_request(std::move(ti));
+                    }
+
+                    // whether to skip wait
+                    if (newcomers.size() > 0 || requests.size() > num_paused) {
+                        break;
+                    }
+
+                    // wait for consumers
+                    pause_latch->await();
+                }
+            }
+        }
+    }
+    
+    bool curl_perform() {
+        // timeout
+        long timeo = -1;
+        CURLMcode err_timeout = curl_multi_timeout(handle.get(), std::addressof(timeo));
+        if (check_and_abort_on_multi_error(err_timeout)) {
+            return false;
+        }
+        struct timeval timeout = create_timeout_struct(timeo);
+
+        // fdset
+        fd_set fdread = create_fd();
+        fd_set fdwrite = create_fd();
+        fd_set fdexcep = create_fd();
+        int maxfd = -1;
+        CURLMcode err_fdset = curl_multi_fdset(handle.get(), std::addressof(fdread),
+                std::addressof(fdwrite), std::addressof(fdexcep), std::addressof(maxfd));
+        if (check_and_abort_on_multi_error(err_fdset)) {
+            return false;
+        }
+
+        // wait or select
+        int err_select = 0;
+        if (maxfd == -1) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(this->options.fdset_timeout_millis));
+        } else {
+            err_select = select(maxfd + 1, std::addressof(fdread), std::addressof(fdwrite),
+                    std::addressof(fdexcep), std::addressof(timeout));
+        }
+
+        // do perform if no select error
+        int active = -1;
+        if (-1 != err_select) {
+            CURLMcode err_perform = curl_multi_perform(handle.get(), std::addressof(active));
+            if (check_and_abort_on_multi_error(err_perform)) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    bool pop_completed_requests() {
+        for (;;) {
+            int tmp = -1;
+            CURLMsg* cm = curl_multi_info_read(handle.get(), std::addressof(tmp));
+            if (nullptr == cm) {
+                // all requests in queue inspected
+                break;
+            }
+            int64_t req_key = reinterpret_cast<int64_t> (cm->easy_handle);
+            auto it = requests.find(req_key);
+            if (requests.end() == it) {
+                abort_running_on_multi_error(TRACEMSG("System error: inconsistent queue state, aborting"));
+                return false;
+            }
+            running_request& req = *it->second;
+            if (CURLMSG_DONE == cm->msg) {
+                CURLcode result = cm->data.result;
+                if (req.get_options().abort_on_connect_error && CURLE_OK != result) {
+                    req.append_error(curl_easy_strerror(result));
+                }
+                requests.erase(req_key);
+            }
+        }
+        return true;
+    }
+    
+    size_t unpause_enqueued_requests() {
+        size_t num_paused = 0;
+        for (auto& pa : requests) {
+            running_request& req = *pa.second;
+            if (req.is_paused()) {
+                if (!req.data_queue_is_full()) {
+                    req.unpause();
+                } else {
+                    num_paused += 1;
+                }
+            }
+        }
+        return num_paused;
+    }
+    
     void setopt_uint32(CURLMoption opt, uint32_t value) {
         if (0 == value) return;
         CURLMcode err = curl_multi_setopt(handle.get(), opt, value);
@@ -268,7 +286,7 @@ private:
             auto pa = std::make_pair(reinterpret_cast<int64_t> (ha), std::move(req));
             requests.insert(std::move(pa));
         } catch (const std::exception& e) {
-            // this two are normally called
+            // these two are normally called
             // on requests queue pop, but here
             // enqueue itself is failed
             pipe->append_error(TRACEMSG(e.what()));
@@ -290,7 +308,7 @@ private:
     
     bool check_and_abort_on_multi_error(CURLMcode code) {
         if (CURLM_OK == code) return false;
-        abort_running_on_multi_error(TRACEMSG("CURL engine error, transfer aborted," +
+        abort_running_on_multi_error(TRACEMSG("cURL engine error, transfer aborted," +
                 " code: [" + curl_multi_strerror(code) + "]"));
         return true;
     }
@@ -323,8 +341,6 @@ private:
         FD_ZERO(std::addressof(res));
         return res;
     }
-
-    
 };
 PIMPL_FORWARD_CONSTRUCTOR(http_session, (http_session_options), (), httpclient_exception)
 PIMPL_FORWARD_METHOD(http_session, http_resource, open_url, (const std::string&)(http_request_options), (), httpclient_exception)

@@ -56,6 +56,15 @@ struct http_request_options {
      * HttpException will be thrown from read method on HTTP response code >= 400
      */
     bool abort_on_response_error = true;
+    /**
+     * Max amount of cURL data packets cached in memory for this request.
+     * Each packet takes CURL_MAX_WRITE_SIZE (usually 16KB).
+     */
+    uint16_t response_data_queue_size = 16;
+    /**
+     * Max allowed number of response headers
+     */
+    uint16_t max_number_of_response_headers = 128;
     
     // general behavior options
     

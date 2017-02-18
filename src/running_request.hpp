@@ -33,7 +33,7 @@ namespace httpclient {
 
 class running_request {
     enum class req_state {
-        created, receiving_headers, receiving_data
+        created, receiving_headers, receiving_data, receiving_trailers
     };
     
     // holds data passed to curl
@@ -160,12 +160,14 @@ private:
         if (req_state::created == state) {
             long code = getinfo_long(CURLINFO_RESPONSE_CODE);
             if (options.abort_on_response_error && code >= 400) {
-                append_error("HTTP response error, status code: [" + sc::to_string(code) + "]");
+                append_error(TRACEMSG("HTTP response error, status code: [" + sc::to_string(code) + "]"));
                 return 0;
             } else {
                 pipe->set_response_code(code);
                 state = req_state::receiving_headers;
             }
+        } else if (req_state::receiving_data == state) {
+            state = req_state::receiving_trailers;
         }
         size_t len = size*nitems;
         std::string name{};
@@ -188,6 +190,12 @@ private:
     }
     
     size_t write_data(char* buffer, size_t size, size_t nitems) {
+        if (req_state::receiving_headers == state) {
+            state = req_state::receiving_data;
+        } else if (req_state::receiving_data != state) {
+            append_error(TRACEMSG("System error: invalid state on 'write_data'"));
+            return 0;
+        }
         size_t len = size * nitems;
         // chunk is too big for stack        
         std::vector<char> buf;
