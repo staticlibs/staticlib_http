@@ -73,7 +73,7 @@ public:
                 "Invalid response code specified: [" + sc::to_string(code) + "]"));
         int16_t the_zero = 0;
         bool success = response_code.compare_exchange_strong(the_zero, static_cast<int16_t> (code),
-                std::memory_order_release);
+                std::memory_order_release, std::memory_order_relaxed);
         if (!success) throw httpclient_exception(TRACEMSG(
                 "Invalid second attempt to set response code," +
                 " existing code: [" + sc::to_string(the_zero) +"]," +

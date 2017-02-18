@@ -32,7 +32,8 @@
 namespace staticlib {
 namespace httpclient {
 
-struct http_resource_params {
+class http_resource_params {
+public:
     const std::string& url;
     std::shared_ptr<running_request_pipe> pipe;
     

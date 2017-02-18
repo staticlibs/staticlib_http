@@ -43,7 +43,7 @@ class response_data_queue : public std::enable_shared_from_this<response_data_qu
     bool exhausted = false;
 
 public:
-    response_data_queue(size_t queue_size) :
+    response_data_queue(uint32_t queue_size) :
     queue(queue_size) { }
 
     // producer methods
