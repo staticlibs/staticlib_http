@@ -49,8 +49,6 @@ class running_request {
     bool paused = false;
     std::string error;
     
-    
-    
     req_state state = req_state::created;
     
 public:
@@ -259,6 +257,7 @@ private:
         setopt_uint32(CURLOPT_TCP_KEEPIDLE, options.tcp_keepidle_secs);
         setopt_uint32(CURLOPT_TCP_KEEPINTVL, options.tcp_keepintvl_secs);
         setopt_uint32(CURLOPT_CONNECTTIMEOUT_MS, options.connecttimeout_millis);
+        setopt_uint32(CURLOPT_TIMEOUT_MS, options.timeout_millis);
 
         // HTTP options
         setopt_uint32(CURLOPT_BUFFERSIZE, options.buffersize_bytes);

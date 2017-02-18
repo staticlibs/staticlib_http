@@ -56,11 +56,6 @@ struct http_request_options {
      * HttpException will be thrown from read method on HTTP response code >= 400
      */
     bool abort_on_response_error = true;
-    /**
-     * Timeout for reading the whole response from server,
-     * HttpException exception will be thrown from read method on timeout 
-     */
-    uint32_t read_timeout_millis = 15000;
     
     // general behavior options
     
@@ -107,6 +102,10 @@ struct http_request_options {
      * https://curl.haxx.se/libcurl/c/CURLOPT_CONNECTTIMEOUT_MS.html
      */
     uint32_t connecttimeout_millis = 10000;
+    /**
+     * https://curl.haxx.se/libcurl/c/CURLOPT_TIMEOUT_MS.html
+     */
+    uint32_t timeout_millis = 15000;
     
     // HTTP options
     

@@ -134,8 +134,7 @@ public:
                         if (check_and_abort_on_multi_error(err_perform)) break;
                     }
                     
-                    // pop completed or timeouted
-                    std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+                    // pop completed
                     for(;;) {
                         int tmp = -1;
                         CURLMsg* m = curl_multi_info_read(handle.get(), std::addressof(tmp));
@@ -157,14 +156,6 @@ public:
                                     ", spinwait_exit_cycles: " << spinwait_exit_cycles <<
                                     ", spinwait_enter_cycles: " << spinwait_enter_cycles << std::endl;
                             requests.erase(req_key);
-                        } else {
-                            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - req.started_at());
-                            if (elapsed.count() > req.get_options().read_timeout_millis) {
-                                req.append_error(TRACEMSG("Request timeout error," +
-                                        " elapsed time (millis): [" + sc::to_string(elapsed.count()) + "]," +
-                                        " limit: [" + sc::to_string(req.get_options().read_timeout_millis) + "]"));
-                                requests.erase(req_key);
-                            }
                         }
                     }
                     

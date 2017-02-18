@@ -176,6 +176,14 @@ void large_handler(hs::http_request_ptr& req, hs::tcp_connection_ptr& conn) {
     sender->send();
 }
 
+void timeout_handler(hs::http_request_ptr& req, hs::tcp_connection_ptr& conn) {
+    slassert("test" == req->get_header("User-Agent"));
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    auto writer = hs::http_response_writer::create(conn, req);
+    writer->write(GET_RESPONSE);
+    writer->send();
+}
+
 void test_get() {
     // server
     hs::http_server server(2, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
@@ -302,10 +310,55 @@ void test_connectfail() {
     slassert(!src.connection_successful());
 }
 
+void test_timeout() {
+    // server
+    hs::http_server server(2, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
+    server.add_handler("GET", "/", timeout_handler);
+    server.start();
+    // client
+    try {
+        hc::http_session session{};
+        hc::http_request_options opts{};
+        opts.headers = {{"User-Agent", "test"}};
+        opts.timeout_millis = 3000;
+        enrich_opts_ssl(opts);
+
+        {
+            hc::http_resource src = session.open_url(URL, opts);
+            auto sink = io::string_sink();
+            std::streamsize res = io::copy_all(src, sink);
+            slassert(GET_RESPONSE.size() == static_cast<size_t> (res));
+            slassert(GET_RESPONSE == sink.get_string());
+        }
+        
+        {
+            bool caught = false;
+            // timeout
+            opts.timeout_millis = 1000;
+            try {
+                hc::http_resource src = session.open_url(URL, opts);
+                auto sink = io::null_sink();
+                io::copy_all(src, sink);
+            } catch(const hc::httpclient_exception& e) {
+                (void) e;
+                caught = true;
+            }
+            slassert(caught);
+        }
+    } catch (const std::exception&) {
+        server.stop(true);
+        throw;
+    }
+    // stop server
+    server.stop(true);
+}
+
 void test_stress() {
     hc::http_session session;
     auto fun = [&session] {
-        hc::http_resource src = session.open_url("http://127.0.0.1:80/data");
+        hc::http_request_options opts;
+        opts.timeout_millis = 60000;
+        hc::http_resource src = session.open_url("http://127.0.0.1:80/data", opts);
         auto sink = cr::make_sha256_sink(io::null_sink());
         std::streamsize res = io::copy_all(src, sink);
         slassert(432515165 == res);
@@ -332,6 +385,7 @@ int main() {
 //        test_put();
 //        test_delete();
 //        test_connectfail();
+//        test_timeout();
         test_stress();
         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start);
         std::cout << "millist elapsed: " << elapsed.count() << std::endl;

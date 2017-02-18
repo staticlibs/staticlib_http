@@ -55,15 +55,16 @@ public:
         if (!sc::is_uint16_positive(code)) throw httpclient_exception(TRACEMSG(
                 "Invalid response code specified: [" + sc::to_string(code) + "]"));
         int16_t the_zero = 0;
-        bool success = response_code.compare_exchange_strong(the_zero, static_cast<int16_t> (code));
+        bool success = response_code.compare_exchange_strong(the_zero, static_cast<int16_t> (code),
+                std::memory_order_release);
         if (!success) throw httpclient_exception(TRACEMSG(
                 "Invalid second attempt to set response code," +
-                " existing code: [" + sc::to_string(response_code.load()) +"]," +
+                " existing code: [" + sc::to_string(the_zero) +"]," +
                 " new code: [" + sc::to_string(code) + "]"));
     }
     
     uint16_t get_response_code() const {
-        return response_code.load();
+        return response_code.load(std::memory_order_acquire);
     }
     
     void set_resource_info(http_resource_info&& info) {
@@ -123,7 +124,7 @@ public:
     
     // not synchronized, but only single producer is expected
     void append_error(const std::string& msg) STATICLIB_NOEXCEPT {
-        errors_non_empty.store(true);
+        errors_non_empty.store(true, std::memory_order_release);
         errors.emplace(msg);
     }
     
@@ -139,7 +140,7 @@ public:
     }
     
     bool has_errors() {
-        return errors_non_empty.load();
+        return errors_non_empty.load(std::memory_order_acquire);
     }
     
 };
