@@ -32,6 +32,9 @@ Visual Studio development command prompt
     git clone --recursive https://github.com/staticlibs/external_zlib.git
     git clone --recursive https://github.com/staticlibs/external_openssl.git
     git clone --recursive https://github.com/staticlibs/external_curl.git
+    git clone https://github.com/staticlibs/staticlib_config.git
+    git clone https://github.com/staticlibs/staticlib_containers.git
+    git clone https://github.com/staticlibs/staticlib_io.git
     git clone https://github.com/staticlibs/staticlib_httpclient.git
     cd staticlib_httpclient
     mkdir build
@@ -54,6 +57,11 @@ This project is released under the [Apache License 2.0](http://www.apache.org/li
 
 Changelog
 ---------
+
+**2016-06-29**
+
+ * version 1.2
+ * make `http_session` thread-safe
 
 **2016-06-29**
 
