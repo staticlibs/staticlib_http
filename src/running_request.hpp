@@ -35,7 +35,6 @@ class running_request {
     enum class req_state {
         created, receiving_headers, receiving_data
     };
-    std::chrono::system_clock::time_point started_time_point;
     
     // holds data passed to curl
     std::string url;
@@ -53,7 +52,6 @@ class running_request {
     
 public:
     running_request(CURLM* multi_handle, request_ticket&& ticket) :
-    started_time_point(std::chrono::system_clock::now()),
     url(std::move(ticket.url)),
     options(std::move(ticket.options)),
     post_data(std::move(ticket.post_data)),    
@@ -149,10 +147,6 @@ public:
     
     CURL* easy_handle() {
         return handle.get();
-    }
-    
-    std::chrono::system_clock::time_point started_at() {
-        return started_time_point;
     }
     
     bool data_queue_is_full() {
