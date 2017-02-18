@@ -33,7 +33,7 @@ class running_request_pipe : public std::enable_shared_from_this<running_request
     response_data_queue data_queue;
     staticlib::containers::producer_consumer_queue<std::pair<std::string, std::string>> headers_queue;
     std::atomic<bool> errors_non_empty;
-    staticlib::containers::synchronized_queue<std::string> errors;
+    staticlib::containers::blocking_queue<std::string> errors;
     
     std::shared_ptr<all_requests_paused_latch> pause_latch;
 
@@ -123,7 +123,6 @@ public:
         return res;
     }
     
-    // not synchronized, but only single producer is expected
     void append_error(const std::string& msg) STATICLIB_NOEXCEPT {
         errors_non_empty.store(true, std::memory_order_release);
         errors.emplace(msg);

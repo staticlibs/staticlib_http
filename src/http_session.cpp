@@ -60,7 +60,7 @@ class http_session::impl : public staticlib::pimpl::pimpl_object::impl {
     http_session_options options;
     std::unique_ptr<CURLM, curl_multi_deleter> handle;
     
-    staticlib::containers::synchronized_queue<request_ticket> tickets;
+    staticlib::containers::blocking_queue<request_ticket> tickets;
     std::atomic<bool> new_tickets_arrived;
     std::map<int64_t, std::unique_ptr<running_request>> requests;
 
