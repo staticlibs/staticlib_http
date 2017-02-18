@@ -1,11 +1,10 @@
 var searchData=
 [
-  ['read',['read',['../classstaticlib_1_1httpclient_1_1HttpResource.html#a9bb22ae0dc3d38d5e32dc043a26f885d',1,'staticlib::httpclient::HttpResource']]],
-  ['read_5ftimeout_5fmillis',['read_timeout_millis',['../structstaticlib_1_1httpclient_1_1HttpRequestOptions.html#a17267cab2d72d4e3ef057e7aa75ee1bb',1,'staticlib::httpclient::HttpRequestOptions']]],
-  ['ready',['ready',['../structstaticlib_1_1httpclient_1_1HttpResourceInfo.html#a2611699be8af5a0eb0e55cea0475f87f',1,'staticlib::httpclient::HttpResourceInfo']]],
-  ['redirect_5fcount',['redirect_count',['../structstaticlib_1_1httpclient_1_1HttpResourceInfo.html#a8f31ef41af39e4de736ba18cfe2fdace',1,'staticlib::httpclient::HttpResourceInfo']]],
-  ['redirect_5ftime_5fsecs',['redirect_time_secs',['../structstaticlib_1_1httpclient_1_1HttpResourceInfo.html#a471723022cb2415497f07af129a74f3c',1,'staticlib::httpclient::HttpResourceInfo']]],
-  ['request_5fsize_5fbytes',['request_size_bytes',['../structstaticlib_1_1httpclient_1_1HttpResourceInfo.html#a47af673c3e0640005e5e619877401d31',1,'staticlib::httpclient::HttpResourceInfo']]],
-  ['require_5ftls',['require_tls',['../structstaticlib_1_1httpclient_1_1HttpRequestOptions.html#a8a7f164637df95bb44f12878fa3e28fe',1,'staticlib::httpclient::HttpRequestOptions']]],
-  ['response_5fcode',['response_code',['../structstaticlib_1_1httpclient_1_1HttpResourceInfo.html#a01f5426b478a20d4e4205b1442fed8f4',1,'staticlib::httpclient::HttpResourceInfo']]]
+  ['read',['read',['../classstaticlib_1_1httpclient_1_1http__resource.html#adfa8fb0d5568c2f3d27a9279a5e75cda',1,'staticlib::httpclient::http_resource']]],
+  ['redirect_5fcount',['redirect_count',['../structstaticlib_1_1httpclient_1_1http__resource__info.html#a4968cc9b5da1e9ca4882b49625774ef2',1,'staticlib::httpclient::http_resource_info']]],
+  ['redirect_5ftime_5fsecs',['redirect_time_secs',['../structstaticlib_1_1httpclient_1_1http__resource__info.html#adec70e933363a1333005b058ca898422',1,'staticlib::httpclient::http_resource_info']]],
+  ['request_5fsize_5fbytes',['request_size_bytes',['../structstaticlib_1_1httpclient_1_1http__resource__info.html#ac871a17fd6fb91617566599d9763da08',1,'staticlib::httpclient::http_resource_info']]],
+  ['requests_5fqueue_5fmax_5fsize',['requests_queue_max_size',['../structstaticlib_1_1httpclient_1_1http__session__options.html#a7bf26f89a611bdb6a1c89e248e8575a1',1,'staticlib::httpclient::http_session_options']]],
+  ['require_5ftls',['require_tls',['../structstaticlib_1_1httpclient_1_1http__request__options.html#ace8dc27848ce5d25803468080b1c4063',1,'staticlib::httpclient::http_request_options']]],
+  ['response_5fdata_5fqueue_5fsize',['response_data_queue_size',['../structstaticlib_1_1httpclient_1_1http__request__options.html#a41a934e334c3baa400cac2bbf8fea315',1,'staticlib::httpclient::http_request_options']]]
 ];

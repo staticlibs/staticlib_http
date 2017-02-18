@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['path_5fas_5fis',['path_as_is',['../structstaticlib_1_1httpclient_1_1HttpRequestOptions.html#a78ff596c42d89544a3a55e3010fd6d54',1,'staticlib::httpclient::HttpRequestOptions']]],
-  ['pretransfer_5ftime_5fsecs',['pretransfer_time_secs',['../structstaticlib_1_1httpclient_1_1HttpResourceInfo.html#afaba282dbbf033bd048e9765b9a78c07',1,'staticlib::httpclient::HttpResourceInfo']]],
-  ['primary_5fip',['primary_ip',['../structstaticlib_1_1httpclient_1_1HttpResourceInfo.html#a533eac2c9f61f04cb8146f870c4f0e70',1,'staticlib::httpclient::HttpResourceInfo']]],
-  ['primary_5fport',['primary_port',['../structstaticlib_1_1httpclient_1_1HttpResourceInfo.html#add515f462abc874420cb5ed3c723d8c5',1,'staticlib::httpclient::HttpResourceInfo']]]
+  ['path_5fas_5fis',['path_as_is',['../structstaticlib_1_1httpclient_1_1http__request__options.html#ab3ee8ecdc6b91aceb62727bc1abe4ab9',1,'staticlib::httpclient::http_request_options']]],
+  ['pretransfer_5ftime_5fsecs',['pretransfer_time_secs',['../structstaticlib_1_1httpclient_1_1http__resource__info.html#a16a732ea298b525fc5ce29d96d12f851',1,'staticlib::httpclient::http_resource_info']]],
+  ['primary_5fip',['primary_ip',['../structstaticlib_1_1httpclient_1_1http__resource__info.html#a98969f1d402ab8e7c688073eb8bb6274',1,'staticlib::httpclient::http_resource_info']]],
+  ['primary_5fport',['primary_port',['../structstaticlib_1_1httpclient_1_1http__resource__info.html#afe4f39aa32145535c66c2bce3e04f819',1,'staticlib::httpclient::http_resource_info']]]
 ];

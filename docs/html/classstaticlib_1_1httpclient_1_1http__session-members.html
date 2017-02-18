@@ -23,7 +23,7 @@
   <td id="projectlogo"><img alt="Logo" src="logo.png"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">staticlib_httpclient
-   &#160;<span id="projectnumber">1.1</span>
+   &#160;<span id="projectnumber">1.2</span>
    </div>
   </td>
  </tr>
@@ -82,23 +82,27 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="namespacestaticlib.html">staticlib</a></li><li class="navelem"><a class="el" href="namespacestaticlib_1_1httpclient.html">httpclient</a></li><li class="navelem"><a class="el" href="classstaticlib_1_1httpclient_1_1HttpClientException.html">HttpClientException</a></li>  </ul>
+<li class="navelem"><a class="el" href="namespacestaticlib.html">staticlib</a></li><li class="navelem"><a class="el" href="namespacestaticlib_1_1httpclient.html">httpclient</a></li><li class="navelem"><a class="el" href="classstaticlib_1_1httpclient_1_1http__session.html">http_session</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="headertitle">
-<div class="title">staticlib::httpclient::HttpClientException Member List</div>  </div>
+<div class="title">staticlib::httpclient::http_session Member List</div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>This is the complete list of members for <a class="el" href="classstaticlib_1_1httpclient_1_1HttpClientException.html">staticlib::httpclient::HttpClientException</a>, including all inherited members.</p>
+<p>This is the complete list of members for <a class="el" href="classstaticlib_1_1httpclient_1_1http__session.html">staticlib::httpclient::http_session</a>, including all inherited members.</p>
 <table class="directory">
-  <tr class="even"><td class="entry"><a class="el" href="classstaticlib_1_1httpclient_1_1HttpClientException.html#acf9ef5a48e621429379aefb392415a31">HttpClientException</a>()</td><td class="entry"><a class="el" href="classstaticlib_1_1httpclient_1_1HttpClientException.html">staticlib::httpclient::HttpClientException</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="classstaticlib_1_1httpclient_1_1HttpClientException.html#aeddca3c8fe1b5a066f267aa493461c39">HttpClientException</a>(const std::string &amp;msg)</td><td class="entry"><a class="el" href="classstaticlib_1_1httpclient_1_1HttpClientException.html">staticlib::httpclient::HttpClientException</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="classstaticlib_1_1httpclient_1_1http__session.html#af1a7099b27e97bb7e9e15c4606f99b43">http_session</a>(http_session_options options=http_session_options{})</td><td class="entry"><a class="el" href="classstaticlib_1_1httpclient_1_1http__session.html">staticlib::httpclient::http_session</a></td><td class="entry"></td></tr>
+  <tr><td class="entry"><a class="el" href="classstaticlib_1_1httpclient_1_1http__session.html#abeea81ff82d758530297f2d91434b6ac">open_url</a>(const std::string &amp;url, http_request_options options=http_request_options{})</td><td class="entry"><a class="el" href="classstaticlib_1_1httpclient_1_1http__session.html">staticlib::httpclient::http_session</a></td><td class="entry"></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="classstaticlib_1_1httpclient_1_1http__session.html#a5c9c5df961c45c190932293d659e8f31">open_url</a>(const std::string &amp;url, std::streambuf *post_data, http_request_options options=http_request_options{})</td><td class="entry"><a class="el" href="classstaticlib_1_1httpclient_1_1http__session.html">staticlib::httpclient::http_session</a></td><td class="entry"></td></tr>
+  <tr><td class="entry"><a class="el" href="classstaticlib_1_1httpclient_1_1http__session.html#ad8c01e0c012756df0c6015e4f2ceec64">open_url</a>(const std::string &amp;url, std::unique_ptr&lt; std::istream &gt; post_data, http_request_options options=http_request_options{})</td><td class="entry"><a class="el" href="classstaticlib_1_1httpclient_1_1http__session.html">staticlib::httpclient::http_session</a></td><td class="entry"></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="classstaticlib_1_1httpclient_1_1http__session.html#aed0b048506b9a67be7e77e6156b392fb">open_url</a>(const std::string &amp;url, PostDataSource &amp;&amp;post_data, http_request_options options=http_request_options{})</td><td class="entry"><a class="el" href="classstaticlib_1_1httpclient_1_1http__session.html">staticlib::httpclient::http_session</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
+  <tr><td class="entry"><a class="el" href="classstaticlib_1_1httpclient_1_1http__session.html#a0b5176504a57a68d9eed95e0af2d535d">open_url</a>(const std::string &amp;url, PostDataSource &amp;post_data, http_request_options options=http_request_options{})</td><td class="entry"><a class="el" href="classstaticlib_1_1httpclient_1_1http__session.html">staticlib::httpclient::http_session</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
 </table></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Jun 29 2016 09:09:54 for staticlib_httpclient by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Feb 18 2017 19:01:02 for staticlib_httpclient by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.1.2
 </small></address>
