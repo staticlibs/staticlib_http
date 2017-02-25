@@ -57,14 +57,13 @@ struct http_request_options {
      */
     bool abort_on_response_error = true;
     /**
-     * Max amount of cURL data packets cached in memory for this request.
-     * Each packet takes CURL_MAX_WRITE_SIZE (usually 16KB).
-     */
-    uint16_t response_data_queue_size = 16;
-    /**
      * Max allowed number of response headers
      */
     uint16_t max_number_of_response_headers = 128;
+    /**
+     * Consumer thread wakeup timeout (in milliseconds)
+     */
+    uint16_t consumer_thread_wakeup_timeout_millis = 100;
     
     // general behavior options
     

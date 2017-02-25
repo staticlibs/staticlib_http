@@ -49,7 +49,7 @@ if ( NOT DEFINED STATICLIB_TOOLCHAIN )
         staticlib_httpclient_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../external_curl )
     endif (  )
     staticlib_httpclient_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../staticlib_config )
-    staticlib_httpclient_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../staticlib_containers )
+    staticlib_httpclient_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../staticlib_concurrent )
     staticlib_httpclient_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../staticlib_io )
     staticlib_httpclient_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../staticlib_pimpl )
 endif ( )
@@ -57,7 +57,7 @@ endif ( )
 # deps
 set ( ${PROJECT_NAME}_OPTIONS "" )
 set ( ${PROJECT_NAME}_DEPS_PUBLIC
-        staticlib_containers
+        staticlib_concurrent
         staticlib_io
         staticlib_pimpl )
 set ( ${PROJECT_NAME}_DEPS_PRIVATE 

@@ -32,17 +32,15 @@
 
 #include "curl/curl.h"
 
-#include "staticlib/containers.hpp"
+#include "staticlib/concurrent.hpp"
 #include "staticlib/io.hpp"
 #include "staticlib/pimpl/pimpl_forward_macros.hpp"
 
 #include "curl_deleters.hpp"
 #include "curl_headers.hpp"
-#include "response_data_queue.hpp"
 #include "running_request_pipe.hpp"
 #include "running_request.hpp"
 #include "http_resource_params.hpp"
-#include "all_requests_paused_latch.hpp"
 
 namespace staticlib {
 namespace httpclient {
@@ -60,21 +58,24 @@ class http_session::impl : public staticlib::pimpl::pimpl_object::impl {
     http_session_options options;
     std::unique_ptr<CURLM, curl_multi_deleter> handle;
     
-    staticlib::containers::blocking_queue<request_ticket> tickets;
+    staticlib::concurrent::mpmc_blocking_queue<request_ticket> tickets;
     std::atomic<bool> new_tickets_arrived;
     std::map<int64_t, std::unique_ptr<running_request>> requests;
 
+    std::shared_ptr<staticlib::concurrent::condition_latch> pause_latch;
+    
     std::thread worker;
     std::atomic<bool> running;
     
-    std::shared_ptr<all_requests_paused_latch> pause_latch = std::make_shared<all_requests_paused_latch>();
-
 public:
     impl(http_session_options options) :
     options(options),
     handle(curl_multi_init(), curl_multi_deleter()),
     tickets(options.requests_queue_max_size),
     new_tickets_arrived(false),
+    pause_latch(std::make_shared<staticlib::concurrent::condition_latch>([this] {
+        return this->check_pause_condition();
+    })),
     running(true) { 
         if (nullptr == handle.get()) throw httpclient_exception(TRACEMSG("Error initializing cURL multi handle"));
         // available since 7.30.0        
@@ -90,6 +91,7 @@ public:
     
     ~impl() STATICLIB_NOEXCEPT {
         running.store(false, std::memory_order_release);
+        pause_latch->notify_one();
         tickets.unblock();
         worker.join();
     }
@@ -136,6 +138,30 @@ public:
         return http_resource(std::move(params));
     }
     
+    // not exposed
+    
+    bool check_pause_condition() {
+        // unpause when possible
+        size_t num_paused = unpause_enqueued_requests();
+        if (requests.size() > num_paused) {
+            // consumers are active, let's proceed
+            // with them postponing polling for newcomers
+            return true;
+        }
+        
+        // check more tickets
+        auto newcomers = poll_enqueued_tickets();
+        if (newcomers.size() > 0) {
+            for (request_ticket& ti : newcomers) {
+                this->enqueue_request(std::move(ti));
+            }
+            return true;
+        }
+        
+        // check we are still running
+        return !running.load(std::memory_order_acquire);
+    }
+    
 private:
     void worker_proc() {
         while (running.load(std::memory_order_acquire)) {
@@ -162,29 +188,14 @@ private:
                     break;
                 }
 
+                // check there are running requests
                 if (0 == requests.size()) break;
 
-                // wait for paused
-                for (;;) {
-                    // unpause when possible
-                    size_t num_paused = unpause_enqueued_requests();
-
-                    // check more tickets
-                    auto newcomers = poll_enqueued_tickets();
-                    for (request_ticket& ti : newcomers) {
-                        enqueue_request(std::move(ti));
-                    }
-
-                    // whether to skip wait
-                    if (newcomers.size() > 0 || requests.size() > num_paused) {
-                        break;
-                    }
-
-                    // wait for consumers
-                    pause_latch->await();
-                }
-            }
+                // wait if all requests paused
+                pause_latch->await();
+            }            
         }
+        requests.clear();
     }
     
     bool curl_perform() {
@@ -290,7 +301,7 @@ private:
             // on requests queue pop, but here
             // enqueue itself is failed
             pipe->append_error(TRACEMSG(e.what()));
-            pipe->finalize_data_queue();
+            pipe->shutdown();
         }
     }
     
@@ -299,7 +310,7 @@ private:
         std::vector<request_ticket> vec;
         if (has_new_tickets) {
             new_tickets_arrived.store(false, std::memory_order_release);
-            tickets.consume([&vec](request_ticket&& ti){
+            tickets.poll([&vec](request_ticket&& ti){
                 vec.emplace_back(std::move(ti));
             });
         }

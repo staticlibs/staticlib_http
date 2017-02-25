@@ -379,7 +379,7 @@ void test_stress() {
 
 int main() {
     try {
-        auto start = std::chrono::system_clock::now();
+//        auto start = std::chrono::system_clock::now();
         test_get();
         test_post();
         test_put();
@@ -387,8 +387,8 @@ int main() {
         test_connectfail();
 //        test_timeout();
 //        test_stress();
-        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start);
-        std::cout << "millist elapsed: " << elapsed.count() << std::endl;
+//        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start);
+//        std::cout << "millist elapsed: " << elapsed.count() << std::endl;
     } catch (const std::exception& e) {
         std::cout << e.what() << std::endl;
         return 1;

@@ -32,36 +32,36 @@
 #include <vector>
 
 #include "staticlib/config.hpp"
+#include "staticlib/concurrent.hpp"
 
 #include "staticlib/httpclient/httpclient_exception.hpp"
 #include "staticlib/httpclient/http_request_options.hpp"
 #include "staticlib/httpclient/http_resource_info.hpp"
-
-#include "response_data_queue.hpp"
-#include "all_requests_paused_latch.hpp"
 
 namespace staticlib {
 namespace httpclient {
 
 class running_request_pipe : public std::enable_shared_from_this<running_request_pipe> {
     std::atomic<int16_t> response_code;
-    staticlib::containers::producer_consumer_queue<http_resource_info> resource_info;
-    response_data_queue data_queue;
-    staticlib::containers::producer_consumer_queue<std::pair<std::string, std::string>> headers_queue;
+    staticlib::concurrent::spsc_inobject_concurrent_queue<http_resource_info, 1> resource_info;
+    staticlib::concurrent::spsc_inobject_waiting_queue<staticlib::concurrent::growing_buffer, 16> data_queue;
+    staticlib::concurrent::spsc_concurrent_queue<std::pair<std::string, std::string>> headers_queue;
     std::atomic<bool> errors_non_empty;
-    staticlib::containers::blocking_queue<std::string> errors;
-    
-    std::shared_ptr<all_requests_paused_latch> pause_latch;
+    staticlib::concurrent::mpmc_blocking_queue<std::string> errors;
+    std::shared_ptr<staticlib::concurrent::condition_latch> pause_latch;
+    uint16_t consumer_thread_wakeup_timeout_millis;
+    std::atomic<bool> running;
 
 public:    
-    running_request_pipe(http_request_options& opts, std::shared_ptr<all_requests_paused_latch> pause_latch) :
+    running_request_pipe(http_request_options& opts, 
+            std::shared_ptr<staticlib::concurrent::condition_latch> pause_latch) :
     response_code(0),
-    resource_info(1),
-    data_queue(opts.response_data_queue_size),
     headers_queue(opts.max_number_of_response_headers),
     errors_non_empty(false),
     errors(std::numeric_limits<uint16_t>::max()),
-    pause_latch(std::move(pause_latch)) { }
+    pause_latch(std::move(pause_latch)),
+    consumer_thread_wakeup_timeout_millis(opts.consumer_thread_wakeup_timeout_millis),
+    running(true) { }
     
     running_request_pipe(const running_request_pipe&) = delete;
     
@@ -85,7 +85,7 @@ public:
     }
     
     void set_resource_info(http_resource_info&& info) {
-        if (resource_info.size_guess() > 0) throw httpclient_exception(TRACEMSG(
+        if (resource_info.size() > 0) throw httpclient_exception(TRACEMSG(
                 "Invalid second attempt to set resource info"));
         resource_info.emplace(std::move(info));
     }
@@ -96,30 +96,46 @@ public:
         return res;
     }
     
-    bool emplace_some_data(std::vector<char>&& data) {
-        return data_queue.emplace(std::move(data));
+    bool write_some_data(staticlib::concurrent::growing_buffer&& buf) {
+        return data_queue.emplace(std::move(buf));
     }
     
-    bool receive_some_data(std::vector<char>& dest_buffer) {
-        bool prefilled = data_queue.poll(dest_buffer);
-        bool res;
-        if (prefilled) {
-            res = true;
-        } else {
-            res = data_queue.take(dest_buffer);
+    bool receive_some_data(staticlib::concurrent::growing_buffer& dest_buffer) {
+        // non-blocking read
+        bool polres = data_queue.poll(dest_buffer);
+        if (polres) {
+            return true;
         }
-        if (res && data_queue.is_empty()) {
-            pause_latch->unlock();
+        // blocking read
+        pause_latch->notify_one();
+        // at this point we have a race condition between waiting consumer 
+        // and worker that is due to start waiting on pause_latch;
+        // synchronization appeared to be too expensive here,
+        // so this spinwait + timeout trick is used
+        for(;;) {
+            auto timeout = std::chrono::milliseconds(consumer_thread_wakeup_timeout_millis);
+            bool takeres = data_queue.take(dest_buffer, timeout);
+            if (takeres) {
+                // got data
+                return true;
+            }
+            if (running.load(std::memory_order_acquire)) {
+                // still running, wakeup worker and wait again
+                pause_latch->notify_one();
+            } else {
+                // shutting down
+                return data_queue.take(dest_buffer);
+            }
         }
-        return res;
     }
     
-    void finalize_data_queue() STATICLIB_NOEXCEPT {
-        data_queue.finalize();
+    void shutdown() STATICLIB_NOEXCEPT {
+        running.store(false, std::memory_order_release);
+        data_queue.unblock();
     }
     
     bool data_queue_is_full() {
-        return data_queue.is_full();
+        return data_queue.full();
     }
     
     void emplace_header(std::string&& name, std::string&& value) {
@@ -146,7 +162,7 @@ public:
     
     std::string get_error_message() {
         std::string dest;
-        errors.consume([&dest](std::string&& st){
+        errors.poll([&dest](std::string&& st){
             if (!dest.empty()) {
                 dest.append("\n");
             }

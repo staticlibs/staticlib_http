@@ -58,12 +58,10 @@ class running_request {
     std::unique_ptr<std::istream> post_data;
     curl_headers headers;
     std::unique_ptr<CURL, curl_easy_deleter> handle;
-
     std::shared_ptr<running_request_pipe> pipe;
-
     bool paused = false;
     std::string error;
-    
+    staticlib::concurrent::growing_buffer buf;
     req_state state = req_state::created;
     
 public:
@@ -99,7 +97,7 @@ public:
         if (!error.empty()) {
             pipe->append_error(error);
         }
-        pipe->finalize_data_queue();
+        pipe->shutdown();
     }
 
     static size_t headers_callback(char* buffer, size_t size, size_t nitems, void* userp) STATICLIB_NOEXCEPT {
@@ -214,10 +212,9 @@ private:
         }
         size_t len = size * nitems;
         // chunk is too big for stack        
-        std::vector<char> buf;
         buf.resize(len);
         std::memcpy(buf.data(), buffer, buf.size());
-        bool placed = pipe->emplace_some_data(std::move(buf));
+        bool placed = pipe->write_some_data(std::move(buf));
         if (!placed) {
             paused = true;
             return CURL_WRITEFUNC_PAUSE;

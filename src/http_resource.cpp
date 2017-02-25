@@ -33,12 +33,12 @@
 #include "curl/curl.h"
 
 #include "staticlib/config.hpp"
+#include "staticlib/concurrent.hpp"
 #include "staticlib/pimpl/pimpl_forward_macros.hpp"
 
 #include "staticlib/httpclient/http_resource_info.hpp"
 #include "staticlib/httpclient/httpclient_exception.hpp"
 
-#include "response_data_queue.hpp"
 #include "http_resource_params.hpp"
 
 namespace staticlib {
@@ -47,6 +47,7 @@ namespace httpclient {
 namespace { // anonymous
 
 namespace sc = staticlib::config;
+namespace cr = staticlib::concurrent;
 
 using headers_type = const std::vector<std::pair<std::string, std::string>>&;
 
@@ -59,7 +60,7 @@ class http_resource::impl : public staticlib::pimpl::pimpl_object::impl {
     mutable std::shared_ptr<running_request_pipe> pipe;
     mutable std::vector<std::pair<std::string, std::string>> headers;
     
-    std::vector<char> current_chunk;
+    cr::growing_buffer current_buf;
     size_t start_idx = 0;
     
 public:
@@ -68,15 +69,17 @@ public:
     pipe(std::move(params.pipe)) { }
     
     std::streamsize read(http_resource&, sc::span<char> span) {
-        size_t avail = current_chunk.size() - start_idx;
+        size_t avail = current_buf.size() - start_idx;
         if (avail > 0) {
             return read_from_current(span, avail);
         }
         start_idx = 0;
-        bool success = pipe->receive_some_data(current_chunk);
-        if (pipe->has_errors()) throw httpclient_exception(TRACEMSG(pipe->get_error_message()));
+        bool success = pipe->receive_some_data(current_buf);
+        if (pipe->has_errors()) {
+            throw httpclient_exception(TRACEMSG(pipe->get_error_message()));
+        }
         if (success) {
-            return read_from_current(span, current_chunk.size());
+            return read_from_current(span, current_buf.size());
         } else {
             return std::char_traits<char>::eof();
         }
@@ -130,7 +133,7 @@ public:
 private:
     std::streamsize read_from_current(sc::span<char>& span, size_t avail) {
         size_t len = avail <= span.size() ? avail : span.size();
-        std::memcpy(span.data(), current_chunk.data() + start_idx, len);
+        std::memcpy(span.data(), current_buf.data() + start_idx, len);
         start_idx += len;
         return static_cast<std::streamsize> (len);
     }

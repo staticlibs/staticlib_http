@@ -49,6 +49,16 @@ public:
     curl_headers(const curl_headers&) = delete;
 
     curl_headers& operator=(const curl_headers&) = delete;
+    
+    curl_headers(curl_headers&& other) :
+    stored_headers(std::move(other.stored_headers)),
+    slist(std::move(other.slist)) { }
+    
+    curl_headers& operator=(curl_headers&& other) {
+        stored_headers = std::move(other.stored_headers);
+        slist = std::move(other.slist);
+        return *this;
+    }
 
     staticlib::config::optional<curl_slist*> wrap_into_slist(
             const std::vector<std::pair<std::string, std::string>>& provided_headers) {
