@@ -297,9 +297,9 @@ private:
             auto pa = std::make_pair(reinterpret_cast<int64_t> (ha), std::move(req));
             requests.insert(std::move(pa));
         } catch (const std::exception& e) {
-            // these two are normally called
+            // these two lines are normally called
             // on requests queue pop, but here
-            // enqueue itself is failed
+            // enqueue itself failed
             pipe->append_error(TRACEMSG(e.what()));
             pipe->shutdown();
         }
