@@ -21,7 +21,7 @@
  * Created on November 20, 2015, 8:44 AM
  */
 
-#include "staticlib/httpclient/http_session.hpp"
+#include "staticlib/httpclient/multi_threaded_http_session.hpp"
 
 #include <iostream>
 
@@ -29,7 +29,7 @@
 
 void test_not_leaked() {
     // check not leaked
-    auto hs = staticlib::httpclient::http_session{};
+    auto hs = staticlib::httpclient::multi_threaded_http_session{};
     (void) hs;
 }
 

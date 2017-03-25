@@ -42,20 +42,16 @@
 namespace staticlib {
 namespace httpclient {
 
-// forward decl
-class http_resource_params;
-
 /**
- * Remote HTTP resoure that can be read from as a `Source`
+ * Remote HTTP resource that can be read from as a `Source`
  */
 class http_resource : public staticlib::pimpl::pimpl_object {
-friend class http_session;    
 protected:
     /**
      * implementation class
      */
     class impl;
-
+    
 public:
     /**
      * PIMPL-specific constructor
@@ -63,42 +59,42 @@ public:
      * @param pimpl impl object
      */
     PIMPL_CONSTRUCTOR(http_resource)
-
+    
     /**
      * Reads some data from a remote resource
      * 
      * @param span output span
      * @return number of bytes processed
      */
-    std::streamsize read(staticlib::config::span<char> span);
+    virtual std::streamsize read(staticlib::config::span<char> span);
     
     /**
      * Returns URL of this resource
      * 
      * @return URL of this resource
      */
-    const std::string& get_url() const;
+    virtual const std::string& get_url() const;
     
     /**
      * Returns HTTP status code
      * 
      * @return HTTP status code
      */
-    uint16_t get_status_code() const;
+    virtual uint16_t get_status_code() const;
     
     /**
      * Accessor for the resource metainformation
      * 
      * @return 
      */
-    http_resource_info get_info() const;
+    virtual http_resource_info get_info() const;
 
     /**
      * Accessor for received headers
      * 
      * @return received headers
      */
-    const std::vector<std::pair<std::string, std::string>>& get_headers() const;
+    virtual const std::vector<std::pair<std::string, std::string>>& get_headers() const;
 
     /**
      * Returns a value for the specified header, received from server.
@@ -107,7 +103,7 @@ public:
      * @param name header name
      * @return header value, empty string if specified header not found
      */
-    const std::string& get_header(const std::string& name) const;
+    virtual const std::string& get_header(const std::string& name) const;
 
     /**
      * Inspect connection attempt results
@@ -115,15 +111,7 @@ public:
      * @return 'true' if connection has been established successfully and
      *         response code has been received, 'false' otherwise
      */
-    bool connection_successful() const;
-    
-private:
-    /**
-     * Private constructor for implementation details
-     * 
-     * @param http_resource_params input parameterss
-     */
-    http_resource(http_resource_params&& params);
+    virtual bool connection_successful() const;    
     
 };
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, alex at staticlibs.net
+ * Copyright 2017, alex at staticlibs.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,23 +15,18 @@
  */
 
 /* 
- * File:   http_session.hpp
+ * File:   basic_http_session.hpp
  * Author: alex
  *
- * Created on November 20, 2015, 8:42 AM
+ * Created on March 25, 2017, 5:29 PM
  */
 
-#ifndef STATICLIB_HTTPCLIENT_HTTP_SESSION_HPP
-#define	STATICLIB_HTTPCLIENT_HTTP_SESSION_HPP
+#ifndef STATICLIB_HTTPCLIENT_BASIC_HTTP_SESSION_HPP
+#define	STATICLIB_HTTPCLIENT_BASIC_HTTP_SESSION_HPP
 
 #include <istream>
 #include <memory>
-#include <sstream>
 #include <streambuf>
-#include <string>
-#include <type_traits>
-#include <utility>
-#include <vector>
 
 #include "staticlib/config.hpp"
 #include "staticlib/io.hpp"
@@ -45,29 +40,27 @@
 namespace staticlib {
 namespace httpclient {
 
-/**
- * Context object for one or more HTTP requests. Caches TCP connections.
- */
-class http_session : public staticlib::pimpl::pimpl_object {
+class basic_http_session : public staticlib::pimpl::pimpl_object {
+protected:
     /**
-     * implementation class
+     * Implementation class
      */
     class impl;
-    
-public:   
-    /**
-     * PIMPL-specific constructor
-     * 
-     * @param pimpl impl object
-     */
-    PIMPL_CONSTRUCTOR(http_session)
     
     /**
      * Constructor
      * 
      * @param options session options
      */
-    http_session(http_session_options options = http_session_options{});
+    basic_http_session(http_session_options options = http_session_options{});
+    
+public:
+    /**
+     * PIMPL-specific constructor
+     * 
+     * @param pimpl impl object
+     */
+    PIMPL_CONSTRUCTOR(basic_http_session)
 
     /**
      * Opens specified HTTP url as a Source
@@ -79,7 +72,7 @@ public:
     http_resource open_url(
             const std::string& url,
             http_request_options options = http_request_options{});
-    
+
     /**
      * Opens specified HTTP url as a Source using POST method
      * 
@@ -101,19 +94,6 @@ public:
      * @param options request options
      * @return HTTP resource
      */
-    http_resource open_url(
-            const std::string& url,
-            std::unique_ptr<std::istream> post_data,
-            http_request_options options = http_request_options{});
-
-    /**
-     * Opens specified HTTP url as a Source using POST method
-     * 
-     * @param url HTTP URL
-     * @param post_data data to upload
-     * @param options request options
-     * @return HTTP resource
-     */
     template<typename PostDataSource,
             class = typename std::enable_if<!std::is_lvalue_reference<PostDataSource>::value>::type>
     http_resource open_url(
@@ -121,7 +101,8 @@ public:
             PostDataSource&& post_data,
             http_request_options options = http_request_options{}) {
         std::unique_ptr<std::istream> sbuf{
-            staticlib::io::make_source_istream_ptr(std::move(post_data))};
+            staticlib::io::make_source_istream_ptr(std::move(post_data))
+        };
         return open_url(url, std::move(sbuf), std::move(options));
     }
 
@@ -132,21 +113,35 @@ public:
      * @param post_data data to upload
      * @param options request options
      * @return HTTP resource
-     */            
+     */
     template<typename PostDataSource>
     http_resource open_url(
             const std::string& url,
             PostDataSource& post_data,
             http_request_options options = http_request_options{}) {
         std::unique_ptr<std::istream> sbuf{
-            staticlib::io::make_source_istream_ptr(post_data)};
+            staticlib::io::make_source_istream_ptr(post_data)
+        };
         return open_url(url, std::move(sbuf), std::move(options));
-    }            
-    
+    }
+            
+    /**
+     * Opens specified HTTP url as a Source using POST method
+     * 
+     * @param url HTTP URL
+     * @param post_data data to upload
+     * @param options request options
+     * @return HTTP resource
+     */
+    virtual http_resource open_url(
+            const std::string& url,
+            std::unique_ptr<std::istream> post_data,
+            http_request_options options = http_request_options{}) = 0;
+            
 };
 
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTPCLIENT_HTTP_SESSION_HPP */
+#endif	/* STATICLIB_HTTPCLIENT_BASIC_HTTP_SESSION_HPP */
 

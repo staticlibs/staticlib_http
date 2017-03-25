@@ -77,7 +77,7 @@ public:
         CURLMcode errm = curl_multi_add_handle(multi_handle, handle.get());
         if (errm != CURLM_OK) throw httpclient_exception(TRACEMSG(
                 "cURL multi_add error: [" + curl_multi_strerror(errm) + "], url: [" + this->url + "]"));
-        apply_curl_options(this, url, options, post_data, headers, handle);
+        apply_curl_options(this, this->url, this->options, this->post_data, this->headers, this->handle);
     }
     
     running_request(const running_request&) = delete;

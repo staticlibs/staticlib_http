@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, alex at staticlibs.net
+ * Copyright 2017, alex at staticlibs.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,13 @@
  */
 
 /* 
- * File:   http_session.cpp
+ * File:   multi_threaded_http_session.cpp
  * Author: alex
- * 
- * Created on November 20, 2015, 8:42 AM
+ *
+ * Created on March 25, 2017, 6:20 PM
  */
 
-#include "staticlib/httpclient/http_session.hpp"
+#include "staticlib/httpclient/multi_threaded_http_session.hpp"
 
 #include <chrono>
 #include <condition_variable>
@@ -36,11 +36,13 @@
 #include "staticlib/io.hpp"
 #include "staticlib/pimpl/pimpl_forward_macros.hpp"
 
-#include "curl_deleters.hpp"
+#include "basic_http_session_impl.hpp"
 #include "curl_headers.hpp"
+#include "curl_utils.hpp"
+#include "http_resource_params.hpp"
+#include "multi_threaded_http_resource.hpp"
 #include "running_request_pipe.hpp"
 #include "running_request.hpp"
-#include "http_resource_params.hpp"
 
 namespace staticlib {
 namespace httpclient {
@@ -50,12 +52,10 @@ namespace { // anonymous
 namespace sc = staticlib::config;
 namespace io = staticlib::io;
 
-//
-
 } // namespace
 
-class http_session::impl : public staticlib::pimpl::pimpl_object::impl {
-    http_session_options options;
+class multi_threaded_http_session::impl : public basic_http_session::impl {
+
     std::unique_ptr<CURLM, curl_multi_deleter> handle;
     
     staticlib::concurrent::mpmc_blocking_queue<request_ticket> tickets;
@@ -63,32 +63,27 @@ class http_session::impl : public staticlib::pimpl::pimpl_object::impl {
     std::map<int64_t, std::unique_ptr<running_request>> requests;
 
     std::shared_ptr<staticlib::concurrent::condition_latch> pause_latch;
-    
+
     std::thread worker;
     std::atomic<bool> running;
     
 public:
     impl(http_session_options options) :
-    options(options),
+    basic_http_session::impl(options),
     handle(curl_multi_init(), curl_multi_deleter()),
     tickets(options.requests_queue_max_size),
     new_tickets_arrived(false),
     pause_latch(std::make_shared<staticlib::concurrent::condition_latch>([this] {
         return this->check_pause_condition();
     })),
-    running(true) { 
+    running(true) {
         if (nullptr == handle.get()) throw httpclient_exception(TRACEMSG("Error initializing cURL multi handle"));
-        // available since 7.30.0        
-#if LIBCURL_VERSION_NUM >= 0x071e00
-        setopt_uint32(CURLMOPT_MAX_HOST_CONNECTIONS, options.max_host_connections);
-        setopt_uint32(CURLMOPT_MAX_TOTAL_CONNECTIONS, options.max_total_connections);
-#endif // LIBCURL_VERSION_NUM
-        setopt_uint32(CURLMOPT_MAXCONNECTS, options.maxconnects);
+        apply_curl_multi_options(this->options, this->handle);
         worker = std::thread([this] {
             this->worker_proc();
         });
     }
-    
+
     ~impl() STATICLIB_NOEXCEPT {
         running.store(false, std::memory_order_release);
         pause_latch->notify_one();
@@ -96,34 +91,7 @@ public:
         worker.join();
     }
 
-    http_resource open_url(http_session& frontend,
-            const std::string& url,
-            http_request_options options) {
-        if ("" == options.method) {
-            options.method = "GET";
-        }
-        return open_url(frontend, url, nullptr, std::move(options));
-    }
-    
-    http_resource open_url(http_session& frontend,
-            const std::string& url,
-            std::streambuf* post_data, http_request_options options) {
-        namespace si = staticlib::io;
-        auto sbuf_ptr = [post_data] () -> std::streambuf* {
-            if (nullptr != post_data) {
-                return post_data;
-            }
-            static std::istringstream empty_stream{""};
-            return empty_stream.rdbuf();
-        } ();
-        if ("" == options.method) {
-            options.method = "POST";
-        }
-        auto sbuf = si::make_source_istream_ptr(si::streambuf_source(sbuf_ptr));
-        return open_url(frontend, url, std::move(sbuf), std::move(options));
-    }
-    
-    http_resource open_url(http_session&, const std::string& url,
+    http_resource open_url(multi_threaded_http_session&, const std::string& url,
             std::unique_ptr<std::istream> post_data, http_request_options options) {
         if ("" == options.method) {
             options.method = "POST";
@@ -135,11 +103,11 @@ public:
                 "Requests queue is full, size: [" + sc::to_string(tickets.size()) + "]"));
         new_tickets_arrived.exchange(true, std::memory_order_acq_rel);
         auto params = http_resource_params(url, std::move(pipe));
-        return http_resource(std::move(params));
+        return multi_threaded_http_resource(std::move(params));
     }
-    
+
     // not exposed
-    
+
     bool check_pause_condition() {
         // unpause when possible
         size_t num_paused = unpause_enqueued_requests();
@@ -148,7 +116,7 @@ public:
             // with them postponing polling for newcomers
             return true;
         }
-        
+
         // check more tickets
         auto newcomers = poll_enqueued_tickets();
         if (newcomers.size() > 0) {
@@ -157,12 +125,13 @@ public:
             }
             return true;
         }
-        
+
         // check we are still running
         return !running.load(std::memory_order_acquire);
     }
-    
+
 private:
+
     void worker_proc() {
         while (running.load(std::memory_order_acquire)) {
             // wait on queue
@@ -193,11 +162,11 @@ private:
 
                 // wait if all requests paused
                 pause_latch->await();
-            }            
+            }
         }
         requests.clear();
     }
-    
+
     bool curl_perform() {
         // timeout
         long timeo = -1;
@@ -235,10 +204,10 @@ private:
                 return false;
             }
         }
-        
+
         return true;
     }
-    
+
     bool pop_completed_requests() {
         for (;;) {
             int tmp = -1;
@@ -264,7 +233,7 @@ private:
         }
         return true;
     }
-    
+
     size_t unpause_enqueued_requests() {
         size_t num_paused = 0;
         for (auto& pa : requests) {
@@ -279,15 +248,7 @@ private:
         }
         return num_paused;
     }
-    
-    void setopt_uint32(CURLMoption opt, uint32_t value) {
-        if (0 == value) return;
-        CURLMcode err = curl_multi_setopt(handle.get(), opt, value);
-        if (err != CURLM_OK) throw httpclient_exception(TRACEMSG(
-                "Error setting session option: [" + sc::to_string(opt) + "]," +
-                " to value: [" + sc::to_string(value) + "]"));
-    }
-    
+
     void enqueue_request(request_ticket&& ticket) {
         // local copy                
         auto pipe = ticket.pipe;
@@ -304,26 +265,26 @@ private:
             pipe->shutdown();
         }
     }
-    
+
     std::vector<request_ticket> poll_enqueued_tickets() {
         bool has_new_tickets = new_tickets_arrived.load(std::memory_order_acquire);
         std::vector<request_ticket> vec;
         if (has_new_tickets) {
             new_tickets_arrived.store(false, std::memory_order_release);
-            tickets.poll([&vec](request_ticket&& ti){
+            tickets.poll([&vec](request_ticket && ti) {
                 vec.emplace_back(std::move(ti));
             });
         }
         return vec;
     }
-    
+
     bool check_and_abort_on_multi_error(CURLMcode code) {
         if (CURLM_OK == code) return false;
         abort_running_on_multi_error(TRACEMSG("cURL engine error, transfer aborted," +
                 " code: [" + curl_multi_strerror(code) + "]"));
         return true;
     }
-    
+
     void abort_running_on_multi_error(const std::string& error) {
         for (auto& pa : requests) {
             running_request& re = *pa.second;
@@ -331,32 +292,9 @@ private:
         }
         requests.clear();
     }
-
-    // http://curl-library.cool.haxx.narkive.com/2sYifbgu/issue-with-curl-multi-timeout-while-doing-non-blocking-http-posts-in-vms
-    struct timeval create_timeout_struct(long timeo) {
-        struct timeval timeout;
-        std::memset(std::addressof(timeout), '\0', sizeof (timeout));
-        timeout.tv_sec = 10;
-        if (timeo > 0) {
-            long ctsecs = timeo / 1000;
-            if (ctsecs < 10) {
-                timeout.tv_sec = ctsecs;
-            }
-            timeout.tv_usec = (timeo % 1000) * 1000;
-        }
-        return timeout;
-    }
-
-    fd_set create_fd() {
-        fd_set res;
-        FD_ZERO(std::addressof(res));
-        return res;
-    }
 };
-PIMPL_FORWARD_CONSTRUCTOR(http_session, (http_session_options), (), httpclient_exception)
-PIMPL_FORWARD_METHOD(http_session, http_resource, open_url, (const std::string&)(http_request_options), (), httpclient_exception)
-PIMPL_FORWARD_METHOD(http_session, http_resource, open_url, (const std::string&)(std::streambuf*)(http_request_options), (), httpclient_exception)
-PIMPL_FORWARD_METHOD(http_session, http_resource, open_url, (const std::string&)(std::unique_ptr<std::istream>)(http_request_options), (), httpclient_exception)        
+PIMPL_FORWARD_CONSTRUCTOR(multi_threaded_http_session, (http_session_options), (), httpclient_exception)
+PIMPL_FORWARD_METHOD(multi_threaded_http_session, http_resource, open_url, (const std::string&)(std::unique_ptr<std::istream>)(http_request_options), (), httpclient_exception)            
 
 } // namespace
 }

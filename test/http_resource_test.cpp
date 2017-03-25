@@ -41,7 +41,7 @@
 #include "staticlib/io.hpp"
 #include "staticlib/tinydir.hpp"
 
-#include "staticlib/httpclient/http_session.hpp"
+#include "staticlib/httpclient/multi_threaded_http_session.hpp"
 
 
 namespace io = staticlib::io;
@@ -191,7 +191,7 @@ void test_get() {
     server.start();
     // client
     try {
-        hc::http_session session{};
+        hc::multi_threaded_http_session session{};
         hc::http_request_options opts{};
         opts.headers = {{"User-Agent", "test"}, {"X-Method", "GET"}};
         enrich_opts_ssl(opts);
@@ -220,7 +220,7 @@ void test_post() {
     server.start();
     // client
     try {
-        hc::http_session session{};
+        hc::multi_threaded_http_session session{};
         hc::http_request_options opts{};
         opts.headers = {{"User-Agent", "test"}, {"X-Method", "POST"}};
         opts.method = "POST";
@@ -249,7 +249,7 @@ void test_put() {
     server.start();
     // client
     try {
-        hc::http_session session{};
+        hc::multi_threaded_http_session session{};
         hc::http_request_options opts{};
         opts.headers = {{"User-Agent", "test"}, {"X-Method", "PUT"}};
         opts.method = "PUT";
@@ -277,7 +277,7 @@ void test_delete() {
     server.start();
     // client
     try {
-        hc::http_session session{};
+        hc::multi_threaded_http_session session{};
         hc::http_request_options opts{};
         opts.headers = {{"User-Agent", "test"}, {"X-Method", "DELETE"}};
         enrich_opts_ssl(opts);
@@ -299,7 +299,7 @@ void test_delete() {
 }
 
 void test_connectfail() {    
-    hc::http_session session{};
+    hc::multi_threaded_http_session session{};
     hc::http_request_options opts{};
     opts.abort_on_connect_error = false;
     opts.connecttimeout_millis = 100;
@@ -317,7 +317,7 @@ void test_timeout() {
     server.start();
     // client
     try {
-        hc::http_session session{};
+        hc::multi_threaded_http_session session{};
         hc::http_request_options opts{};
         opts.headers = {{"User-Agent", "test"}};
         opts.timeout_millis = 3000;
@@ -354,7 +354,7 @@ void test_timeout() {
 }
 
 void test_stress() {
-    hc::http_session session;
+    hc::multi_threaded_http_session session;
     auto fun = [&session] {
         hc::http_request_options opts;
         opts.timeout_millis = 60000;

@@ -33,6 +33,7 @@
 #include "staticlib/config.hpp"
 
 #include "staticlib/httpclient/http_request_options.hpp"
+#include "staticlib/httpclient/http_session_options.hpp"
 #include "staticlib/httpclient/httpclient_exception.hpp"
 
 #include "curl_headers.hpp"
@@ -247,11 +248,49 @@ private:
 
 };
 
+class curl_multi_options {
+    staticlib::config::observer_ptr<http_session_options> options;
+    CURLM* handle;
+public:
+    curl_multi_options(http_session_options& options, std::unique_ptr<CURLM, curl_multi_deleter>& handle) :
+    options(staticlib::config::make_observer_ptr(options)),
+    handle(handle.get()) { }
+
+    curl_multi_options(const curl_multi_options&) = delete;
+
+    curl_multi_options& operator=(const curl_multi_options&) = delete;
+
+    void apply() {
+        // available since 7.30.0        
+#if LIBCURL_VERSION_NUM >= 0x071e00
+        setopt_uint32(CURLMOPT_MAX_HOST_CONNECTIONS, options->max_host_connections);
+        setopt_uint32(CURLMOPT_MAX_TOTAL_CONNECTIONS, options->max_total_connections);
+#endif // LIBCURL_VERSION_NUM
+        setopt_uint32(CURLMOPT_MAXCONNECTS, options->maxconnects);
+    }
+
+private:
+    void setopt_uint32(CURLMoption opt, uint32_t value) {
+        namespace sc = staticlib::config;
+        if (0 == value) return;
+        CURLMcode err = curl_multi_setopt(handle, opt, value);
+        if (err != CURLM_OK) throw httpclient_exception(TRACEMSG(
+                "Error setting session option: [" + sc::to_string(opt) + "]," +
+                " to value: [" + sc::to_string(value) + "]," +
+                " error: [" + curl_multi_strerror(err) + "]"));
+    }        
+    
+};
+
 template<typename T>
 void apply_curl_options(T* cb_obj, std::string& url, http_request_options& options,
         std::unique_ptr<std::istream>& post_data, curl_headers& headers,
         std::unique_ptr<CURL, curl_easy_deleter>& handle) {
     curl_options<T>(cb_obj, url, options, post_data, headers, handle).apply();
+}
+
+void apply_curl_multi_options(http_session_options& options, std::unique_ptr<CURLM, curl_multi_deleter>& handle) {
+    curl_multi_options(options, handle).apply();
 }
 
 } // namespace

@@ -37,7 +37,9 @@ public:
     multi_handle(multi_handle) { }
 
     void operator()(CURL* curl) {
-        curl_multi_remove_handle(multi_handle, curl);
+        if (nullptr != multi_handle) {
+            curl_multi_remove_handle(multi_handle, curl);
+        }
         curl_easy_cleanup(curl);
     }
 };
