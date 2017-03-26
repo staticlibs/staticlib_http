@@ -27,10 +27,10 @@
 #include "staticlib/httpclient/http_request_options.hpp"
 #include "staticlib/httpclient/http_resource.hpp"
 #include "staticlib/httpclient/http_resource_info.hpp"
-// todo
-// #include "staticlib/httpclient/http_session.hpp"
 #include "staticlib/httpclient/http_session_options.hpp"
 #include "staticlib/httpclient/httpclient_exception.hpp"
+#include "staticlib/httpclient/multi_threaded_http_session.hpp"
+#include "staticlib/httpclient/single_threaded_http_session.hpp"
 
 #endif	/* STATICLIB_HTTPCLIENT_HTTPCLIENT_HPP */
 

@@ -30,7 +30,7 @@ namespace staticlib {
 namespace httpclient {
 
 // http://curl-library.cool.haxx.narkive.com/2sYifbgu/issue-with-curl-multi-timeout-while-doing-non-blocking-http-posts-in-vms
-struct timeval create_timeout_struct(long timeo) {
+inline struct timeval create_timeout_struct(long timeo) {
     struct timeval timeout;
     std::memset(std::addressof(timeout), '\0', sizeof (timeout));
     timeout.tv_sec = 10;
@@ -44,7 +44,7 @@ struct timeval create_timeout_struct(long timeo) {
     return timeout;
 }
 
-fd_set create_fd() {
+inline fd_set create_fd() {
     fd_set res;
     FD_ZERO(std::addressof(res));
     return res;

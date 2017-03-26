@@ -42,6 +42,7 @@
 #include "staticlib/tinydir.hpp"
 
 #include "staticlib/httpclient/multi_threaded_http_session.hpp"
+#include "staticlib/httpclient/single_threaded_http_session.hpp"
 
 
 namespace io = staticlib::io;
@@ -184,122 +185,65 @@ void timeout_handler(hs::http_request_ptr& req, hs::tcp_connection_ptr& conn) {
     writer->send();
 }
 
-void test_get() {
-    // server
-    hs::http_server server(2, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
-    server.add_handler("GET", "/", get_handler);
-    server.start();
-    // client
-    try {
-        hc::multi_threaded_http_session session{};
-        hc::http_request_options opts{};
-        opts.headers = {{"User-Agent", "test"}, {"X-Method", "GET"}};
-        enrich_opts_ssl(opts);
-        opts.method = "GET";
-    
-        hc::http_resource src = session.open_url(URL, opts);
-        // check
-        std::string out{};
-        out.resize(GET_RESPONSE.size());
-        std::streamsize res = io::read_all(src, out);
-        slassert(out.size() == static_cast<size_t>(res));
-        slassert(GET_RESPONSE == out);
-    } catch (const std::exception&) {
-        server.stop(true);
-        throw;
-    }
-    // stop server
-    server.stop(true);
+void request_get(hc::basic_http_session& session) {
+    hc::http_request_options opts{};
+    opts.headers = {{"User-Agent", "test"}, {"X-Method", "GET"}};
+    enrich_opts_ssl(opts);
+    opts.method = "GET";
+    hc::http_resource src = session.open_url(URL + "get", opts);
+    // check
+    std::string out{};
+    out.resize(GET_RESPONSE.size());
+    std::streamsize res = io::read_all(src, out);
+    slassert(out.size() == static_cast<size_t>(res));
+    slassert(GET_RESPONSE == out);
 }
 
-void test_post() {
-    // server
-    hs::http_server server(2, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
-    server.add_handler("POST", "/", post_handler);
-    server.add_payload_handler("POST", "/", [](hs::http_request_ptr&) { return payload_receiver{}; });
-    server.start();
-    // client
-    try {
-        hc::multi_threaded_http_session session{};
-        hc::http_request_options opts{};
-        opts.headers = {{"User-Agent", "test"}, {"X-Method", "POST"}};
-        opts.method = "POST";
-        enrich_opts_ssl(opts);
-        io::string_source post_data{POSTPUT_DATA};
-        hc::http_resource src = session.open_url(URL, post_data, opts);
-        // check
-        std::string out{};
-        out.resize(POST_RESPONSE.size());        
-        std::streamsize res = io::read_all(src, out);
-        slassert(out.size() == static_cast<size_t> (res));
-        slassert(POST_RESPONSE == out);
-    } catch (const std::exception&) {
-        server.stop(true);
-        throw;
-    }
-    // stop server
-    server.stop(true);
+void request_post(hc::basic_http_session& session) {
+    hc::http_request_options opts{};
+    opts.headers = {{"User-Agent", "test"}, {"X-Method", "POST"}};
+    opts.method = "POST";
+    enrich_opts_ssl(opts);
+    io::string_source post_data{POSTPUT_DATA};
+    hc::http_resource src = session.open_url(URL + "post", post_data, opts);
+    // check
+    std::string out{};
+    out.resize(POST_RESPONSE.size());        
+    std::streamsize res = io::read_all(src, out);
+    slassert(out.size() == static_cast<size_t> (res));
+    slassert(POST_RESPONSE == out);
 }
 
-void test_put() {
-    // server
-    hs::http_server server(2, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
-    server.add_handler("PUT", "/", put_handler);
-    server.add_payload_handler("PUT", "/", [](hs::http_request_ptr&) {return payload_receiver{}; });
-    server.start();
-    // client
-    try {
-        hc::multi_threaded_http_session session{};
-        hc::http_request_options opts{};
-        opts.headers = {{"User-Agent", "test"}, {"X-Method", "PUT"}};
-        opts.method = "PUT";
-        enrich_opts_ssl(opts);
-        io::string_source post_data{POSTPUT_DATA};
-        hc::http_resource src = session.open_url(URL, std::move(post_data), opts);
-        // check
-        std::string out{};
-        out.resize(PUT_RESPONSE.size());
-        std::streamsize res = io::read_all(src, out);
-        slassert(out.size() == static_cast<size_t> (res));
-        slassert(PUT_RESPONSE == out);
-    } catch (const std::exception&) {
-        server.stop(true);
-        throw;
-    }
-    // stop server
-    server.stop(true);
+void request_put(hc::basic_http_session& session) {
+    hc::http_request_options opts{};
+    opts.headers = {{"User-Agent", "test"}, {"X-Method", "PUT"}};
+    opts.method = "PUT";
+    enrich_opts_ssl(opts);
+    io::string_source post_data{POSTPUT_DATA};
+    hc::http_resource src = session.open_url(URL + "put", std::move(post_data), opts);
+    // check
+    std::string out{};
+    out.resize(PUT_RESPONSE.size());
+    std::streamsize res = io::read_all(src, out);
+    slassert(out.size() == static_cast<size_t> (res));
+    slassert(PUT_RESPONSE == out);
 }
 
-void test_delete() {
-    // server
-    hs::http_server server(2, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
-    server.add_handler("DELETE", "/", delete_handler);
-    server.start();
-    // client
-    try {
-        hc::multi_threaded_http_session session{};
-        hc::http_request_options opts{};
-        opts.headers = {{"User-Agent", "test"}, {"X-Method", "DELETE"}};
-        enrich_opts_ssl(opts);
-        opts.method = "DELETE";
-
-        hc::http_resource src = session.open_url(URL, opts);
-        // check
-        std::string out{};
-        out.resize(DELETE_RESPONSE.size());
-        std::streamsize res = io::read_all(src, out);
-        slassert(out.size() == static_cast<size_t> (res));
-        slassert(DELETE_RESPONSE == out);
-    } catch (const std::exception&) {
-        server.stop(true);
-        throw;
-    }
-    // stop server
-    server.stop(true);
+void request_delete(hc::basic_http_session& session) {
+    hc::http_request_options opts{};
+    opts.headers = {{"User-Agent", "test"}, {"X-Method", "DELETE"}};
+    enrich_opts_ssl(opts);
+    opts.method = "DELETE";
+    hc::http_resource src = session.open_url(URL + "delete", opts);
+    // check
+    std::string out{};
+    out.resize(DELETE_RESPONSE.size());
+    std::streamsize res = io::read_all(src, out);
+    slassert(out.size() == static_cast<size_t> (res));
+    slassert(DELETE_RESPONSE == out);
 }
 
-void test_connectfail() {    
-    hc::multi_threaded_http_session session{};
+void request_connectfail(hc::basic_http_session& session) {    
     hc::http_request_options opts{};
     opts.abort_on_connect_error = false;
     opts.connecttimeout_millis = 100;
@@ -310,51 +254,37 @@ void test_connectfail() {
     slassert(!src.connection_successful());
 }
 
-void test_timeout() {
-    // server
-    hs::http_server server(2, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
-    server.add_handler("GET", "/", timeout_handler);
-    server.start();
-    // client
-    try {
-        hc::multi_threaded_http_session session{};
-        hc::http_request_options opts{};
-        opts.headers = {{"User-Agent", "test"}};
-        opts.timeout_millis = 3000;
-        enrich_opts_ssl(opts);
+void request_timeout(hc::basic_http_session& session) {
+    hc::http_request_options opts{};
+    opts.headers = {{"User-Agent", "test"}};
+    opts.timeout_millis = 3000;
+    enrich_opts_ssl(opts);
 
-        {
-            hc::http_resource src = session.open_url(URL, opts);
-            auto sink = io::string_sink();
-            std::streamsize res = io::copy_all(src, sink);
-            slassert(GET_RESPONSE.size() == static_cast<size_t> (res));
-            slassert(GET_RESPONSE == sink.get_string());
-        }
-        
-        {
-            bool caught = false;
-            // timeout
-            opts.timeout_millis = 1000;
-            try {
-                hc::http_resource src = session.open_url(URL, opts);
-                auto sink = io::null_sink();
-                io::copy_all(src, sink);
-            } catch(const hc::httpclient_exception& e) {
-                (void) e;
-                caught = true;
-            }
-            slassert(caught);
-        }
-    } catch (const std::exception&) {
-        server.stop(true);
-        throw;
+    {
+        hc::http_resource src = session.open_url(URL, opts);
+        auto sink = io::string_sink();
+        std::streamsize res = io::copy_all(src, sink);
+        slassert(GET_RESPONSE.size() == static_cast<size_t> (res));
+        slassert(GET_RESPONSE == sink.get_string());
     }
-    // stop server
-    server.stop(true);
+    
+    {
+        bool caught = false;
+        // timeout
+        opts.timeout_millis = 1000;
+        try {
+            hc::http_resource src = session.open_url(URL, opts);
+            auto sink = io::null_sink();
+            io::copy_all(src, sink);
+        } catch(const hc::httpclient_exception& e) {
+            (void) e;
+            caught = true;
+        }
+        slassert(caught);
+    }
 }
 
-void test_stress() {
-    hc::multi_threaded_http_session session;
+void request_stress(hc::basic_http_session& session) {
     auto fun = [&session] {
         hc::http_request_options opts;
         opts.timeout_millis = 60000;
@@ -377,15 +307,74 @@ void test_stress() {
     fun();
 }
 
+void test_methods() {
+    // server
+    hs::http_server server(2, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
+    server.add_handler("GET", "/get", get_handler);
+    server.add_handler("POST", "/post", post_handler);
+    server.add_payload_handler("POST", "/post", [](hs::http_request_ptr&) { return payload_receiver{}; });
+    server.add_handler("PUT", "/put", put_handler);
+    server.add_payload_handler("PUT", "/put", [](hs::http_request_ptr&) { return payload_receiver{}; });    
+    server.add_handler("DELETE", "/delete", delete_handler);
+    server.start();
+    try {
+        auto st = hc::single_threaded_http_session();
+        auto mt = hc::multi_threaded_http_session();
+        request_get(st);
+        request_get(mt);
+        request_post(st);
+        request_post(mt);
+        request_put(st);
+        request_put(mt);
+        request_delete(st);
+        request_delete(mt);
+    } catch (const std::exception&) {
+        server.stop(true);
+        throw;
+    }
+    // stop server
+    server.stop(true);
+}
+
+void test_connectfail() {
+    auto st = hc::single_threaded_http_session();
+    auto mt = hc::multi_threaded_http_session();
+    request_connectfail(st);
+    request_connectfail(mt);
+}
+
+void test_timeout() {
+    // server
+    hs::http_server server(2, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
+    server.add_handler("GET", "/", timeout_handler);
+    server.start();
+    try {
+        auto st = hc::single_threaded_http_session();
+        auto mt = hc::multi_threaded_http_session();
+        request_timeout(st);
+        request_timeout(mt);
+    } catch (const std::exception&) {
+        server.stop(true);
+        throw;
+    }
+    // stop server
+    server.stop(true);
+}
+
+void test_stress() {
+    auto st = hc::single_threaded_http_session();
+    auto mt = hc::multi_threaded_http_session();
+//    request_stress(st);
+    request_stress(mt);
+}
+
 int main() {
     try {
 //        auto start = std::chrono::system_clock::now();
-        test_get();
-        test_post();
-        test_put();
-        test_delete();
+        test_methods();
         test_connectfail();
 //        test_timeout();
+        // todo: st
 //        test_stress();
 //        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start);
 //        std::cout << "millist elapsed: " << elapsed.count() << std::endl;

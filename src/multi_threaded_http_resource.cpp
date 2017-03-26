@@ -68,7 +68,7 @@ public:
     url(params.url.data(), params.url.length()),
     pipe(std::move(params.pipe)) { }
     
-    std::streamsize read(http_resource&, sc::span<char> span) {
+    virtual std::streamsize read(http_resource&, sc::span<char> span) override {
         size_t avail = current_buf.size() - start_idx;
         if (avail > 0) {
             return read_from_current(span, avail);
@@ -85,24 +85,24 @@ public:
         }
     }
     
-    const std::string& get_url(const http_resource&) const {
+    virtual const std::string& get_url(const http_resource&) const override {
         return url;
     }
     
-    uint16_t get_status_code(const http_resource&) const {
+    virtual uint16_t get_status_code(const http_resource&) const override {
         return pipe->get_response_code();
     }
     
-    http_resource_info get_info(const http_resource&) const {
+    virtual http_resource_info get_info(const http_resource&) const override {
         return pipe->get_resource_info();
     }
 
-    const std::vector<std::pair<std::string, std::string>>& get_headers(const http_resource&) const {
+    virtual const std::vector<std::pair<std::string, std::string>>& get_headers(const http_resource&) const override {
         load_more_headers();
         return headers;
     }
 
-    const std::string& get_header(const http_resource&, const std::string& name) const {
+    virtual const std::string& get_header(const http_resource&, const std::string& name) const override {
         // try cached first
         for (auto& en : headers) {
             if (name == en.first) {
@@ -120,7 +120,7 @@ public:
         return empty;
     }
 
-    bool connection_successful(const http_resource& frontend) const {
+    virtual bool connection_successful(const http_resource& frontend) const override {
         return get_status_code(frontend) > 0;
     }
     

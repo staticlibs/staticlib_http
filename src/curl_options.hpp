@@ -289,7 +289,7 @@ void apply_curl_options(T* cb_obj, std::string& url, http_request_options& optio
     curl_options<T>(cb_obj, url, options, post_data, headers, handle).apply();
 }
 
-void apply_curl_multi_options(http_session_options& options, std::unique_ptr<CURLM, curl_multi_deleter>& handle) {
+inline void apply_curl_multi_options(http_session_options& options, std::unique_ptr<CURLM, curl_multi_deleter>& handle) {
     curl_multi_options(options, handle).apply();
 }
 

@@ -48,7 +48,7 @@ protected:
     class impl;
     
     /**
-     * Constructor
+     * Constructor for inheritors
      * 
      * @param options session options
      */

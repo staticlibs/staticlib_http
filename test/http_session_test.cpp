@@ -22,6 +22,7 @@
  */
 
 #include "staticlib/httpclient/multi_threaded_http_session.hpp"
+#include "staticlib/httpclient/single_threaded_http_session.hpp"
 
 #include <iostream>
 
@@ -29,8 +30,10 @@
 
 void test_not_leaked() {
     // check not leaked
-    auto hs = staticlib::httpclient::multi_threaded_http_session{};
-    (void) hs;
+    auto mt = staticlib::httpclient::multi_threaded_http_session{};
+    (void) mt;
+    auto st = staticlib::httpclient::single_threaded_http_session{};
+    (void) st;
 }
 
 int main() {

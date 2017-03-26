@@ -79,7 +79,7 @@ public:
 
 };
 
-http_resource_info curl_collect_info(CURL* handle) {
+inline http_resource_info curl_collect_info(CURL* handle) {
     http_resource_info info;
     curl_info ci(handle);
     info.effective_url = ci.getinfo_string(CURLINFO_EFFECTIVE_URL);
