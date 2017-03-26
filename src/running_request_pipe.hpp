@@ -138,9 +138,9 @@ public:
         return data_queue.full();
     }
     
-    void emplace_header(std::string&& name, std::string&& value) {
+    void emplace_header(std::pair<std::string, std::string>&& pair) {
         namespace sc = staticlib::config;
-        bool emplaced = headers_queue.emplace(std::move(name), std::move(value));
+        bool emplaced = headers_queue.emplace(std::move(pair));
         if (!emplaced) throw httpclient_exception(TRACEMSG(
                 "Error emplacing header to queue, " +
                 "queue size: [" + sc::to_string(headers_queue.max_size()) + "]"));        

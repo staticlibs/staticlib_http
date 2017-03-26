@@ -42,17 +42,22 @@ namespace io = staticlib::io;
 
 } // namespace
 
-class single_threaded_http_session::impl : public basic_http_session::impl {    
+class single_threaded_http_session::impl : public basic_http_session::impl {
+    bool has_active_request = false;
+    
 public:
     impl(http_session_options options) :
     basic_http_session::impl(options) { }
     http_resource open_url(single_threaded_http_session&, const std::string& url,
             std::unique_ptr<std::istream> post_data, http_request_options options) {
+        if (has_active_request) throw httpclient_exception(TRACEMSG(
+                "This single-threaded session is already has one HTTP resource open, please dispose it first"));
         if ("" == options.method) {
             options.method = "POST";
         }
-        return single_threaded_http_resource(this->options, std::move(url), 
-                std::move(post_data), std::move(options));
+        this->has_active_request = true;
+        return single_threaded_http_resource(handle.get(), this->options, std::move(url), 
+                std::move(post_data), std::move(options), [this] {this->has_active_request = false; });
     }
     
 };

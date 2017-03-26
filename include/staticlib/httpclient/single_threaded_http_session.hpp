@@ -29,6 +29,11 @@
 namespace staticlib {
 namespace httpclient {
 
+/**
+ * Single-threaded "session" implementation, NOT thread-safe,
+ * opened resource must be disposed before opening next one.
+ * TCP connections are cached where possible and are bound to session object.
+ */
 class single_threaded_http_session : public basic_http_session {
 protected:
     /**

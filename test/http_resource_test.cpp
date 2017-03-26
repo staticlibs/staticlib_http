@@ -284,7 +284,9 @@ void request_timeout(hc::basic_http_session& session) {
     }
 }
 
-void request_stress(hc::basic_http_session& session) {
+void test_stress() {
+    auto session = hc::multi_threaded_http_session();
+    
     auto fun = [&session] {
         hc::http_request_options opts;
         opts.timeout_millis = 60000;
@@ -343,6 +345,22 @@ void test_connectfail() {
     request_connectfail(mt);
 }
 
+void test_single() {
+    auto st = hc::single_threaded_http_session();
+    {
+        auto res1 = st.open_url(URL);
+        bool thrown = false;
+        try {
+            auto res2 = st.open_url(URL);
+        } catch(const std::exception& e) {        
+            (void) e;
+            thrown = true;
+        }
+        slassert(thrown);
+    }
+    auto res3 = st.open_url(URL);
+}
+
 void test_timeout() {
     // server
     hs::http_server server(2, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
@@ -361,20 +379,13 @@ void test_timeout() {
     server.stop(true);
 }
 
-void test_stress() {
-    auto st = hc::single_threaded_http_session();
-    auto mt = hc::multi_threaded_http_session();
-//    request_stress(st);
-    request_stress(mt);
-}
-
 int main() {
     try {
 //        auto start = std::chrono::system_clock::now();
         test_methods();
         test_connectfail();
+        test_single();
 //        test_timeout();
-        // todo: st
 //        test_stress();
 //        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start);
 //        std::cout << "millist elapsed: " << elapsed.count() << std::endl;

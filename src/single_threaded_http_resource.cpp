@@ -48,6 +48,7 @@ namespace io = staticlib::io;
 namespace sc = staticlib::config;
 
 using headers_type = const std::vector<std::pair<std::string, std::string>>&;
+using fin_type = std::function<void()>;
 
 } // namespace
 
@@ -58,7 +59,7 @@ class single_threaded_http_resource::impl : public http_resource::impl {
         response_info_filled
     };
     
-    std::unique_ptr<CURLM, curl_multi_deleter> multi_handle;
+    CURLM* multi_handle;
     std::unique_ptr<CURL, curl_easy_deleter> handle;
     
     // holds data passed to curl
@@ -79,17 +80,16 @@ class single_threaded_http_resource::impl : public http_resource::impl {
     std::string error;
     
 public:
-    impl(const http_session_options& session_options, const std::string& url,
-            std::unique_ptr<std::istream> post_data, http_request_options options) :
-    multi_handle(curl_multi_init(), curl_multi_deleter()),
-    handle(curl_easy_init(), curl_easy_deleter(this->multi_handle.get())),
+    impl(CURLM* multi_handle, const http_session_options& session_options,
+            const std::string& url, std::unique_ptr<std::istream> post_data,
+            http_request_options options, std::function<void()> finalizer) :
+    multi_handle(multi_handle),
+    handle(curl_easy_init(), curl_easy_deleter(this->multi_handle, finalizer)),
     url(url.data(), url.length()),
     session_options(session_options),
     options(std::move(options)),
     post_data(std::move(post_data)) {
-        if (nullptr == multi_handle.get()) throw httpclient_exception(TRACEMSG("Error initializing cURL multi handle"));
-        apply_curl_multi_options(this->session_options, this->multi_handle);
-        CURLMcode errm = curl_multi_add_handle(multi_handle.get(), handle.get());
+        CURLMcode errm = curl_multi_add_handle(multi_handle, handle.get());
         if (errm != CURLM_OK) throw httpclient_exception(TRACEMSG(
                 "cURL multi_add error: [" + curl_multi_strerror(errm) + "], url: [" + this->url + "]"));
         apply_curl_options(this, this->url, this->options, this->post_data, this->request_headers, this->handle);
@@ -146,30 +146,14 @@ public:
         return get_status_code(frontend) > 0;
     }
     
-    // http://stackoverflow.com/a/9681122/314015
-    size_t write_headers(char *buffer, size_t size, size_t nitems) {
+    size_t write_headers(char* buffer, size_t size, size_t nitems) {
         if (resource_state::created == state) {
             curl_info ci(handle.get());
             this->status_code = ci.getinfo_long(CURLINFO_RESPONSE_CODE);
             this->state = resource_state::writing_headers;
         }
         size_t len = size*nitems;
-        std::string name{};
-        for (size_t i = 0; i < len; i++) {
-            if (':' != buffer[i]) {
-                name.push_back(buffer[i]);
-            } else {
-                std::string value{};
-                // 2 for ': ', 2 for '\r\n'
-                size_t valen = len - i - 2 - 2;
-                if (valen > 0) {
-                    value.resize(valen);
-                    std::memcpy(std::addressof(value.front()), buffer + i + 2, value.length());
-                    response_headers.emplace_back(std::move(name), std::move(value));
-                    break;
-                }
-            }
-        }
+        response_headers.emplace_back(curl_parse_header(buffer, len));
         return len;
     }
     
@@ -207,7 +191,7 @@ private:
         // attempt to fill buffer
         while (open && 0 == buf.size()) {
             long timeo = -1;
-            CURLMcode err_timeout = curl_multi_timeout(multi_handle.get(), std::addressof(timeo));
+            CURLMcode err_timeout = curl_multi_timeout(multi_handle, std::addressof(timeo));
             if (err_timeout != CURLM_OK) throw httpclient_exception(TRACEMSG(
                     "cURL timeout error: [" + curl_multi_strerror(err_timeout) + "], url: [" + url + "]"));
             struct timeval timeout = create_timeout_struct(timeo);
@@ -217,7 +201,7 @@ private:
             fd_set fdwrite = create_fd();
             fd_set fdexcep = create_fd();
             int maxfd = -1;
-            CURLMcode err_fdset = curl_multi_fdset(multi_handle.get(), std::addressof(fdread),
+            CURLMcode err_fdset = curl_multi_fdset(multi_handle, std::addressof(fdread),
                     std::addressof(fdwrite), std::addressof(fdexcep), std::addressof(maxfd));
             if (err_fdset != CURLM_OK) throw httpclient_exception(TRACEMSG(
                     "cURL fdset error: [" + curl_multi_strerror(err_fdset) + "], url: [" + url + "]"));
@@ -234,7 +218,7 @@ private:
             // do perform if no select error
             if (-1 != err_select) {
                 int active = -1;
-                CURLMcode err = curl_multi_perform(multi_handle.get(), std::addressof(active));
+                CURLMcode err = curl_multi_perform(multi_handle, std::addressof(active));
                 if (err != CURLM_OK) throw httpclient_exception(TRACEMSG(
                         "cURL multi_perform error: [" + curl_multi_strerror(err) + "], url: [" + url + "]"));
                 open = (1 == active);
@@ -275,7 +259,7 @@ private:
     }
 };
 
-PIMPL_FORWARD_CONSTRUCTOR(single_threaded_http_resource, (const http_session_options&)(const std::string&)(std::unique_ptr<std::istream>)(http_request_options), (), httpclient_exception)
+PIMPL_FORWARD_CONSTRUCTOR(single_threaded_http_resource, (CURLM*)(const http_session_options&)(const std::string&)(std::unique_ptr<std::istream>)(http_request_options)(fin_type), (), httpclient_exception)
 PIMPL_FORWARD_METHOD(single_threaded_http_resource, std::streamsize, read, (sc::span<char>), (), httpclient_exception)
 PIMPL_FORWARD_METHOD(single_threaded_http_resource, const std::string&, get_url, (), (const), httpclient_exception)
 PIMPL_FORWARD_METHOD(single_threaded_http_resource, uint16_t, get_status_code, (), (const), httpclient_exception)

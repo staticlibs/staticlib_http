@@ -25,6 +25,8 @@
 #define	STATICLIB_HTTPCLIENT_CURL_UTILS_HPP
 
 #include <cstring>
+#include <string>
+#include <utility>
 
 namespace staticlib {
 namespace httpclient {
@@ -48,6 +50,26 @@ inline fd_set create_fd() {
     fd_set res;
     FD_ZERO(std::addressof(res));
     return res;
+}
+
+// http://stackoverflow.com/a/9681122/314015
+inline std::pair<std::string, std::string> curl_parse_header(const char* buffer, size_t len) {
+    std::string name{};
+    std::string value{};
+    for (size_t i = 0; i < len; i++) {
+        if (':' != buffer[i]) {
+            name.push_back(buffer[i]);
+        } else {
+            // 2 for ': ', 2 for '\r\n'
+            size_t valen = len - i - 2 - 2;
+            if (valen > 0) {
+                value.resize(valen);
+                std::memcpy(std::addressof(value.front()), buffer + i + 2, value.length());
+                break;
+            }
+        }
+    }
+    return {name, value};
 }
 
 } // namespace

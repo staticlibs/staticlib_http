@@ -152,23 +152,8 @@ public:
         } else if (req_state::receiving_data == state) {
             state = req_state::receiving_trailers;
         }
-        size_t len = size*nitems;
-        std::string name{};
-        for (size_t i = 0; i < len; i++) {
-            if (':' != buffer[i]) {
-                name.push_back(buffer[i]);
-            } else {
-                std::string value{};
-                // 2 for ': ', 2 for '\r\n'
-                size_t valen = len - i - 2 - 2;
-                if (valen > 0) {
-                    value.resize(valen);
-                    std::memcpy(std::addressof(value.front()), buffer + i + 2, value.length());
-                    pipe->emplace_header(std::move(name), std::move(value));                        
-                    break;
-                }
-            }
-        }
+        size_t len = size*nitems;        
+        pipe->emplace_header(curl_parse_header(buffer, len));
         return len;
     }
     

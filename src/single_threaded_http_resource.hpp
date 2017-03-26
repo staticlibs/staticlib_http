@@ -26,6 +26,10 @@
 
 #include "staticlib/httpclient/http_resource.hpp"
 
+#include <functional>
+
+#include "curl/curl.h"
+
 #include "staticlib/httpclient/http_session_options.hpp"
 
 namespace staticlib {
@@ -38,8 +42,9 @@ protected:
 public:
     PIMPL_INHERIT_CONSTRUCTOR(single_threaded_http_resource, http_resource)
 
-    single_threaded_http_resource(const http_session_options& session_options, const std::string& url,
-            std::unique_ptr<std::istream> post_data, http_request_options options);
+    single_threaded_http_resource(CURLM* multi_handle, const http_session_options& session_options, 
+            const std::string& url, std::unique_ptr<std::istream> post_data,
+            http_request_options options, std::function<void()> finalizer);
     
     virtual std::streamsize read(staticlib::config::span<char> span) override;
 
@@ -49,7 +54,7 @@ public:
 
     virtual http_resource_info get_info() const override;
 
-    virtual const std::vector<std::pair<std::string, std::string>>&get_headers() const override;
+    virtual const std::vector<std::pair<std::string, std::string>>& get_headers() const override;
 
     virtual const std::string& get_header(const std::string& name) const override;
 

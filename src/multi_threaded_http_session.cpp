@@ -55,8 +55,6 @@ namespace io = staticlib::io;
 } // namespace
 
 class multi_threaded_http_session::impl : public basic_http_session::impl {
-
-    std::unique_ptr<CURLM, curl_multi_deleter> handle;
     
     staticlib::concurrent::mpmc_blocking_queue<request_ticket> tickets;
     std::atomic<bool> new_tickets_arrived;
@@ -69,16 +67,13 @@ class multi_threaded_http_session::impl : public basic_http_session::impl {
     
 public:
     impl(http_session_options options) :
-    basic_http_session::impl(options),
-    handle(curl_multi_init(), curl_multi_deleter()),
+    basic_http_session::impl(options),    
     tickets(options.requests_queue_max_size),
     new_tickets_arrived(false),
     pause_latch(std::make_shared<staticlib::concurrent::condition_latch>([this] {
         return this->check_pause_condition();
     })),
     running(true) {
-        if (nullptr == handle.get()) throw httpclient_exception(TRACEMSG("Error initializing cURL multi handle"));
-        apply_curl_multi_options(this->options, this->handle);
         worker = std::thread([this] {
             this->worker_proc();
         });

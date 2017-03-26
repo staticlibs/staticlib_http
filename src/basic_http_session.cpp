@@ -25,6 +25,8 @@
 
 #include "staticlib/pimpl/pimpl_forward_macros.hpp"
 
+#include "curl_options.hpp"
+
 namespace staticlib {
 namespace httpclient {
 
@@ -37,7 +39,11 @@ namespace si = staticlib::io;
 
 basic_http_session::impl::impl(http_session_options options) :
 // todo: use move
-options(options) { }
+options(options),
+handle(curl_multi_init(), curl_multi_deleter()) {
+    if (nullptr == handle.get()) throw httpclient_exception(TRACEMSG("Error initializing cURL multi handle"));
+    apply_curl_multi_options(this->handle.get(), this->options);
+}
 PIMPL_FORWARD_CONSTRUCTOR(basic_http_session, (http_session_options), (), httpclient_exception)
 
 http_resource basic_http_session::impl::open_url(basic_http_session& frontend, 

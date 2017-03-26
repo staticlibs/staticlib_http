@@ -24,6 +24,8 @@
 #ifndef STATICLIB_HTTPCLIENT_CURL_DELETERS_HPP
 #define	STATICLIB_HTTPCLIENT_CURL_DELETERS_HPP
 
+#include <functional>
+
 #include "curl/curl.h"
 
 namespace staticlib {
@@ -31,16 +33,20 @@ namespace httpclient {
 
 class curl_easy_deleter {
     CURLM* multi_handle;
+    std::function<void()> on_delete;
 
 public:
-    curl_easy_deleter(CURLM* multi_handle) :
-    multi_handle(multi_handle) { }
+    curl_easy_deleter(CURLM* multi_handle, 
+            std::function<void()> on_delete = []{}) :
+    multi_handle(multi_handle),
+    on_delete(on_delete) { }
 
     void operator()(CURL* curl) {
         if (nullptr != multi_handle) {
             curl_multi_remove_handle(multi_handle, curl);
         }
         curl_easy_cleanup(curl);
+        on_delete();
     }
 };
 

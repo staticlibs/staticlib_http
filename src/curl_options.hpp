@@ -249,12 +249,13 @@ private:
 };
 
 class curl_multi_options {
-    staticlib::config::observer_ptr<http_session_options> options;
     CURLM* handle;
+    staticlib::config::observer_ptr<http_session_options> options;
+    
 public:
-    curl_multi_options(http_session_options& options, std::unique_ptr<CURLM, curl_multi_deleter>& handle) :
-    options(staticlib::config::make_observer_ptr(options)),
-    handle(handle.get()) { }
+    curl_multi_options(CURLM* handle, http_session_options& options) :
+    handle(handle),
+    options(staticlib::config::make_observer_ptr(options)) { }
 
     curl_multi_options(const curl_multi_options&) = delete;
 
@@ -289,8 +290,8 @@ void apply_curl_options(T* cb_obj, std::string& url, http_request_options& optio
     curl_options<T>(cb_obj, url, options, post_data, headers, handle).apply();
 }
 
-inline void apply_curl_multi_options(http_session_options& options, std::unique_ptr<CURLM, curl_multi_deleter>& handle) {
-    curl_multi_options(options, handle).apply();
+inline void apply_curl_multi_options(CURLM* handle, http_session_options& options) {
+    curl_multi_options(handle, options).apply();
 }
 
 } // namespace

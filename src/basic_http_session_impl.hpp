@@ -36,6 +36,7 @@ namespace httpclient {
 class basic_http_session::impl : public staticlib::pimpl::pimpl_object::impl {
 protected:
     http_session_options options;
+    std::unique_ptr<CURLM, curl_multi_deleter> handle;
 
 public:
     impl(http_session_options options = http_session_options{});
