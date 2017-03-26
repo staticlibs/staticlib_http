@@ -149,7 +149,7 @@ public:
     size_t write_headers(char* buffer, size_t size, size_t nitems) {
         if (resource_state::created == state) {
             curl_info ci(handle.get());
-            this->status_code = ci.getinfo_long(CURLINFO_RESPONSE_CODE);
+            this->status_code = static_cast<uint16_t>(ci.getinfo_long(CURLINFO_RESPONSE_CODE));
             this->state = resource_state::writing_headers;
         }
         size_t len = size*nitems;
