@@ -63,6 +63,16 @@ const std::string SERVER_CERT_PATH = "../test/certificates/server/localhost.pem"
 const std::string CLIENT_CERT_PATH = "../test/certificates/client/testclient.pem";
 const std::string CA_PATH = "../test/certificates/server/staticlibs_test_ca.cer";
 
+bool throws_exc(std::function<void()> fun) {
+    try {
+        fun();
+    } catch (const hc::httpclient_exception& e) {
+        (void) e;
+        return true;
+    }
+    return false;
+}
+
 std::string pwdcb(std::size_t, asio::ssl::context::password_purpose) {
     return "test";
 };
@@ -284,6 +294,23 @@ void request_timeout(hc::basic_http_session& session) {
     }
 }
 
+void request_status(hc::basic_http_session& session) {
+    auto opts = hc::http_request_options();
+    opts.headers = {{"User-Agent", "test"}, {"X-Method", "GET"}};
+    enrich_opts_ssl(opts);
+    opts.method = "GET";
+    opts.abort_on_response_error = false;
+    // perform
+    {
+        auto res_success = session.open_url(URL + "get", opts);
+        slassert(200 == res_success.get_status_code());
+    }
+    {
+        auto res_fail = session.open_url(URL + "get_FAIL", opts);
+        slassert(404 == res_fail.get_status_code());
+    }
+}
+
 void test_stress() {
     auto session = hc::multi_threaded_http_session();
     
@@ -330,6 +357,8 @@ void test_methods() {
         request_put(mt);
         request_delete(st);
         request_delete(mt);
+        request_status(st);
+        request_status(mt);
     } catch (const std::exception&) {
         server.stop(true);
         throw;
@@ -347,18 +376,15 @@ void test_connectfail() {
 
 void test_single() {
     auto st = hc::single_threaded_http_session();
+    auto opts = hc::http_request_options();
+    opts.abort_on_connect_error = false;
     {
-        auto res1 = st.open_url(URL);
-        bool thrown = false;
-        try {
-            auto res2 = st.open_url(URL);
-        } catch(const std::exception& e) {        
-            (void) e;
-            thrown = true;
-        }
-        slassert(thrown);
+        auto res1 = st.open_url(URL, opts);
+        slassert(throws_exc([&]{
+            auto res2 = st.open_url(URL, opts);
+        }));
     }
-    auto res3 = st.open_url(URL);
+    auto res3 = st.open_url(URL, opts);
 }
 
 void test_timeout() {
@@ -379,6 +405,17 @@ void test_timeout() {
     server.stop(true);
 }
 
+void test_status_fail() {
+    auto st = hc::single_threaded_http_session();    
+    slassert(throws_exc([&] {
+        st.open_url(URL + "get");
+    }));
+    auto mt = hc::multi_threaded_http_session();
+    slassert(throws_exc([&] {
+        mt.open_url(URL + "get");
+    }));
+}
+
 int main() {
     try {
 //        auto start = std::chrono::system_clock::now();
@@ -386,6 +423,7 @@ int main() {
         test_connectfail();
         test_single();
 //        test_timeout();
+        test_status_fail();
 //        test_stress();
 //        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start);
 //        std::cout << "millist elapsed: " << elapsed.count() << std::endl;

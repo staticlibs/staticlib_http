@@ -182,10 +182,6 @@ public:
         std::streamsize read = io::read_all(src, {buffer, len});
         return static_cast<size_t> (read);
     }
-
-private:    
-
-
 };
 
 } // namespace

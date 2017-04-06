@@ -61,17 +61,26 @@ class multi_threaded_http_resource::impl : public http_resource::impl {
     
     cr::growing_buffer current_buf;
     size_t start_idx = 0;
+    bool empty_response = false;
     
 public:
     impl(http_resource_params&& params):
     http_resource::impl(),
     url(params.url.data(), params.url.length()),
-    pipe(std::move(params.pipe)) { }
+    pipe(std::move(params.pipe)) {
+        // read first data chunk to make sure that status_code is ready
+        this->empty_response = !pipe->receive_some_data(current_buf);
+        if (pipe->has_errors()) {
+            throw httpclient_exception(TRACEMSG(pipe->get_error_message()));
+        }
+    }
     
     virtual std::streamsize read(http_resource&, sc::span<char> span) override {
         size_t avail = current_buf.size() - start_idx;
         if (avail > 0) {
             return read_from_current(span, avail);
+        } else if (empty_response) {
+            return std::char_traits<char>::eof();
         }
         start_idx = 0;
         bool success = pipe->receive_some_data(current_buf);

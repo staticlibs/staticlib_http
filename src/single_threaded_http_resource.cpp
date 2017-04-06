@@ -94,6 +94,7 @@ public:
                 "cURL multi_add error: [" + curl_multi_strerror(errm) + "], url: [" + this->url + "]"));
         apply_curl_options(this, this->url, this->options, this->post_data, this->request_headers, this->handle);
         this->open = true;
+        fill_buffer();
     }
 
     virtual std::streamsize read(http_resource&, sc::span<char> span) override {
