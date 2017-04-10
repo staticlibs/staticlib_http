@@ -15,13 +15,13 @@
  */
 
 /* 
- * File:   multi_threaded_http_resource.cpp
+ * File:   multi_threaded_resource.cpp
  * Author: alex
  * 
  * Created on November 20, 2015, 8:43 AM
  */
 
-#include "multi_threaded_http_resource.hpp"
+#include "multi_threaded_resource.hpp"
 
 #include <cstring>
 #include <chrono>
@@ -32,50 +32,47 @@
 
 #include "staticlib/config.hpp"
 #include "staticlib/concurrent.hpp"
-#include "staticlib/pimpl/pimpl_forward_macros.hpp"
+#include "staticlib/pimpl/forward_macros.hpp"
 
-#include "staticlib/httpclient/http_resource_info.hpp"
-#include "staticlib/httpclient/httpclient_exception.hpp"
+#include "staticlib/http/resource_info.hpp"
+#include "staticlib/http/http_exception.hpp"
 
-#include "http_resource_impl.hpp"
-#include "http_resource_params.hpp"
+#include "resource_impl.hpp"
+#include "resource_params.hpp"
 
 namespace staticlib {
-namespace httpclient {
+namespace http {
 
 namespace { // anonymous
-
-namespace sc = staticlib::config;
-namespace cr = staticlib::concurrent;
 
 using headers_type = const std::vector<std::pair<std::string, std::string>>&;
 
 } // namespace
 
 
-class multi_threaded_http_resource::impl : public http_resource::impl {
+class multi_threaded_resource::impl : public resource::impl {
     std::string url;
 
     mutable std::shared_ptr<running_request_pipe> pipe;
     mutable std::vector<std::pair<std::string, std::string>> headers;
     
-    cr::growing_buffer current_buf;
+    sl::concurrent::growing_buffer current_buf;
     size_t start_idx = 0;
     bool empty_response = false;
     
 public:
-    impl(http_resource_params&& params):
-    http_resource::impl(),
+    impl(resource_params&& params):
+    resource::impl(),
     url(params.url.data(), params.url.length()),
     pipe(std::move(params.pipe)) {
         // read first data chunk to make sure that status_code is ready
         this->empty_response = !pipe->receive_some_data(current_buf);
         if (pipe->has_errors()) {
-            throw httpclient_exception(TRACEMSG(pipe->get_error_message()));
+            throw http_exception(TRACEMSG(pipe->get_error_message()));
         }
     }
     
-    virtual std::streamsize read(http_resource&, sc::span<char> span) override {
+    virtual std::streamsize read(resource&, sl::io::span<char> span) override {
         size_t avail = current_buf.size() - start_idx;
         if (avail > 0) {
             return read_from_current(span, avail);
@@ -85,7 +82,7 @@ public:
         start_idx = 0;
         bool success = pipe->receive_some_data(current_buf);
         if (pipe->has_errors()) {
-            throw httpclient_exception(TRACEMSG(pipe->get_error_message()));
+            throw http_exception(TRACEMSG(pipe->get_error_message()));
         }
         if (success) {
             return read_from_current(span, current_buf.size());
@@ -94,24 +91,24 @@ public:
         }
     }
     
-    virtual const std::string& get_url(const http_resource&) const override {
+    virtual const std::string& get_url(const resource&) const override {
         return url;
     }
     
-    virtual uint16_t get_status_code(const http_resource&) const override {
+    virtual uint16_t get_status_code(const resource&) const override {
         return pipe->get_response_code();
     }
     
-    virtual http_resource_info get_info(const http_resource&) const override {
+    virtual resource_info get_info(const resource&) const override {
         return pipe->get_resource_info();
     }
 
-    virtual const std::vector<std::pair<std::string, std::string>>& get_headers(const http_resource&) const override {
+    virtual const std::vector<std::pair<std::string, std::string>>& get_headers(const resource&) const override {
         load_more_headers();
         return headers;
     }
 
-    virtual const std::string& get_header(const http_resource&, const std::string& name) const override {
+    virtual const std::string& get_header(const resource&, const std::string& name) const override {
         // try cached first
         for (auto& en : headers) {
             if (name == en.first) {
@@ -129,12 +126,12 @@ public:
         return empty;
     }
 
-    virtual bool connection_successful(const http_resource& frontend) const override {
+    virtual bool connection_successful(const resource& frontend) const override {
         return get_status_code(frontend) > 0;
     }
     
 private:
-    std::streamsize read_from_current(sc::span<char>& span, size_t avail) {
+    std::streamsize read_from_current(sl::io::span<char>& span, size_t avail) {
         size_t len = avail <= span.size() ? avail : span.size();
         std::memcpy(span.data(), current_buf.data() + start_idx, len);
         start_idx += len;
@@ -148,14 +145,14 @@ private:
         }
     }
 };
-PIMPL_FORWARD_CONSTRUCTOR(multi_threaded_http_resource, (http_resource_params&&), (), httpclient_exception)
-PIMPL_FORWARD_METHOD(multi_threaded_http_resource, std::streamsize, read, (sc::span<char>), (), httpclient_exception)
-PIMPL_FORWARD_METHOD(multi_threaded_http_resource, const std::string&, get_url, (), (const), httpclient_exception)        
-PIMPL_FORWARD_METHOD(multi_threaded_http_resource, uint16_t, get_status_code, (), (const), httpclient_exception)        
-PIMPL_FORWARD_METHOD(multi_threaded_http_resource, http_resource_info, get_info, (), (const), httpclient_exception)
-PIMPL_FORWARD_METHOD(multi_threaded_http_resource, headers_type, get_headers, (), (const), httpclient_exception)
-PIMPL_FORWARD_METHOD(multi_threaded_http_resource, const std::string&, get_header, (const std::string&), (const), httpclient_exception)
-PIMPL_FORWARD_METHOD(multi_threaded_http_resource, bool, connection_successful, (), (const), httpclient_exception)
+PIMPL_FORWARD_CONSTRUCTOR(multi_threaded_resource, (resource_params&&), (), http_exception)
+PIMPL_FORWARD_METHOD(multi_threaded_resource, std::streamsize, read, (sl::io::span<char>), (), http_exception)
+PIMPL_FORWARD_METHOD(multi_threaded_resource, const std::string&, get_url, (), (const), http_exception)        
+PIMPL_FORWARD_METHOD(multi_threaded_resource, uint16_t, get_status_code, (), (const), http_exception)        
+PIMPL_FORWARD_METHOD(multi_threaded_resource, resource_info, get_info, (), (const), http_exception)
+PIMPL_FORWARD_METHOD(multi_threaded_resource, headers_type, get_headers, (), (const), http_exception)
+PIMPL_FORWARD_METHOD(multi_threaded_resource, const std::string&, get_header, (const std::string&), (const), http_exception)
+PIMPL_FORWARD_METHOD(multi_threaded_resource, bool, connection_successful, (), (const), http_exception)
 
 } // namespace
 }

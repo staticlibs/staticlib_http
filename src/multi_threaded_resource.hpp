@@ -15,39 +15,39 @@
  */
 
 /* 
- * File:   multi_threaded_http_resource.hpp
+ * File:   multi_threaded_resource.hpp
  * Author: alex
  *
  * Created on March 25, 2017, 9:10 PM
  */
 
-#ifndef STATICLIB_HTTPCLIENT_MULTI_THREADED_HTTP_RESOURCE_HPP
-#define	STATICLIB_HTTPCLIENT_MULTI_THREADED_HTTP_RESOURCE_HPP
+#ifndef STATICLIB_HTTP_MULTI_THREADED_RESOURCE_HPP
+#define	STATICLIB_HTTP_MULTI_THREADED_RESOURCE_HPP
 
-#include "staticlib/httpclient/http_resource.hpp"
+#include "staticlib/http/resource.hpp"
 
 namespace staticlib {
-namespace httpclient {
+namespace http {
 
 // forward decl
-class http_resource_params;
+class resource_params;
 
-class multi_threaded_http_resource : public http_resource {
+class multi_threaded_resource : public resource {
 protected:
     class impl;
     
 public:    
-    PIMPL_INHERIT_CONSTRUCTOR(multi_threaded_http_resource, http_resource)
+    PIMPL_INHERIT_CONSTRUCTOR(multi_threaded_resource, resource)
 
-    multi_threaded_http_resource(http_resource_params&& params);
+    multi_threaded_resource(resource_params&& params);
     
-    virtual std::streamsize read(staticlib::config::span<char> span) override;
+    virtual std::streamsize read(sl::io::span<char> span) override;
 
     virtual const std::string& get_url() const override;
 
     virtual uint16_t get_status_code() const override;
 
-    virtual http_resource_info get_info() const override;
+    virtual resource_info get_info() const override;
 
     virtual const std::vector<std::pair<std::string, std::string>>& get_headers() const override;
 
@@ -60,5 +60,5 @@ public:
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTPCLIENT_MULTI_THREADED_HTTP_RESOURCE_HPP */
+#endif	/* STATICLIB_HTTP_MULTI_THREADED_RESOURCE_HPP */
 

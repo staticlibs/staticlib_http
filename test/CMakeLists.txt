@@ -22,7 +22,7 @@ endif ( )
 set ( CMAKE_TOOLCHAIN_FILE ${STATICLIB_CMAKE}/toolchains/${STATICLIB_TOOLCHAIN}.cmake CACHE INTERNAL "" )
 
 # project
-project ( staticlib_httpclient_test CXX )
+project ( staticlib_http_test CXX )
 include ( ${STATICLIB_CMAKE}/staticlibs_common.cmake )
 staticlib_enable_deplibs_cache ( )
 
@@ -39,6 +39,7 @@ if ( NOT STATICLIB_TOOLCHAIN MATCHES "linux_[^_]+_[^_]+" )
     staticlib_add_subdirectory ( ${STATICLIB_DEPS}/external_curl )
 endif ( )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_config )
+staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_support )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_concurrent )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_io )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_crypto )
@@ -46,9 +47,9 @@ staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_pimpl )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_utils )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_tinydir )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_httpserver ) # testonly
-staticlib_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../../staticlib_httpclient )
+staticlib_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../../staticlib_http )
 set ( ${PROJECT_NAME}_DEPS 
-        staticlib_httpclient
+        staticlib_http
         staticlib_httpserver
         staticlib_crypto
         staticlib_tinydir
@@ -57,12 +58,6 @@ staticlib_pkg_check_modules ( ${PROJECT_NAME}_DEPS_PC REQUIRED ${PROJECT_NAME}_D
 
 # tests
 set ( ${PROJECT_NAME}_TEST_INCLUDES ${${PROJECT_NAME}_DEPS_PC_INCLUDE_DIRS} )
-set ( ${PROJECT_NAME}_TEST_LIBS ${${PROJECT_NAME}_DEPS_PC_LIBRARIES} curl z )
-if ( STATICLIB_TOOLCHAIN MATCHES "linux_[^_]+_[^_]+" )
-    list ( APPEND ${PROJECT_NAME}_TEST_LIBS ssl crypto )
-else ( )
-    list ( APPEND ${PROJECT_NAME}_TEST_LIBS ws2_32 openssl )
-endif ( )
-
+set ( ${PROJECT_NAME}_TEST_LIBS ${${PROJECT_NAME}_DEPS_PC_STATIC_LIBRARIES} )
 set ( ${PROJECT_NAME}_TEST_OPTS ${${PROJECT_NAME}_DEPS_PC_CFLAGS_OTHER} )
 staticlib_enable_testing ( ${PROJECT_NAME}_TEST_INCLUDES ${PROJECT_NAME}_TEST_LIBS ${PROJECT_NAME}_TEST_OPTS )

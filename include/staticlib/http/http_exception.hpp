@@ -15,42 +15,42 @@
  */
 
 /* 
- * File:   httpclient_exception.hpp
+ * File:   http_exception.hpp
  * Author: alex
  *
  * Created on November 20, 2015, 8:48 AM
  */
 
-#ifndef STATICLIB_HTTPCLIENT_HTTP_CLIENT_EXCEPTION_HPP
-#define	STATICLIB_HTTPCLIENT_HTTP_CLIENT_EXCEPTION_HPP
+#ifndef STATICLIB_HTTP_HTTP_EXCEPTION_HPP
+#define	STATICLIB_HTTP_HTTP_EXCEPTION_HPP
 
-#include "staticlib/config/staticlib_exception.hpp"
+#include "staticlib/support/exception.hpp"
 
 namespace staticlib {
-namespace httpclient {
+namespace http {
 
 /**
  * Module specific exception
  */
-class httpclient_exception : public staticlib::config::staticlib_exception {
+class http_exception : public sl::support::exception {
 public:
     /**
      * Default constructor
      */
-    httpclient_exception() = default;
+    http_exception() = default;
 
     /**
      * Constructor with message
      * 
      * @param msg error message
      */
-    httpclient_exception(const std::string& msg) :
-    staticlib::config::staticlib_exception(msg) { }
+    http_exception(const std::string& msg) :
+    sl::support::exception(msg) { }
 
 };
 
 } //namespace
 }
 
-#endif	/* STATICLIB_HTTPCLIENT_HTTP_CLIENT_EXCEPTION_HPP */
+#endif	/* STATICLIB_HTTP_HTTP_EXCEPTION_HPP */
 

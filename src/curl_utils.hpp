@@ -21,15 +21,15 @@
  * Created on March 25, 2017, 8:29 PM
  */
 
-#ifndef STATICLIB_HTTPCLIENT_CURL_UTILS_HPP
-#define	STATICLIB_HTTPCLIENT_CURL_UTILS_HPP
+#ifndef STATICLIB_HTTP_CURL_UTILS_HPP
+#define	STATICLIB_HTTP_CURL_UTILS_HPP
 
 #include <cstring>
 #include <string>
 #include <utility>
 
 namespace staticlib {
-namespace httpclient {
+namespace http {
 
 // http://curl-library.cool.haxx.narkive.com/2sYifbgu/issue-with-curl-multi-timeout-while-doing-non-blocking-http-posts-in-vms
 inline struct timeval create_timeout_struct(long timeo) {
@@ -75,5 +75,5 @@ inline std::pair<std::string, std::string> curl_parse_header(const char* buffer,
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTPCLIENT_CURL_UTILS_HPP */
+#endif	/* STATICLIB_HTTP_CURL_UTILS_HPP */
 

@@ -15,13 +15,13 @@
  */
 
 /* 
- * File:   multi_threaded_http_session.cpp
+ * File:   multi_threaded_session.cpp
  * Author: alex
  *
  * Created on March 25, 2017, 6:20 PM
  */
 
-#include "staticlib/httpclient/multi_threaded_http_session.hpp"
+#include "staticlib/http/multi_threaded_session.hpp"
 
 #include <chrono>
 #include <condition_variable>
@@ -34,43 +34,35 @@
 
 #include "staticlib/concurrent.hpp"
 #include "staticlib/io.hpp"
-#include "staticlib/pimpl/pimpl_forward_macros.hpp"
+#include "staticlib/pimpl/forward_macros.hpp"
 
-#include "basic_http_session_impl.hpp"
+#include "session_impl.hpp"
 #include "curl_headers.hpp"
 #include "curl_utils.hpp"
-#include "http_resource_params.hpp"
-#include "multi_threaded_http_resource.hpp"
+#include "resource_params.hpp"
+#include "multi_threaded_resource.hpp"
 #include "running_request_pipe.hpp"
 #include "running_request.hpp"
 
 namespace staticlib {
-namespace httpclient {
+namespace http {
 
-namespace { // anonymous
-
-namespace sc = staticlib::config;
-namespace io = staticlib::io;
-
-} // namespace
-
-class multi_threaded_http_session::impl : public basic_http_session::impl {
-    
-    staticlib::concurrent::mpmc_blocking_queue<request_ticket> tickets;
+class multi_threaded_session::impl : public session::impl {
+    sl::concurrent::mpmc_blocking_queue<request_ticket> tickets;
     std::atomic<bool> new_tickets_arrived;
     std::map<int64_t, std::unique_ptr<running_request>> requests;
 
-    std::shared_ptr<staticlib::concurrent::condition_latch> pause_latch;
+    std::shared_ptr<sl::concurrent::condition_latch> pause_latch;
 
     std::thread worker;
     std::atomic<bool> running;
     
 public:
-    impl(http_session_options options) :
-    basic_http_session::impl(options),    
+    impl(session_options options) :
+    session::impl(options),    
     tickets(options.requests_queue_max_size),
     new_tickets_arrived(false),
-    pause_latch(std::make_shared<staticlib::concurrent::condition_latch>([this] {
+    pause_latch(std::make_shared<sl::concurrent::condition_latch>([this] {
         return this->check_pause_condition();
     })),
     running(true) {
@@ -86,19 +78,19 @@ public:
         worker.join();
     }
 
-    http_resource open_url(multi_threaded_http_session&, const std::string& url,
-            std::unique_ptr<std::istream> post_data, http_request_options options) {
+    resource open_url(multi_threaded_session&, const std::string& url,
+            std::unique_ptr<std::istream> post_data, request_options options) {
         if ("" == options.method) {
             options.method = "POST";
         }
         //  note: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=63736
         auto pipe = std::make_shared<running_request_pipe>(options, pause_latch);
         auto enqueued = tickets.emplace(url, std::move(options), std::move(post_data), pipe);
-        if (!enqueued) throw httpclient_exception(TRACEMSG(
-                "Requests queue is full, size: [" + sc::to_string(tickets.size()) + "]"));
+        if (!enqueued) throw http_exception(TRACEMSG(
+                "Requests queue is full, size: [" + sl::support::to_string(tickets.size()) + "]"));
         new_tickets_arrived.exchange(true, std::memory_order_acq_rel);
-        auto params = http_resource_params(url, std::move(pipe));
-        return multi_threaded_http_resource(std::move(params));
+        auto params = resource_params(url, std::move(pipe));
+        return multi_threaded_resource(std::move(params));
     }
 
     // not exposed
@@ -288,8 +280,8 @@ private:
         requests.clear();
     }
 };
-PIMPL_FORWARD_CONSTRUCTOR(multi_threaded_http_session, (http_session_options), (), httpclient_exception)
-PIMPL_FORWARD_METHOD(multi_threaded_http_session, http_resource, open_url, (const std::string&)(std::unique_ptr<std::istream>)(http_request_options), (), httpclient_exception)            
+PIMPL_FORWARD_CONSTRUCTOR(multi_threaded_session, (session_options), (), http_exception)
+PIMPL_FORWARD_METHOD(multi_threaded_session, resource, open_url, (const std::string&)(std::unique_ptr<std::istream>)(request_options), (), http_exception)            
 
 } // namespace
 }

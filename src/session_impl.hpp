@@ -15,47 +15,47 @@
  */
 
 /* 
- * File:   basic_http_session_impl.hpp
+ * File:   session_impl.hpp
  * Author: alex
  *
  * Created on March 25, 2017, 5:45 PM
  */
 
-#ifndef STATICLIB_HTTPCLIENT_BASIC_HTTP_SESSION_IMPL_HPP
-#define	STATICLIB_HTTPCLIENT_BASIC_HTTP_SESSION_IMPL_HPP
+#ifndef STATICLIB_HTTP_SESSION_IMPL_HPP
+#define	STATICLIB_HTTP_SESSION_IMPL_HPP
 
-#include "staticlib/httpclient/basic_http_session.hpp"
+#include "staticlib/http/session.hpp"
 
 #include "curl/curl.h"
 
 #include "curl_deleters.hpp"
 
 namespace staticlib {
-namespace httpclient {
+namespace http {
 
-class basic_http_session::impl : public staticlib::pimpl::pimpl_object::impl {
+class session::impl : public sl::pimpl::object::impl {
 protected:
-    http_session_options options;
+    session_options options;
     std::unique_ptr<CURLM, curl_multi_deleter> handle;
 
 public:
-    impl(http_session_options options = http_session_options{});
+    impl(session_options options = session_options{});
     
-    http_resource open_url(
-            basic_http_session&,
+    resource open_url(
+            session&,
             const std::string& url,
-            http_request_options options);
+            request_options options);
 
-    http_resource open_url(
-            basic_http_session&,
+    resource open_url(
+            session&,
             const std::string& url,
             std::streambuf* post_data,
-            http_request_options options);
+            request_options options);
     
 };
 
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTPCLIENT_BASIC_HTTP_SESSION_IMPL_HPP */
+#endif	/* STATICLIB_HTTP_SESSION_IMPL_HPP */
 

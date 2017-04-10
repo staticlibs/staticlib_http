@@ -21,15 +21,15 @@
  * Created on February 13, 2017, 6:53 PM
  */
 
-#ifndef STATICLIB_HTTPCLIENT_CURL_DELETERS_HPP
-#define	STATICLIB_HTTPCLIENT_CURL_DELETERS_HPP
+#ifndef STATICLIB_HTTP_CURL_DELETERS_HPP
+#define	STATICLIB_HTTP_CURL_DELETERS_HPP
 
 #include <functional>
 
 #include "curl/curl.h"
 
 namespace staticlib {
-namespace httpclient {
+namespace http {
 
 class curl_easy_deleter {
     CURLM* multi_handle;
@@ -69,5 +69,5 @@ public:
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTPCLIENT_CURL_DELETERS_HPP */
+#endif	/* STATICLIB_HTTP_CURL_DELETERS_HPP */
 

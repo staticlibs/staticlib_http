@@ -21,8 +21,8 @@
  * Created on February 13, 2017, 7:01 PM
  */
 
-#ifndef STATICLIB_HTTPCLIENT_CURL_HEADERS_HPP
-#define	STATICLIB_HTTPCLIENT_CURL_HEADERS_HPP
+#ifndef STATICLIB_HTTP_CURL_HEADERS_HPP
+#define	STATICLIB_HTTP_CURL_HEADERS_HPP
 
 #include <memory>
 #include <string>
@@ -31,13 +31,14 @@
 #include "curl/curl.h"
 
 #include "staticlib/config.hpp"
+#include "staticlib/support.hpp"
 
-#include "staticlib/httpclient/http_request_options.hpp"
+#include "staticlib/http/request_options.hpp"
 
 #include "curl_deleters.hpp"
 
 namespace staticlib {
-namespace httpclient {
+namespace http {
 
 class curl_headers {
     std::vector<std::string> stored_headers;
@@ -60,28 +61,28 @@ public:
         return *this;
     }
 
-    staticlib::config::optional<curl_slist*> wrap_into_slist(
+    sl::support::optional<curl_slist*> wrap_into_slist(
             const std::vector<std::pair<std::string, std::string>>& provided_headers) {
         namespace sc = staticlib::config;
         for (auto& pa : provided_headers) {
             stored_headers.emplace_back(pa.first + ": " + pa.second);
             curl_slist* released = slist.release();
             curl_slist* ptr = curl_slist_append(released, stored_headers.back().c_str());
-            if (nullptr == ptr) throw httpclient_exception(TRACEMSG(
+            if (nullptr == ptr) throw http_exception(TRACEMSG(
                     "Error appending header, key: [" + pa.first + "]," +
                     " value: [" + pa.second + "]," +
-                    " appended count: [" + sc::to_string(stored_headers.size()) + "]"));
+                    " appended count: [" + sl::support::to_string(stored_headers.size()) + "]"));
             slist.reset(ptr);
         }
         if (nullptr != slist.get()) {
-            return sc::make_optional(slist.get());
+            return sl::support::make_optional(slist.get());
         }
-        return sc::optional<curl_slist*>();
+        return sl::support::optional<curl_slist*>();
     }
 };
 
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTPCLIENT_CURL_HEADERS_HPP */
+#endif	/* STATICLIB_HTTP_CURL_HEADERS_HPP */
 

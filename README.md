@@ -6,7 +6,7 @@ This project is a part of [Staticlibs](http://staticlibs.net/).
 This library is built on top of [libcurl](http://curl.haxx.se/libcurl/c/). 
 It uses `curl_multi` API to implement streaming access to HTTP resources.
 
-Link to the [API documentation](http://staticlibs.github.io/staticlib_httpclient/docs/html/namespacestaticlib_1_1httpclient.html).
+Link to the [API documentation](http://staticlibs.github.io/staticlib_http/docs/html/namespacestaticlib_1_1http.html).
 
 How to build
 ------------
@@ -33,14 +33,15 @@ Visual Studio development command prompt
     git clone --recursive https://github.com/staticlibs/external_openssl.git
     git clone --recursive https://github.com/staticlibs/external_curl.git
     git clone https://github.com/staticlibs/staticlib_config.git
-    git clone https://github.com/staticlibs/staticlib_containers.git
+    git clone https://github.com/staticlibs/staticlib_support.git
+    git clone https://github.com/staticlibs/staticlib_concurrent.git
     git clone https://github.com/staticlibs/staticlib_io.git
-    git clone https://github.com/staticlibs/staticlib_httpclient.git
-    cd staticlib_httpclient
+    git clone https://github.com/staticlibs/staticlib_http.git
+    cd staticlib_http
     mkdir build
     cd build
     cmake ..
-    msbuild staticlib_httpclient.sln
+    msbuild staticlib_http.sln
 
 Cloning of [external_zlib](https://github.com/staticlibs/external_zlib),
 [external_openssl](https://github.com/staticlibs/external_openssl) and
@@ -57,6 +58,11 @@ This project is released under the [Apache License 2.0](http://www.apache.org/li
 
 Changelog
 ---------
+
+**2017-04-10**
+
+ * version 1.3.0
+ * classes renamed
 
 **2016-06-29**
 

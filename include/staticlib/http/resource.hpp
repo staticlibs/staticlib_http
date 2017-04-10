@@ -15,14 +15,14 @@
  */
 
 /* 
- * File:   http_resource.hpp
+ * File:   resource.hpp
  * Author: alex
  *
  * Created on November 20, 2015, 8:43 AM
  */
 
-#ifndef STATICLIB_HTTPCLIENT_HTTP_RESOURCE_HPP
-#define	STATICLIB_HTTPCLIENT_HTTP_RESOURCE_HPP
+#ifndef STATICLIB_HTTP_RESOURCE_HPP
+#define	STATICLIB_HTTP_RESOURCE_HPP
 
 #include <ios>
 #include <istream>
@@ -35,17 +35,17 @@
 #include "staticlib/io/unbuffered_streambuf.hpp"
 #include "staticlib/pimpl.hpp"
 
-#include "staticlib/httpclient/httpclient_exception.hpp"
-#include "staticlib/httpclient/http_request_options.hpp"
-#include "staticlib/httpclient/http_resource_info.hpp"
+#include "staticlib/http/http_exception.hpp"
+#include "staticlib/http/request_options.hpp"
+#include "staticlib/http/resource_info.hpp"
 
 namespace staticlib {
-namespace httpclient {
+namespace http {
 
 /**
  * Remote HTTP resource that can be read from as a `Source`
  */
-class http_resource : public staticlib::pimpl::pimpl_object {
+class resource : public sl::pimpl::object {
 protected:
     /**
      * implementation class
@@ -58,7 +58,7 @@ public:
      * 
      * @param pimpl impl object
      */
-    PIMPL_CONSTRUCTOR(http_resource)
+    PIMPL_CONSTRUCTOR(resource)
     
     /**
      * Reads some data from a remote resource
@@ -66,7 +66,7 @@ public:
      * @param span output span
      * @return number of bytes processed
      */
-    virtual std::streamsize read(staticlib::config::span<char> span);
+    virtual std::streamsize read(sl::io::span<char> span);
     
     /**
      * Returns URL of this resource
@@ -87,7 +87,7 @@ public:
      * 
      * @return 
      */
-    virtual http_resource_info get_info() const;
+    virtual resource_info get_info() const;
 
     /**
      * Accessor for received headers
@@ -118,5 +118,5 @@ public:
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTPCLIENT_HTTP_RESOURCE_HPP */
+#endif	/* STATICLIB_HTTP_RESOURCE_HPP */
 

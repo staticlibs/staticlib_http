@@ -21,8 +21,8 @@
  * Created on March 24, 2017, 1:02 PM
  */
 
-#ifndef STATICLIB_HTTPCLIENT_CURL_OPTIONS_HPP
-#define	STATICLIB_HTTPCLIENT_CURL_OPTIONS_HPP
+#ifndef STATICLIB_HTTP_CURL_OPTIONS_HPP
+#define	STATICLIB_HTTP_CURL_OPTIONS_HPP
 
 #include <cstdint>
 #include <memory>
@@ -32,34 +32,34 @@
 
 #include "staticlib/config.hpp"
 
-#include "staticlib/httpclient/http_request_options.hpp"
-#include "staticlib/httpclient/http_session_options.hpp"
-#include "staticlib/httpclient/httpclient_exception.hpp"
+#include "staticlib/http/request_options.hpp"
+#include "staticlib/http/session_options.hpp"
+#include "staticlib/http/http_exception.hpp"
 
 #include "curl_headers.hpp"
 
 namespace staticlib {
-namespace httpclient {
+namespace http {
 
 template<typename T>
 class curl_options {
-    staticlib::config::observer_ptr<T> cb_obj;
-    staticlib::config::observer_ptr<std::string> url;
-    staticlib::config::observer_ptr<http_request_options> options;
-    staticlib::config::observer_ptr<std::istream> post_data;
-    staticlib::config::observer_ptr<curl_headers> headers;
+    sl::support::observer_ptr<T> cb_obj;
+    sl::support::observer_ptr<std::string> url;
+    sl::support::observer_ptr<request_options> options;
+    sl::support::observer_ptr<std::istream> post_data;
+    sl::support::observer_ptr<curl_headers> headers;
     // CURL is void so cannot be used with observer
     CURL* handle;
     
 public:
-    curl_options(T* cb_obj, std::string& url, http_request_options& options,
+    curl_options(T* cb_obj, std::string& url, request_options& options,
             std::unique_ptr<std::istream>& post_data, curl_headers& headers,
             std::unique_ptr<CURL, curl_easy_deleter>& handle) :
-    cb_obj(staticlib::config::make_observer_ptr(cb_obj)),
-    url(staticlib::config::make_observer_ptr(url)),
-    options(staticlib::config::make_observer_ptr(options)),
-    post_data(staticlib::config::make_observer_ptr(post_data.get())),
-    headers(staticlib::config::make_observer_ptr(headers)),
+    cb_obj(sl::support::make_observer_ptr(cb_obj)),
+    url(sl::support::make_observer_ptr(url)),
+    options(sl::support::make_observer_ptr(options)),
+    post_data(sl::support::make_observer_ptr(post_data.get())),
+    headers(sl::support::make_observer_ptr(headers)),
     handle(handle.get()) { }
     
     curl_options(const curl_options&) = delete;
@@ -82,17 +82,17 @@ public:
         // callbacks
         setopt_object(CURLOPT_WRITEDATA, cb_obj.get());
         CURLcode err_wf = curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, curl_options<T>::write_callback);
-        if (err_wf != CURLE_OK) throw httpclient_exception(TRACEMSG(
+        if (err_wf != CURLE_OK) throw http_exception(TRACEMSG(
                 "Error setting option: [CURLOPT_WRITEFUNCTION], error: [" + curl_easy_strerror(err_wf) + "]"));
         setopt_object(CURLOPT_HEADERDATA, cb_obj.get());
         CURLcode err_hf = curl_easy_setopt(handle, CURLOPT_HEADERFUNCTION, curl_options<T>::headers_callback);
-        if (err_hf != CURLE_OK) throw httpclient_exception(TRACEMSG(
+        if (err_hf != CURLE_OK) throw http_exception(TRACEMSG(
                 "Error setting option: [CURLOPT_HEADERFUNCTION], error: [" + curl_easy_strerror(err_hf) + "]"));
 
         // general behavior options
         if (options->force_http_10) {
             CURLcode err = curl_easy_setopt(handle, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
-            if (err != CURLE_OK) throw httpclient_exception(TRACEMSG(
+            if (err != CURLE_OK) throw http_exception(TRACEMSG(
                     "Error setting option: [CURLOPT_HTTP_VERSION], error: [" + curl_easy_strerror(err) + "]"));
         }
         setopt_bool(CURLOPT_NOPROGRESS, options->noprogress);
@@ -130,7 +130,7 @@ public:
         setopt_string(CURLOPT_KEYPASSWD, options->ssl_keypasswd);
         if (options->require_tls) {
             CURLcode err = curl_easy_setopt(handle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1);
-            if (err != CURLE_OK) throw httpclient_exception(TRACEMSG(
+            if (err != CURLE_OK) throw http_exception(TRACEMSG(
                     "Error setting option: [CURLOPT_SSLVERSION], error: [" + curl_easy_strerror(err) + "]"));
         }
         if (options->ssl_verifyhost) {
@@ -187,22 +187,22 @@ private:
     void setopt_uint32(CURLoption opt, uint32_t value) {
         namespace sc = staticlib::config;
         if (0 == value) return;
-        if (value > static_cast<uint32_t> (std::numeric_limits<int32_t>::max())) throw httpclient_exception(TRACEMSG(
-                "Error setting option: [" + sc::to_string(opt) + "]," +
-                " to invalid overflow value: [" + sc::to_string(value) + "]"));
+        if (value > static_cast<uint32_t> (std::numeric_limits<int32_t>::max())) throw http_exception(TRACEMSG(
+                "Error setting option: [" + sl::support::to_string(opt) + "]," +
+                " to invalid overflow value: [" + sl::support::to_string(value) + "]"));
         CURLcode err = curl_easy_setopt(handle, opt, static_cast<long> (value));
-        if (err != CURLE_OK) throw httpclient_exception(TRACEMSG(
-                "Error setting option: [" + sc::to_string(opt) + "]," +
-                " to value: [" + sc::to_string(value) + "]," +
+        if (err != CURLE_OK) throw http_exception(TRACEMSG(
+                "Error setting option: [" + sl::support::to_string(opt) + "]," +
+                " to value: [" + sl::support::to_string(value) + "]," +
                 " error: [" + curl_easy_strerror(err) + "]"));
     }
 
     void setopt_bool(CURLoption opt, bool value) {
         namespace sc = staticlib::config;
         CURLcode err = curl_easy_setopt(handle, opt, value ? 1 : 0);
-        if (err != CURLE_OK) throw httpclient_exception(TRACEMSG(
-                "Error setting option: [" + sc::to_string(opt) + "]," +
-                " to value: [" + sc::to_string(value) + "]," +
+        if (err != CURLE_OK) throw http_exception(TRACEMSG(
+                "Error setting option: [" + sl::support::to_string(opt) + "]," +
+                " to value: [" + sl::support::to_string(value) + "]," +
                 " error: [" + curl_easy_strerror(err) + "]"));
     }
 
@@ -210,8 +210,8 @@ private:
         namespace sc = staticlib::config;
         if ("" == value) return;
         CURLcode err = curl_easy_setopt(handle, opt, value.c_str());
-        if (err != CURLE_OK) throw httpclient_exception(TRACEMSG(
-                "Error setting option: [" + sc::to_string(opt) + "]," +
+        if (err != CURLE_OK) throw http_exception(TRACEMSG(
+                "Error setting option: [" + sl::support::to_string(opt) + "]," +
                 " to value: [" + value + "]," +
                 " error: [" + curl_easy_strerror(err) + "]"));
     }
@@ -220,8 +220,8 @@ private:
         namespace sc = staticlib::config;
         if (nullptr == value) return;
         CURLcode err = curl_easy_setopt(handle, opt, value);
-        if (err != CURLE_OK) throw httpclient_exception(TRACEMSG(
-                "Error setting option: [" + sc::to_string(opt) + "]," +
+        if (err != CURLE_OK) throw http_exception(TRACEMSG(
+                "Error setting option: [" + sl::support::to_string(opt) + "]," +
                 " error: [" + curl_easy_strerror(err) + "]"));
     }
 
@@ -235,12 +235,12 @@ private:
             setopt_bool(CURLOPT_PUT, true);
         } else if ("DELETE" == options->method) {
             setopt_string(CURLOPT_CUSTOMREQUEST, "DELETE");
-        } else throw httpclient_exception(TRACEMSG(
+        } else throw http_exception(TRACEMSG(
                 "Unsupported HTTP method: [" + options->method + "]"));
         if (nullptr != post_data.get() && ("POST" == options->method || "PUT" == options->method)) {
             setopt_object(CURLOPT_READDATA, cb_obj.get());
             CURLcode err_wf = curl_easy_setopt(handle, CURLOPT_READFUNCTION, curl_options<T>::read_callback);
-            if (err_wf != CURLE_OK) throw httpclient_exception(TRACEMSG(
+            if (err_wf != CURLE_OK) throw http_exception(TRACEMSG(
                     "Error setting option: [CURLOPT_READFUNCTION], error: [" + curl_easy_strerror(err_wf) + "]"));
             options->headers.emplace_back("Transfer-Encoding", "chunked");
         }
@@ -250,12 +250,12 @@ private:
 
 class curl_multi_options {
     CURLM* handle;
-    staticlib::config::observer_ptr<http_session_options> options;
+    sl::support::observer_ptr<session_options> options;
     
 public:
-    curl_multi_options(CURLM* handle, http_session_options& options) :
+    curl_multi_options(CURLM* handle, session_options& options) :
     handle(handle),
-    options(staticlib::config::make_observer_ptr(options)) { }
+    options(sl::support::make_observer_ptr(options)) { }
 
     curl_multi_options(const curl_multi_options&) = delete;
 
@@ -275,27 +275,27 @@ private:
         namespace sc = staticlib::config;
         if (0 == value) return;
         CURLMcode err = curl_multi_setopt(handle, opt, value);
-        if (err != CURLM_OK) throw httpclient_exception(TRACEMSG(
-                "Error setting session option: [" + sc::to_string(opt) + "]," +
-                " to value: [" + sc::to_string(value) + "]," +
+        if (err != CURLM_OK) throw http_exception(TRACEMSG(
+                "Error setting session option: [" + sl::support::to_string(opt) + "]," +
+                " to value: [" + sl::support::to_string(value) + "]," +
                 " error: [" + curl_multi_strerror(err) + "]"));
     }        
     
 };
 
 template<typename T>
-void apply_curl_options(T* cb_obj, std::string& url, http_request_options& options,
+void apply_curl_options(T* cb_obj, std::string& url, request_options& options,
         std::unique_ptr<std::istream>& post_data, curl_headers& headers,
         std::unique_ptr<CURL, curl_easy_deleter>& handle) {
     curl_options<T>(cb_obj, url, options, post_data, headers, handle).apply();
 }
 
-inline void apply_curl_multi_options(CURLM* handle, http_session_options& options) {
+inline void apply_curl_multi_options(CURLM* handle, session_options& options) {
     curl_multi_options(handle, options).apply();
 }
 
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTPCLIENT_CURL_OPTIONS_HPP */
+#endif	/* STATICLIB_HTTP_CURL_OPTIONS_HPP */
 

@@ -15,26 +15,26 @@
  */
 
 /* 
- * File:   single_threaded_http_session.hpp
+ * File:   single_threaded_session.hpp
  * Author: alex
  *
  * Created on March 25, 2017, 5:35 PM
  */
 
-#ifndef STATICLIB_HTTPCLIENT_SINGLE_THREADED_HTTP_SESSION_HPP
-#define	STATICLIB_HTTPCLIENT_SINGLE_THREADED_HTTP_SESSION_HPP
+#ifndef STATICLIB_HTTP_SINGLE_THREADED_SESSION_HPP
+#define	STATICLIB_HTTP_SINGLE_THREADED_SESSION_HPP
 
-#include "staticlib/httpclient/basic_http_session.hpp"
+#include "staticlib/http/session.hpp"
 
 namespace staticlib {
-namespace httpclient {
+namespace http {
 
 /**
  * Single-threaded "session" implementation, NOT thread-safe,
  * opened resource must be disposed before opening next one.
  * TCP connections are cached where possible and are bound to session object.
  */
-class single_threaded_http_session : public basic_http_session {
+class single_threaded_session : public session {
 protected:
     /**
      * Implementation class
@@ -42,21 +42,21 @@ protected:
     class impl;
 
 public:
-    using basic_http_session::open_url;
+    using session::open_url;
 
     /**
      * PIMPL-specific constructor
      * 
      * @param pimpl impl object
      */
-    PIMPL_INHERIT_CONSTRUCTOR(single_threaded_http_session, basic_http_session)
+    PIMPL_INHERIT_CONSTRUCTOR(single_threaded_session, session)
 
     /**
      * Constructor
      * 
      * @param options session options
      */
-    single_threaded_http_session(http_session_options options = http_session_options{});
+    single_threaded_session(session_options options = session_options{});
 
     /**
      * Opens specified HTTP url as a Source using POST method
@@ -66,14 +66,14 @@ public:
      * @param options request options
      * @return HTTP resource
      */
-    virtual http_resource open_url(
+    virtual resource open_url(
             const std::string& url,
             std::unique_ptr<std::istream> post_data,
-            http_request_options options = http_request_options{}) override;
+            request_options options = request_options{}) override;
 };
 
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTPCLIENT_SINGLE_THREADED_HTTP_SESSION_HPP */
+#endif	/* STATICLIB_HTTP_SINGLE_THREADED_SESSION_HPP */
 

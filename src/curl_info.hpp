@@ -21,8 +21,8 @@
  * Created on March 25, 2017, 4:03 PM
  */
 
-#ifndef STATICLIB_HTTPCLIENT_CURL_INFO_HPP
-#define	STATICLIB_HTTPCLIENT_CURL_INFO_HPP
+#ifndef STATICLIB_HTTP_CURL_INFO_HPP
+#define	STATICLIB_HTTP_CURL_INFO_HPP
 
 #include <cstdint>
 #include <cstdint>
@@ -31,10 +31,10 @@
 
 #include "staticlib/config.hpp"
 
-#include "staticlib/httpclient/httpclient_exception.hpp"
+#include "staticlib/http/http_exception.hpp"
 
 namespace staticlib {
-namespace httpclient {
+namespace http {
 
 class curl_info {
     CURL* handle;
@@ -51,9 +51,9 @@ public:
         namespace sc = staticlib::config;
         long out = -1;
         CURLcode err = curl_easy_getinfo(handle, opt, std::addressof(out));
-        if (err != CURLE_OK) throw httpclient_exception(TRACEMSG(
+        if (err != CURLE_OK) throw http_exception(TRACEMSG(
                 "cURL curl_easy_getinfo error: [" + curl_easy_strerror(err) + "]," +
-                " option: [" + sc::to_string(opt) + "]"));
+                " option: [" + sl::support::to_string(opt) + "]"));
         return out;
     }
 
@@ -61,9 +61,9 @@ public:
         namespace sc = staticlib::config;
         double out = -1;
         CURLcode err = curl_easy_getinfo(handle, opt, std::addressof(out));
-        if (err != CURLE_OK) throw httpclient_exception(TRACEMSG(
+        if (err != CURLE_OK) throw http_exception(TRACEMSG(
                 "cURL curl_easy_getinfo error: [" + curl_easy_strerror(err) + "]," +
-                " option: [" + sc::to_string(opt) + "]"));
+                " option: [" + sl::support::to_string(opt) + "]"));
         return out;
     }
 
@@ -71,16 +71,16 @@ public:
         namespace sc = staticlib::config;
         char* out = nullptr;
         CURLcode err = curl_easy_getinfo(handle, opt, std::addressof(out));
-        if (err != CURLE_OK) throw httpclient_exception(TRACEMSG(
+        if (err != CURLE_OK) throw http_exception(TRACEMSG(
                 "cURL curl_easy_getinfo error: [" + curl_easy_strerror(err) + "]," +
-                " option: [" + sc::to_string(opt) + "]"));
+                " option: [" + sl::support::to_string(opt) + "]"));
         return std::string(out);
     }
 
 };
 
-inline http_resource_info curl_collect_info(CURL* handle) {
-    http_resource_info info;
+inline resource_info curl_collect_info(CURL* handle) {
+    resource_info info;
     curl_info ci(handle);
     info.effective_url = ci.getinfo_string(CURLINFO_EFFECTIVE_URL);
     info.total_time_secs = ci.getinfo_double(CURLINFO_TOTAL_TIME);
@@ -107,5 +107,5 @@ inline http_resource_info curl_collect_info(CURL* handle) {
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTPCLIENT_CURL_INFO_HPP */
+#endif	/* STATICLIB_HTTP_CURL_INFO_HPP */
 

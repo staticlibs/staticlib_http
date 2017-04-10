@@ -15,24 +15,24 @@
  */
 
 /* 
- * File:   http_session_options.hpp
+ * File:   session_options.hpp
  * Author: alex
  *
  * Created on February 8, 2016, 9:08 PM
  */
 
-#ifndef STATICLIB_HTTPCLIENT_HTTP_SESSION_OPTIONS_HPP
-#define	STATICLIB_HTTPCLIENT_HTTP_SESSION_OPTIONS_HPP
+#ifndef STATICLIB_HTTP_SESSION_OPTIONS_HPP
+#define	STATICLIB_HTTP_SESSION_OPTIONS_HPP
 
 #include <cstdint>
 
 namespace staticlib {
-namespace httpclient {
+namespace http {
 
 /**
  * Configuration options for the HTTP Session
  */
-struct http_session_options {
+struct session_options {
     
     // general options
 
@@ -69,5 +69,5 @@ struct http_session_options {
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTPCLIENT_HTTP_SESSION_OPTIONS_HPP */
+#endif	/* STATICLIB_HTTP_SESSION_OPTIONS_HPP */
 

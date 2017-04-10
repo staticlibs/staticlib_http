@@ -15,14 +15,14 @@
  */
 
 /* 
- * File:   http_resource_info.hpp
+ * File:   resource_info.hpp
  * Author: alex
  *
  * Created on February 8, 2016, 2:51 PM
  */
 
-#ifndef STATICLIB_HTTPCLIENT_HTTP_RESOURCE_INFO_HPP
-#define	STATICLIB_HTTPCLIENT_HTTP_RESOURCE_INFO_HPP
+#ifndef STATICLIB_HTTP_RESOURCE_INFO_HPP
+#define	STATICLIB_HTTP_RESOURCE_INFO_HPP
 
 #include <string>
 #include <vector>
@@ -30,12 +30,12 @@
 #include <cstdint>
 
 namespace staticlib {
-namespace httpclient {
+namespace http {
 
 /**
  * Metainformation about the opened HTTP resource
  */
-struct http_resource_info {
+struct resource_info {
 
     /**
      * https://curl.haxx.se/libcurl/c/CURLINFO_EFFECTIVE_URL.html
@@ -114,5 +114,5 @@ struct http_resource_info {
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTPCLIENT_HTTP_RESOURCE_INFO_HPP */
+#endif	/* STATICLIB_HTTP_RESOURCE_INFO_HPP */
 

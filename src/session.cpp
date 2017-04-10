@@ -15,49 +15,42 @@
  */
 
 /* 
- * File:   basic_http_session.cpp
+ * File:   session.cpp
  * Author: alex
  *
  * Created on March 25, 2017, 5:45 PM
  */
 
-#include "basic_http_session_impl.hpp"
+#include "session_impl.hpp"
 
-#include "staticlib/pimpl/pimpl_forward_macros.hpp"
+#include "staticlib/pimpl/forward_macros.hpp"
 
 #include "curl_options.hpp"
 
 namespace staticlib {
-namespace httpclient {
+namespace http {
 
-namespace { // anonymous
-
-namespace sc = staticlib::config;
-namespace si = staticlib::io;
-
-} // namespace
-
-basic_http_session::impl::impl(http_session_options options) :
+session::impl::impl(session_options options) :
 // todo: use move
 options(options),
 handle(curl_multi_init(), curl_multi_deleter()) {
-    if (nullptr == handle.get()) throw httpclient_exception(TRACEMSG("Error initializing cURL multi handle"));
+    if (nullptr == handle.get()) throw http_exception(TRACEMSG("Error initializing cURL multi handle"));
     apply_curl_multi_options(this->handle.get(), this->options);
 }
-PIMPL_FORWARD_CONSTRUCTOR(basic_http_session, (http_session_options), (), httpclient_exception)
+PIMPL_FORWARD_CONSTRUCTOR(session, (session_options), (), http_exception)
 
-http_resource basic_http_session::impl::open_url(basic_http_session& frontend, 
-        const std::string& url, http_request_options options) {
+resource session::impl::open_url(session& frontend, 
+        const std::string& url, request_options options) {
     if ("" == options.method) {
         options.method = "GET";
     }
     return frontend.open_url(url, static_cast<std::streambuf*>(nullptr), std::move(options));
 }
-PIMPL_FORWARD_METHOD(basic_http_session, http_resource, open_url, (const std::string&)(http_request_options), (), httpclient_exception)
+PIMPL_FORWARD_METHOD(session, resource, open_url, (const std::string&)(request_options), (), http_exception)
 
 
-http_resource basic_http_session::impl::open_url(basic_http_session& frontend,
-        const std::string& url, std::streambuf* post_data, http_request_options options) {
+resource session::impl::open_url(session& frontend,
+        const std::string& url, std::streambuf* post_data, request_options options) {
     auto sbuf_ptr = [post_data] () -> std::streambuf* {
         if (nullptr != post_data) {
             return post_data;
@@ -68,10 +61,10 @@ http_resource basic_http_session::impl::open_url(basic_http_session& frontend,
     if ("" == options.method) {
         options.method = "POST";
     }
-    auto sbuf = si::make_source_istream_ptr(si::streambuf_source(sbuf_ptr));
+    auto sbuf = sl::io::make_source_istream_ptr(sl::io::streambuf_source(sbuf_ptr));
     return frontend.open_url(url, std::move(sbuf), std::move(options));
 }
-PIMPL_FORWARD_METHOD(basic_http_session, http_resource, open_url, (const std::string&)(std::streambuf*)(http_request_options), (), httpclient_exception)
+PIMPL_FORWARD_METHOD(session, resource, open_url, (const std::string&)(std::streambuf*)(request_options), (), http_exception)
         
 } // namespace
 }

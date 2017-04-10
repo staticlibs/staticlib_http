@@ -15,44 +15,44 @@
  */
 
 /* 
- * File:   single_threaded_http_resource.hpp
+ * File:   single_threaded_resource.hpp
  * Author: alex
  *
  * Created on March 25, 2017, 9:43 PM
  */
 
-#ifndef STATICLIB_HTTPCLIENT_SINGLE_THREADED_HTTP_RESOURCE_HPP
-#define	STATICLIB_HTTPCLIENT_SINGLE_THREADED_HTTP_RESOURCE_HPP
+#ifndef STATICLIB_HTTP_SINGLE_THREADED_RESOURCE_HPP
+#define	STATICLIB_HTTP_SINGLE_THREADED_RESOURCE_HPP
 
-#include "staticlib/httpclient/http_resource.hpp"
+#include "staticlib/http/resource.hpp"
 
 #include <functional>
 
 #include "curl/curl.h"
 
-#include "staticlib/httpclient/http_session_options.hpp"
+#include "staticlib/http/session_options.hpp"
 
 namespace staticlib {
-namespace httpclient {
+namespace http {
 
-class single_threaded_http_resource : public http_resource {
+class single_threaded_resource : public resource {
 protected:
     class impl;
 
 public:
-    PIMPL_INHERIT_CONSTRUCTOR(single_threaded_http_resource, http_resource)
+    PIMPL_INHERIT_CONSTRUCTOR(single_threaded_resource, resource)
 
-    single_threaded_http_resource(CURLM* multi_handle, const http_session_options& session_options, 
+    single_threaded_resource(CURLM* multi_handle, const session_options& session_options, 
             const std::string& url, std::unique_ptr<std::istream> post_data,
-            http_request_options options, std::function<void()> finalizer);
+            request_options options, std::function<void()> finalizer);
     
-    virtual std::streamsize read(staticlib::config::span<char> span) override;
+    virtual std::streamsize read(sl::io::span<char> span) override;
 
     virtual const std::string& get_url() const override;
 
     virtual uint16_t get_status_code() const override;
 
-    virtual http_resource_info get_info() const override;
+    virtual resource_info get_info() const override;
 
     virtual const std::vector<std::pair<std::string, std::string>>& get_headers() const override;
 
@@ -65,5 +65,5 @@ public:
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTPCLIENT_SINGLE_THREADED_HTTP_RESOURCE_HPP */
+#endif	/* STATICLIB_HTTP_SINGLE_THREADED_RESOURCE_HPP */
 

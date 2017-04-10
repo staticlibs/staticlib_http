@@ -15,14 +15,14 @@
  */
 
 /* 
- * File:   http_request_options.hpp
+ * File:   request_options.hpp
  * Author: alex
  *
  * Created on February 8, 2016, 2:51 PM
  */
 
-#ifndef STATICLIB_HTTPCLIENT_HTTP_REQUEST_OPTIONS_HPP
-#define	STATICLIB_HTTPCLIENT_HTTP_REQUEST_OPTIONS_HPP
+#ifndef STATICLIB_HTTP_REQUEST_OPTIONS_HPP
+#define	STATICLIB_HTTP_REQUEST_OPTIONS_HPP
 
 #include <string>
 #include <vector>
@@ -30,12 +30,12 @@
 #include <cstdint>
 
 namespace staticlib {
-namespace httpclient {
+namespace http {
 
 /**
  * Configuration options for the HTTP request
  */
-struct http_request_options {
+struct request_options {
     
     // options implemented manually
     
@@ -205,5 +205,5 @@ struct http_request_options {
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTPCLIENT_HTTP_REQUEST_OPTIONS_HPP */
+#endif	/* STATICLIB_HTTP_REQUEST_OPTIONS_HPP */
 

@@ -21,22 +21,22 @@
  * Created on February 15, 2017, 12:54 PM
  */
 
-#ifndef STATICLIB_HTTPCLIENT_REQUEST_TICKET_HPP
-#define	STATICLIB_HTTPCLIENT_REQUEST_TICKET_HPP
+#ifndef STATICLIB_HTTP_REQUEST_TICKET_HPP
+#define	STATICLIB_HTTP_REQUEST_TICKET_HPP
 
 namespace staticlib {
-namespace httpclient {
+namespace http {
 
 class request_ticket {
 public:    
     std::string url;
-    http_request_options options;
+    request_options options;
     std::unique_ptr<std::istream> post_data;
     std::shared_ptr<running_request_pipe> pipe;
 
     request_ticket() { }
     
-    request_ticket(const std::string& url, http_request_options options,
+    request_ticket(const std::string& url, request_options options,
             std::unique_ptr<std::istream>&& post_data,
             std::shared_ptr<running_request_pipe> pipe) :
     url(url.data(), url.length()),
@@ -67,5 +67,5 @@ public:
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTPCLIENT_REQUEST_TICKET_HPP */
+#endif	/* STATICLIB_HTTP_REQUEST_TICKET_HPP */
 

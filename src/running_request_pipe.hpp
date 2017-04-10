@@ -21,8 +21,8 @@
  * Created on February 14, 2017, 5:27 PM
  */
 
-#ifndef STATICLIB_HTTPCLIENT_RUNNING_REQUEST_PIPE_HPP
-#define	STATICLIB_HTTPCLIENT_RUNNING_REQUEST_PIPE_HPP
+#ifndef STATICLIB_HTTP_RUNNING_REQUEST_PIPE_HPP
+#define	STATICLIB_HTTP_RUNNING_REQUEST_PIPE_HPP
 
 #include <cstdint>
 #include <atomic>
@@ -34,27 +34,27 @@
 #include "staticlib/config.hpp"
 #include "staticlib/concurrent.hpp"
 
-#include "staticlib/httpclient/httpclient_exception.hpp"
-#include "staticlib/httpclient/http_request_options.hpp"
-#include "staticlib/httpclient/http_resource_info.hpp"
+#include "staticlib/http/http_exception.hpp"
+#include "staticlib/http/request_options.hpp"
+#include "staticlib/http/resource_info.hpp"
 
 namespace staticlib {
-namespace httpclient {
+namespace http {
 
 class running_request_pipe : public std::enable_shared_from_this<running_request_pipe> {
     std::atomic<int16_t> response_code;
-    staticlib::concurrent::spsc_inobject_concurrent_queue<http_resource_info, 1> resource_info;
-    staticlib::concurrent::spsc_inobject_waiting_queue<staticlib::concurrent::growing_buffer, 16> data_queue;
-    staticlib::concurrent::spsc_concurrent_queue<std::pair<std::string, std::string>> headers_queue;
+    sl::concurrent::spsc_inobject_concurrent_queue<resource_info, 1> res_info;
+    sl::concurrent::spsc_inobject_waiting_queue<sl::concurrent::growing_buffer, 16> data_queue;
+    sl::concurrent::spsc_concurrent_queue<std::pair<std::string, std::string>> headers_queue;
     std::atomic<bool> errors_non_empty;
-    staticlib::concurrent::mpmc_blocking_queue<std::string> errors;
-    std::shared_ptr<staticlib::concurrent::condition_latch> pause_latch;
+    sl::concurrent::mpmc_blocking_queue<std::string> errors;
+    std::shared_ptr<sl::concurrent::condition_latch> pause_latch;
     uint16_t consumer_thread_wakeup_timeout_millis;
     std::atomic<bool> running;
 
 public:    
-    running_request_pipe(http_request_options& opts, 
-            std::shared_ptr<staticlib::concurrent::condition_latch> pause_latch) :
+    running_request_pipe(request_options& opts, 
+            std::shared_ptr<sl::concurrent::condition_latch> pause_latch) :
     response_code(0),
     headers_queue(opts.max_number_of_response_headers),
     errors_non_empty(false),
@@ -69,38 +69,38 @@ public:
     
     void set_response_code(long code) {
         namespace sc = staticlib::config;
-        if (!sc::is_uint16_positive(code)) throw httpclient_exception(TRACEMSG(
-                "Invalid response code specified: [" + sc::to_string(code) + "]"));
+        if (!sl::support::is_uint16_positive(code)) throw http_exception(TRACEMSG(
+                "Invalid response code specified: [" + sl::support::to_string(code) + "]"));
         int16_t the_zero = 0;
         bool success = response_code.compare_exchange_strong(the_zero, static_cast<int16_t> (code),
                 std::memory_order_release, std::memory_order_relaxed);
-        if (!success) throw httpclient_exception(TRACEMSG(
+        if (!success) throw http_exception(TRACEMSG(
                 "Invalid second attempt to set response code," +
-                " existing code: [" + sc::to_string(the_zero) +"]," +
-                " new code: [" + sc::to_string(code) + "]"));
+                " existing code: [" + sl::support::to_string(the_zero) +"]," +
+                " new code: [" + sl::support::to_string(code) + "]"));
     }
     
     uint16_t get_response_code() const {
         return response_code.load(std::memory_order_acquire);
     }
     
-    void set_resource_info(http_resource_info&& info) {
-        if (resource_info.size() > 0) throw httpclient_exception(TRACEMSG(
+    void set_resource_info(resource_info&& info) {
+        if (res_info.size() > 0) throw http_exception(TRACEMSG(
                 "Invalid second attempt to set resource info"));
-        resource_info.emplace(std::move(info));
+        res_info.emplace(std::move(info));
     }
     
-    http_resource_info get_resource_info() {
-        http_resource_info res;
-        resource_info.poll(res);
+    resource_info get_resource_info() {
+        resource_info res;
+        res_info.poll(res);
         return res;
     }
     
-    bool write_some_data(staticlib::concurrent::growing_buffer&& buf) {
+    bool write_some_data(sl::concurrent::growing_buffer&& buf) {
         return data_queue.emplace(std::move(buf));
     }
     
-    bool receive_some_data(staticlib::concurrent::growing_buffer& dest_buffer) {
+    bool receive_some_data(sl::concurrent::growing_buffer& dest_buffer) {
         // non-blocking read
         bool polres = data_queue.poll(dest_buffer);
         if (polres) {
@@ -141,9 +141,9 @@ public:
     void emplace_header(std::pair<std::string, std::string>&& pair) {
         namespace sc = staticlib::config;
         bool emplaced = headers_queue.emplace(std::move(pair));
-        if (!emplaced) throw httpclient_exception(TRACEMSG(
+        if (!emplaced) throw http_exception(TRACEMSG(
                 "Error emplacing header to queue, " +
-                "queue size: [" + sc::to_string(headers_queue.max_size()) + "]"));        
+                "queue size: [" + sl::support::to_string(headers_queue.max_size()) + "]"));        
     }
     
     std::vector<std::pair<std::string, std::string>> consume_received_headers() {
@@ -180,5 +180,5 @@ public:
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTPCLIENT_RUNNING_REQUEST_PIPE_HPP */
+#endif	/* STATICLIB_HTTP_RUNNING_REQUEST_PIPE_HPP */
 

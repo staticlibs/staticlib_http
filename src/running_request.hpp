@@ -21,8 +21,8 @@
  * Created on February 13, 2017, 9:23 PM
  */
 
-#ifndef STATICLIB_HTTPCLIENT_RUNNING_REQUEST_HPP
-#define	STATICLIB_HTTPCLIENT_RUNNING_REQUEST_HPP
+#ifndef STATICLIB_HTTP_RUNNING_REQUEST_HPP
+#define	STATICLIB_HTTP_RUNNING_REQUEST_HPP
 
 #include <cstdint>
 #include <chrono>
@@ -34,8 +34,8 @@
 
 #include "staticlib/config.hpp"
 
-#include "staticlib/httpclient/http_request_options.hpp"
-#include "staticlib/httpclient/http_resource_info.hpp"
+#include "staticlib/http/request_options.hpp"
+#include "staticlib/http/resource_info.hpp"
 
 #include "curl_deleters.hpp"
 #include "curl_headers.hpp"
@@ -45,7 +45,7 @@
 #include "request_ticket.hpp"
 
 namespace staticlib {
-namespace httpclient {
+namespace http {
 
 class running_request {
     enum class req_state {
@@ -54,7 +54,7 @@ class running_request {
     
     // holds data passed to curl
     std::string url;
-    http_request_options options;
+    request_options options;
     std::unique_ptr<std::istream> post_data;
     curl_headers headers;
     std::unique_ptr<CURL, curl_easy_deleter> handle;
@@ -63,7 +63,7 @@ class running_request {
     std::shared_ptr<running_request_pipe> pipe;
     bool paused = false;
     std::string error;
-    staticlib::concurrent::growing_buffer buf;
+    sl::concurrent::growing_buffer buf;
     req_state state = req_state::created;
     
 public:
@@ -73,9 +73,9 @@ public:
     post_data(std::move(ticket.post_data)),    
     handle(curl_easy_init(), curl_easy_deleter(multi_handle)),
     pipe(std::move(ticket.pipe)) {        
-        if (nullptr == handle.get()) throw httpclient_exception(TRACEMSG("Error initializing cURL handle"));
+        if (nullptr == handle.get()) throw http_exception(TRACEMSG("Error initializing cURL handle"));
         CURLMcode errm = curl_multi_add_handle(multi_handle, handle.get());
-        if (errm != CURLM_OK) throw httpclient_exception(TRACEMSG(
+        if (errm != CURLM_OK) throw http_exception(TRACEMSG(
                 "cURL multi_add error: [" + curl_multi_strerror(errm) + "], url: [" + this->url + "]"));
         apply_curl_options(this, this->url, this->options, this->post_data, this->headers, this->handle);
     }
@@ -92,7 +92,7 @@ public:
                 return curl_collect_info(handle.get());
             } catch (const std::exception& e) {
                 append_error(TRACEMSG(e.what()));
-                return http_resource_info();
+                return resource_info();
             }
         }();
         pipe->set_resource_info(std::move(info));
@@ -124,7 +124,7 @@ public:
         error.append(msg);
     }
     
-    http_request_options& get_options() {
+    request_options& get_options() {
         return options;
     }
     
@@ -143,7 +143,7 @@ public:
             curl_info ci(handle.get());
             long code = ci.getinfo_long(CURLINFO_RESPONSE_CODE);
             if (options.abort_on_response_error && code >= 400) {
-                append_error(TRACEMSG("HTTP response error, status code: [" + sc::to_string(code) + "]"));
+                append_error(TRACEMSG("HTTP response error, status code: [" + sl::support::to_string(code) + "]"));
                 return 0;
             } else {
                 pipe->set_response_code(code);
@@ -178,8 +178,8 @@ public:
 
     size_t read_data(char* buffer, size_t size, size_t nitems) {
         size_t len = size * nitems;
-        auto src = io::streambuf_source(post_data->rdbuf());
-        std::streamsize read = io::read_all(src, {buffer, len});
+        auto src = sl::io::streambuf_source(post_data->rdbuf());
+        std::streamsize read = sl::io::read_all(src, {buffer, len});
         return static_cast<size_t> (read);
     }
 };
@@ -188,5 +188,5 @@ public:
 }
 
 
-#endif	/* STATICLIB_HTTPCLIENT_RUNNING_REQUEST_HPP */
+#endif	/* STATICLIB_HTTP_RUNNING_REQUEST_HPP */
 

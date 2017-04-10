@@ -15,22 +15,34 @@
  */
 
 /* 
- * File:   httpclient.hpp
+ * File:   http_session_test.cpp
  * Author: alex
  *
- * Created on November 20, 2015, 8:46 AM
+ * Created on November 20, 2015, 8:44 AM
  */
 
-#ifndef STATICLIB_HTTPCLIENT_HTTPCLIENT_HPP
-#define	STATICLIB_HTTPCLIENT_HTTPCLIENT_HPP
+#include "staticlib/http/multi_threaded_session.hpp"
+#include "staticlib/http/single_threaded_session.hpp"
 
-#include "staticlib/httpclient/http_request_options.hpp"
-#include "staticlib/httpclient/http_resource.hpp"
-#include "staticlib/httpclient/http_resource_info.hpp"
-#include "staticlib/httpclient/http_session_options.hpp"
-#include "staticlib/httpclient/httpclient_exception.hpp"
-#include "staticlib/httpclient/multi_threaded_http_session.hpp"
-#include "staticlib/httpclient/single_threaded_http_session.hpp"
+#include <iostream>
 
-#endif	/* STATICLIB_HTTPCLIENT_HTTPCLIENT_HPP */
+#include "staticlib/config/assert.hpp"
+
+void test_not_leaked() {
+    // check not leaked
+    auto mt = sl::http::multi_threaded_session{};
+    (void) mt;
+    auto st = sl::http::single_threaded_session{};
+    (void) st;
+}
+
+int main() {
+    try {
+        test_not_leaked();
+    } catch (const std::exception& e) {
+        std::cout << e.what() << std::endl;
+        return 1;
+    }
+    return 0;
+}
 

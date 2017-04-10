@@ -15,10 +15,10 @@
 cmake_minimum_required ( VERSION 2.8.12 )
 
 # project
-project ( staticlib_httpclient CXX )
-set ( ${PROJECT_NAME}_STATICLIB_VERSION 1.2 )
+project ( staticlib_http CXX )
+set ( ${PROJECT_NAME}_STATICLIB_VERSION 1.3.0 )
 set ( ${PROJECT_NAME}_DESCRIPTION "Staticlibs HTTP client library" )
-set ( ${PROJECT_NAME}_URL https://github.com/staticlibs/staticlib_httpclient )
+set ( ${PROJECT_NAME}_URL https://github.com/staticlibs/staticlib_http )
 include ( ${CMAKE_CURRENT_LIST_DIR}/resources/macros.cmake )
 
 # docs
@@ -46,12 +46,13 @@ if ( NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY )
 endif ( )
 if ( NOT DEFINED STATICLIB_TOOLCHAIN )
     if ( NOT ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" ) 
-        staticlib_httpclient_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../external_curl )
+        staticlib_http_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../external_curl )
     endif (  )
-    staticlib_httpclient_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../staticlib_config )
-    staticlib_httpclient_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../staticlib_concurrent )
-    staticlib_httpclient_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../staticlib_io )
-    staticlib_httpclient_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../staticlib_pimpl )
+    staticlib_http_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../staticlib_config )
+    staticlib_http_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../staticlib_support )
+    staticlib_http_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../staticlib_concurrent )
+    staticlib_http_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../staticlib_io )
+    staticlib_http_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../staticlib_pimpl )
 endif ( )
 
 # deps
@@ -62,8 +63,8 @@ set ( ${PROJECT_NAME}_DEPS_PUBLIC
         staticlib_pimpl )
 set ( ${PROJECT_NAME}_DEPS_PRIVATE 
         libcurl )
-staticlib_httpclient_pkg_check_modules ( ${PROJECT_NAME}_DEPS_PUBLIC_PC REQUIRED ${PROJECT_NAME}_DEPS_PUBLIC )
-staticlib_httpclient_pkg_check_modules ( ${PROJECT_NAME}_DEPS_PRIVATE_PC REQUIRED ${PROJECT_NAME}_DEPS_PRIVATE )
+staticlib_http_pkg_check_modules ( ${PROJECT_NAME}_DEPS_PUBLIC_PC REQUIRED ${PROJECT_NAME}_DEPS_PUBLIC )
+staticlib_http_pkg_check_modules ( ${PROJECT_NAME}_DEPS_PRIVATE_PC REQUIRED ${PROJECT_NAME}_DEPS_PRIVATE )
 
 # library
 file ( GLOB_RECURSE ${PROJECT_NAME}_SRC ${CMAKE_CURRENT_LIST_DIR}/src/*.cpp )
@@ -84,10 +85,13 @@ if ( ${CMAKE_CXX_COMPILER_ID}x MATCHES "MSVCx" )
 endif ( )
 
 # pkg-config
-staticlib_httpclient_list_to_string ( ${PROJECT_NAME}_PC_CFLAGS_OPTS "" ${PROJECT_NAME}_OPTIONS )
+staticlib_http_list_to_string ( ${PROJECT_NAME}_PC_CFLAGS_OPTS "" ${PROJECT_NAME}_OPTIONS )
 set ( ${PROJECT_NAME}_PC_CFLAGS "-I${CMAKE_CURRENT_LIST_DIR}/include ${${PROJECT_NAME}_PC_CFLAGS_OPTS}" )
 set ( ${PROJECT_NAME}_PC_LIBS "-L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} -l${PROJECT_NAME}" )
-staticlib_httpclient_list_to_string ( ${PROJECT_NAME}_PC_REQUIRES "" ${PROJECT_NAME}_DEPS_PUBLIC )
-staticlib_httpclient_list_to_string ( ${PROJECT_NAME}_PC_REQUIRES_PRIVATE "" ${PROJECT_NAME}_DEPS_PRIVATE )
+if ( ${CMAKE_CXX_COMPILER_ID}x MATCHES "MSVCx" )
+    set ( ${PROJECT_NAME}_PC_LIBS_PRIVATE "-lws2_32" )
+endif ( )
+staticlib_http_list_to_string ( ${PROJECT_NAME}_PC_REQUIRES "" ${PROJECT_NAME}_DEPS_PUBLIC )
+staticlib_http_list_to_string ( ${PROJECT_NAME}_PC_REQUIRES_PRIVATE "" ${PROJECT_NAME}_DEPS_PRIVATE )
 configure_file ( ${CMAKE_CURRENT_LIST_DIR}/resources/pkg-config.in 
         ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/pkgconfig/${PROJECT_NAME}.pc )

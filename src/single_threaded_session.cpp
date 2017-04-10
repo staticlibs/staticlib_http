@@ -15,55 +15,48 @@
  */
 
 /* 
- * File:   single_threaded_http_session.cpp
+ * File:   single_threaded_session.cpp
  * Author: alex
  *
  * Created on March 25, 2017, 9:48 PM
  */
 
-#include "staticlib/httpclient/single_threaded_http_session.hpp"
+#include "staticlib/http/single_threaded_session.hpp"
 
 #include "curl/curl.h"
 
-#include "staticlib/pimpl/pimpl_forward_macros.hpp"
+#include "staticlib/pimpl/forward_macros.hpp"
 
-#include "basic_http_session_impl.hpp"
+#include "session_impl.hpp"
 #include "curl_headers.hpp"
 #include "curl_utils.hpp"
-#include "single_threaded_http_resource.hpp"
+#include "single_threaded_resource.hpp"
 
 namespace staticlib {
-namespace httpclient {
+namespace http {
 
-namespace { // anonymous
-
-namespace sc = staticlib::config;
-namespace io = staticlib::io;
-
-} // namespace
-
-class single_threaded_http_session::impl : public basic_http_session::impl {
+class single_threaded_session::impl : public session::impl {
     bool has_active_request = false;
     
 public:
-    impl(http_session_options options) :
-    basic_http_session::impl(options) { }
-    http_resource open_url(single_threaded_http_session&, const std::string& url,
-            std::unique_ptr<std::istream> post_data, http_request_options options) {
-        if (has_active_request) throw httpclient_exception(TRACEMSG(
+    impl(session_options options) :
+    session::impl(options) { }
+    resource open_url(single_threaded_session&, const std::string& url,
+            std::unique_ptr<std::istream> post_data, request_options options) {
+        if (has_active_request) throw http_exception(TRACEMSG(
                 "This single-threaded session is already has one HTTP resource open, please dispose it first"));
         if ("" == options.method) {
             options.method = "POST";
         }
         this->has_active_request = true;
-        return single_threaded_http_resource(handle.get(), this->options, std::move(url), 
+        return single_threaded_resource(handle.get(), this->options, std::move(url), 
                 std::move(post_data), std::move(options), [this] {this->has_active_request = false; });
     }
     
 };
 
-PIMPL_FORWARD_CONSTRUCTOR(single_threaded_http_session, (http_session_options), (), httpclient_exception)
-PIMPL_FORWARD_METHOD(single_threaded_http_session, http_resource, open_url, (const std::string&)(std::unique_ptr<std::istream>)(http_request_options), (), httpclient_exception)
+PIMPL_FORWARD_CONSTRUCTOR(single_threaded_session, (session_options), (), http_exception)
+PIMPL_FORWARD_METHOD(single_threaded_session, resource, open_url, (const std::string&)(std::unique_ptr<std::istream>)(request_options), (), http_exception)
 
 } // namespace
 }

@@ -15,13 +15,13 @@
  */
 
 /* 
- * File:   single_threaded_http_resource.cpp
+ * File:   single_threaded_resource.cpp
  * Author: alex
  *
  * Created on March 25, 2017, 10:08 PM
  */
 
-#include "single_threaded_http_resource.hpp"
+#include "single_threaded_resource.hpp"
 
 #include <chrono>
 #include <thread>
@@ -30,29 +30,26 @@
 #include "curl/curl.h"
 
 #include "staticlib/io.hpp"
-#include "staticlib/pimpl/pimpl_forward_macros.hpp"
+#include "staticlib/pimpl/forward_macros.hpp"
 
 #include "curl_deleters.hpp"
 #include "curl_headers.hpp"
 #include "curl_info.hpp"
 #include "curl_options.hpp"
 #include "curl_utils.hpp"
-#include "http_resource_impl.hpp"
+#include "resource_impl.hpp"
 
 namespace staticlib {
-namespace httpclient {
+namespace http {
 
 namespace { // anonymous
-
-namespace io = staticlib::io;
-namespace sc = staticlib::config;
 
 using headers_type = const std::vector<std::pair<std::string, std::string>>&;
 using fin_type = std::function<void()>;
 
 } // namespace
 
-class single_threaded_http_resource::impl : public http_resource::impl {
+class single_threaded_resource::impl : public resource::impl {
     enum class resource_state {
         created,
         writing_headers,
@@ -64,13 +61,13 @@ class single_threaded_http_resource::impl : public http_resource::impl {
     
     // holds data passed to curl
     std::string url;
-    http_session_options session_options;
-    http_request_options options;
+    session_options session_opts;
+    request_options options;
     std::unique_ptr<std::istream> post_data;
     curl_headers request_headers;
     
     // run details
-    http_resource_info info;
+    resource_info info;
     uint16_t status_code = 0;
     std::vector<std::pair<std::string, std::string>> response_headers;
     std::vector<char> buf;
@@ -80,24 +77,24 @@ class single_threaded_http_resource::impl : public http_resource::impl {
     std::string error;
     
 public:
-    impl(CURLM* multi_handle, const http_session_options& session_options,
+    impl(CURLM* multi_handle, const session_options& session_opts,
             const std::string& url, std::unique_ptr<std::istream> post_data,
-            http_request_options options, std::function<void()> finalizer) :
+            request_options options, std::function<void()> finalizer) :
     multi_handle(multi_handle),
     handle(curl_easy_init(), curl_easy_deleter(this->multi_handle, finalizer)),
     url(url.data(), url.length()),
-    session_options(session_options),
+    session_opts(session_opts),
     options(std::move(options)),
     post_data(std::move(post_data)) {
         CURLMcode errm = curl_multi_add_handle(multi_handle, handle.get());
-        if (errm != CURLM_OK) throw httpclient_exception(TRACEMSG(
+        if (errm != CURLM_OK) throw http_exception(TRACEMSG(
                 "cURL multi_add error: [" + curl_multi_strerror(errm) + "], url: [" + this->url + "]"));
         apply_curl_options(this, this->url, this->options, this->post_data, this->request_headers, this->handle);
         this->open = true;
         fill_buffer();
     }
 
-    virtual std::streamsize read(http_resource&, sc::span<char> span) override {
+    virtual std::streamsize read(resource&, sl::io::span<char> span) override {
         size_t ulen = span.size();
         fill_buffer();
         if (0 == buf.size()) {
@@ -116,23 +113,23 @@ public:
         return static_cast<std::streamsize> (reslen);
     }
 
-    virtual const std::string& get_url(const http_resource&) const override {
+    virtual const std::string& get_url(const resource&) const override {
         return url;
     }
 
-    virtual uint16_t get_status_code(const http_resource&) const override {
+    virtual uint16_t get_status_code(const resource&) const override {
         return status_code;
     }
 
-    virtual http_resource_info get_info(const http_resource&) const override {
+    virtual resource_info get_info(const resource&) const override {
         return info;
     }
 
-    virtual const std::vector<std::pair<std::string, std::string>>& get_headers(const http_resource&) const override {
+    virtual const std::vector<std::pair<std::string, std::string>>& get_headers(const resource&) const override {
         return response_headers;
     }
 
-    virtual const std::string& get_header(const http_resource&, const std::string& name) const override {
+    virtual const std::string& get_header(const resource&, const std::string& name) const override {
         // try cached first
         for (auto& en : response_headers) {
             if (name == en.first) {
@@ -143,7 +140,7 @@ public:
         return empty;
     }
 
-    virtual bool connection_successful(const http_resource& frontend) const override {
+    virtual bool connection_successful(const resource& frontend) const override {
         return get_status_code(frontend) > 0;
     }
     
@@ -167,8 +164,8 @@ public:
 
     size_t read_data(char* buffer, size_t size, size_t nitems) {
         std::streamsize len = static_cast<std::streamsize> (size * nitems);
-        io::streambuf_source src{post_data->rdbuf()};
-        std::streamsize read = io::read_all(src,{buffer, len});
+        sl::io::streambuf_source src{post_data->rdbuf()};
+        std::streamsize read = sl::io::read_all(src,{buffer, len});
         return static_cast<size_t> (read);
     }
 
@@ -193,7 +190,7 @@ private:
         while (open && 0 == buf.size()) {
             long timeo = -1;
             CURLMcode err_timeout = curl_multi_timeout(multi_handle, std::addressof(timeo));
-            if (err_timeout != CURLM_OK) throw httpclient_exception(TRACEMSG(
+            if (err_timeout != CURLM_OK) throw http_exception(TRACEMSG(
                     "cURL timeout error: [" + curl_multi_strerror(err_timeout) + "], url: [" + url + "]"));
             struct timeval timeout = create_timeout_struct(timeo);
 
@@ -204,13 +201,13 @@ private:
             int maxfd = -1;
             CURLMcode err_fdset = curl_multi_fdset(multi_handle, std::addressof(fdread),
                     std::addressof(fdwrite), std::addressof(fdexcep), std::addressof(maxfd));
-            if (err_fdset != CURLM_OK) throw httpclient_exception(TRACEMSG(
+            if (err_fdset != CURLM_OK) throw http_exception(TRACEMSG(
                     "cURL fdset error: [" + curl_multi_strerror(err_fdset) + "], url: [" + url + "]"));
 
             // wait or select
             int err_select = 0;
             if (maxfd == -1) {
-                std::this_thread::sleep_for(std::chrono::milliseconds{session_options.fdset_timeout_millis});
+                std::this_thread::sleep_for(std::chrono::milliseconds{session_opts.fdset_timeout_millis});
             } else {
                 err_select = select(maxfd + 1, std::addressof(fdread), std::addressof(fdwrite),
                         std::addressof(fdexcep), std::addressof(timeout));
@@ -220,7 +217,7 @@ private:
             if (-1 != err_select) {
                 int active = -1;
                 CURLMcode err = curl_multi_perform(multi_handle, std::addressof(active));
-                if (err != CURLM_OK) throw httpclient_exception(TRACEMSG(
+                if (err != CURLM_OK) throw http_exception(TRACEMSG(
                         "cURL multi_perform error: [" + curl_multi_strerror(err) + "], url: [" + url + "]"));
                 open = (1 == active);
             }
@@ -232,42 +229,42 @@ private:
     void check_state_after_perform(std::chrono::time_point<std::chrono::system_clock> start) {
         // check whether error happened
         if(!error.empty()) {
-            throw httpclient_exception(TRACEMSG(error + "\n" +
+            throw http_exception(TRACEMSG(error + "\n" +
                     "Processing error for url: [" + url + "]"));
         }
         
         // check whether connection was successful
         if (options.abort_on_connect_error && !open && resource_state::created == state) {
-            throw httpclient_exception(TRACEMSG(
+            throw http_exception(TRACEMSG(
                     "Connection error for url: [" + url + "]"));
         }
 
         // check for response code
         if (options.abort_on_response_error && status_code >= 400) {
-            throw httpclient_exception(TRACEMSG(
+            throw http_exception(TRACEMSG(
                     "HTTP error returned from server, url: [" + url + "]," +
-                    " status_code: [" + sc::to_string(status_code) + "]"));
+                    " status_code: [" + sl::support::to_string(status_code) + "]"));
         }
 
         // check for timeout
         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start);
         if (elapsed.count() > options.timeout_millis) {
-            throw httpclient_exception(TRACEMSG(
+            throw http_exception(TRACEMSG(
                     "Request timeout for url: [" + url + "]," +
-                    " elapsed time (millis): [" + sc::to_string(elapsed.count()) + "]," +
-                    " limit: [" + sc::to_string(options.timeout_millis) + "]"));
+                    " elapsed time (millis): [" + sl::support::to_string(elapsed.count()) + "]," +
+                    " limit: [" + sl::support::to_string(options.timeout_millis) + "]"));
         }
     }
 };
 
-PIMPL_FORWARD_CONSTRUCTOR(single_threaded_http_resource, (CURLM*)(const http_session_options&)(const std::string&)(std::unique_ptr<std::istream>)(http_request_options)(fin_type), (), httpclient_exception)
-PIMPL_FORWARD_METHOD(single_threaded_http_resource, std::streamsize, read, (sc::span<char>), (), httpclient_exception)
-PIMPL_FORWARD_METHOD(single_threaded_http_resource, const std::string&, get_url, (), (const), httpclient_exception)
-PIMPL_FORWARD_METHOD(single_threaded_http_resource, uint16_t, get_status_code, (), (const), httpclient_exception)
-PIMPL_FORWARD_METHOD(single_threaded_http_resource, http_resource_info, get_info, (), (const), httpclient_exception)
-PIMPL_FORWARD_METHOD(single_threaded_http_resource, headers_type, get_headers, (), (const), httpclient_exception)
-PIMPL_FORWARD_METHOD(single_threaded_http_resource, const std::string&, get_header, (const std::string&), (const), httpclient_exception)
-PIMPL_FORWARD_METHOD(single_threaded_http_resource, bool, connection_successful, (), (const), httpclient_exception)
+PIMPL_FORWARD_CONSTRUCTOR(single_threaded_resource, (CURLM*)(const session_options&)(const std::string&)(std::unique_ptr<std::istream>)(request_options)(fin_type), (), http_exception)
+PIMPL_FORWARD_METHOD(single_threaded_resource, std::streamsize, read, (sl::io::span<char>), (), http_exception)
+PIMPL_FORWARD_METHOD(single_threaded_resource, const std::string&, get_url, (), (const), http_exception)
+PIMPL_FORWARD_METHOD(single_threaded_resource, uint16_t, get_status_code, (), (const), http_exception)
+PIMPL_FORWARD_METHOD(single_threaded_resource, resource_info, get_info, (), (const), http_exception)
+PIMPL_FORWARD_METHOD(single_threaded_resource, headers_type, get_headers, (), (const), http_exception)
+PIMPL_FORWARD_METHOD(single_threaded_resource, const std::string&, get_header, (const std::string&), (const), http_exception)
+PIMPL_FORWARD_METHOD(single_threaded_resource, bool, connection_successful, (), (const), http_exception)
 
 } // namespace
 }
