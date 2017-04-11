@@ -370,6 +370,7 @@ void test_single() {
     auto st = sl::http::single_threaded_session();
     auto opts = sl::http::request_options();
     opts.abort_on_connect_error = false;
+    opts.connecttimeout_millis = 100;
     {
         auto res1 = st.open_url(URL, opts);
         slassert(throws_exc([&]{
@@ -399,12 +400,14 @@ void test_timeout() {
 
 void test_status_fail() {
     auto st = sl::http::single_threaded_session();    
+    auto opts = sl::http::request_options();
+    opts.connecttimeout_millis = 100;
     slassert(throws_exc([&] {
-        st.open_url(URL + "get");
+        st.open_url(URL + "get", opts);
     }));
     auto mt = sl::http::multi_threaded_session();
     slassert(throws_exc([&] {
-        mt.open_url(URL + "get");
+        mt.open_url(URL + "get", opts);
     }));
 }
 
