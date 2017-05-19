@@ -30,9 +30,9 @@ staticlib_enable_deplibs_cache ( )
 if ( NOT DEFINED STATICLIB_DEPS )
     set ( STATICLIB_DEPS ${CMAKE_CURRENT_LIST_DIR}/../../ CACHE INTERNAL "" )    
 endif ( )
-set ( staticlib_httpserver_USE_OPENSSL ON CACHE BOOL "" )
+set ( staticlib_pion_USE_OPENSSL ON CACHE BOOL "" )
 # note: comment me to see server output
-set ( staticlib_httpserver_DISABLE_LOGGING ON CACHE BOOL "" )
+set ( staticlib_pion_DISABLE_LOGGING ON CACHE BOOL "" )
 if ( NOT STATICLIB_TOOLCHAIN MATCHES "linux_[^_]+_[^_]+" )
     staticlib_add_subdirectory ( ${STATICLIB_DEPS}/external_zlib )
     staticlib_add_subdirectory ( ${STATICLIB_DEPS}/external_openssl )
@@ -44,13 +44,15 @@ staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_concurrent )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_io )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_crypto )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_pimpl )
+# testonly
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_utils )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_tinydir )
-staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_httpserver ) # testonly
+staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_pion ) 
+# end testonly
 staticlib_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../../staticlib_http )
 set ( ${PROJECT_NAME}_DEPS 
         staticlib_http
-        staticlib_httpserver
+        staticlib_pion
         staticlib_crypto
         staticlib_tinydir
         staticlib_utils )
