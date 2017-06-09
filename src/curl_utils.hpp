@@ -28,6 +28,8 @@
 #include <string>
 #include <utility>
 
+#include "staticlib/support.hpp"
+
 namespace staticlib {
 namespace http {
 
@@ -53,23 +55,28 @@ inline fd_set create_fd() {
 }
 
 // http://stackoverflow.com/a/9681122/314015
-inline std::pair<std::string, std::string> curl_parse_header(const char* buffer, size_t len) {
-    std::string name{};
-    std::string value{};
-    for (size_t i = 0; i < len; i++) {
+inline sl::support::optional<std::pair<std::string, std::string>> curl_parse_header(const char* buffer, size_t len) {
+    std::string name;
+    std::string value;
+    size_t i = 0;
+    // 2 for '\r\n'
+    for (; i < len - 2; i++) {
         if (':' != buffer[i]) {
             name.push_back(buffer[i]);
         } else {
-            // 2 for ': ', 2 for '\r\n'
-            size_t valen = len - i - 2 - 2;
-            if (valen > 0) {
-                value.resize(valen);
-                std::memcpy(std::addressof(value.front()), buffer + i + 2, value.length());
-                break;
-            }
+            break;
         }
     }
-    return {name, value};
+    if (':' == buffer[i]) {
+        // 2 for ': ', 2 for '\r\n'
+        size_t valen = len - i - 2 - 2;
+        if (valen > 0) {
+            value.resize(valen);
+            std::memcpy(std::addressof(value.front()), buffer + i + 2, value.length());
+            return sl::support::make_optional(std::make_pair(std::move(name), std::move(value)));
+        }
+    }
+    return sl::support::optional<std::pair<std::string, std::string>>();
 }
 
 } // namespace

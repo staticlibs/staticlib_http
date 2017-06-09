@@ -152,8 +152,11 @@ public:
         } else if (req_state::receiving_data == state) {
             state = req_state::receiving_trailers;
         }
-        size_t len = size*nitems;        
-        pipe->emplace_header(curl_parse_header(buffer, len));
+        size_t len = size*nitems;
+        auto opt = curl_parse_header(buffer, len);
+        if (opt) {
+            pipe->emplace_header(std::move(opt.value()));
+        }
         return len;
     }
     

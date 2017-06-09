@@ -151,7 +151,10 @@ public:
             this->state = resource_state::writing_headers;
         }
         size_t len = size*nitems;
-        response_headers.emplace_back(curl_parse_header(buffer, len));
+        auto opt = curl_parse_header(buffer, len);
+        if (opt) {
+            response_headers.emplace_back(std::move(opt.value()));
+        }
         return len;
     }
     
