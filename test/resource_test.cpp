@@ -25,6 +25,7 @@
 
 #include <cstdint>
 #include <array>
+#include <atomic>
 #include <iostream>
 #include <string>
 #include <thread>
@@ -84,6 +85,24 @@ void get_handler(sl::pion::http_request_ptr& req, sl::pion::tcp_connection_ptr& 
     auto writer = sl::pion::http_response_writer::create(conn, req);
     writer->write(GET_RESPONSE);
     writer->send();
+}
+
+void get_5_sec_handler(sl::pion::http_request_ptr& req, sl::pion::tcp_connection_ptr& conn) {    
+//    std::cout << ">>> server5: " << std::this_thread::get_id() << std::endl;
+    auto writer = sl::pion::http_response_writer::create(conn, req);
+    std::this_thread::sleep_for(std::chrono::seconds{5});
+    writer->write("5 sec resp");
+    writer->send();
+//    std::cout << "<<< server5: " << std::this_thread::get_id() << std::endl;
+}
+
+void get_1_sec_handler(sl::pion::http_request_ptr& req, sl::pion::tcp_connection_ptr& conn) {
+//    std::cout << ">>> server1: " << std::this_thread::get_id() << std::endl;
+    auto writer = sl::pion::http_response_writer::create(conn, req);
+    std::this_thread::sleep_for(std::chrono::seconds{1});
+    writer->write("1 sec resp");
+    writer->send();
+//    std::cout << "<<< server1: " << std::this_thread::get_id() << std::endl;
 }
 
 class response_sender : public std::enable_shared_from_this<response_sender> {
@@ -408,6 +427,47 @@ void test_status_fail() {
     }));
 }
 
+void test_queue() {
+    sl::pion::http_server server(4, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
+    server.add_handler("GET", "/get5", get_5_sec_handler);
+    server.add_handler("GET", "/get1", get_1_sec_handler);
+    server.start();
+    try {
+        auto mt = sl::http::multi_threaded_session();
+        auto opts = sl::http::request_options();
+        enrich_opts_ssl(opts);
+        std::atomic<uint16_t> counter{0};
+        auto vec = std::vector<std::thread>();
+        vec.emplace_back([&mt, &opts, &counter] {
+//            std::cout << ">>> client5: " << std::this_thread::get_id() << std::endl;
+            auto src = mt.open_url(URL + "get5", opts);
+            auto sink = sl::io::string_sink();
+            sl::io::copy_all(src, sink);
+            slassert(10 == counter.load(std::memory_order_acquire));
+//            std::cout << "<<< client5: " << std::this_thread::get_id() << ": " << sink.get_string() << std::endl;
+        });
+        std::this_thread::sleep_for(std::chrono::milliseconds{100});
+        for (int i = 0; i < 10; i++) {
+            vec.emplace_back([&mt, &opts, &counter] {
+//                std::cout << ">>> client1: " << std::this_thread::get_id() << std::endl;
+                auto src = mt.open_url(URL + "get1", opts);
+                auto sink = sl::io::string_sink();
+                sl::io::copy_all(src, sink);
+//                std::cout << "<<< client1: " << std::this_thread::get_id() << ": " << sink.get_string() << std::endl;
+                counter.fetch_add(1, std::memory_order_acq_rel);
+            });
+        }
+        for (auto&& th : vec) {
+            th.join();
+        }
+    } catch (const std::exception&) {
+        server.stop(true);
+        throw;
+    }
+    // stop server
+    server.stop(true);
+}
+
 int main() {
     try {
 //        auto start = std::chrono::system_clock::now();
@@ -419,6 +479,7 @@ int main() {
 //        test_stress();
 //        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start);
 //        std::cout << "millist elapsed: " << elapsed.count() << std::endl;
+//        test_queue();
     } catch (const std::exception& e) {
         std::cout << e.what() << std::endl;
         return 1;

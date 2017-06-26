@@ -98,18 +98,17 @@ public:
     bool check_pause_condition() {
         // unpause when possible
         size_t num_paused = unpause_enqueued_requests();
-        if (requests.size() > num_paused) {
-            // consumers are active, let's proceed
-            // with them postponing polling for newcomers
-            return true;
-        }
 
         // check more tickets
-        auto newcomers = poll_enqueued_tickets();
-        if (newcomers.size() > 0) {
-            for (request_ticket& ti : newcomers) {
+        if (new_tickets_arrived.load(std::memory_order_acquire)) {
+            new_tickets_arrived.store(false, std::memory_order_release);
+            tickets.poll([this](request_ticket && ti) {
                 this->enqueue_request(std::move(ti));
-            }
+            });
+        }
+        
+        if (requests.size() > num_paused) {
+            // consumers are active, let's proceed
             return true;
         }
 
@@ -131,7 +130,7 @@ private:
 
             // spin while has active transfers
             while (requests.size() > 0) {
-
+                
                 // receive data
                 bool perform_success = curl_perform();
                 if (!perform_success) {
@@ -251,18 +250,6 @@ private:
             pipe->append_error(TRACEMSG(e.what()));
             pipe->shutdown();
         }
-    }
-
-    std::vector<request_ticket> poll_enqueued_tickets() {
-        bool has_new_tickets = new_tickets_arrived.load(std::memory_order_acquire);
-        std::vector<request_ticket> vec;
-        if (has_new_tickets) {
-            new_tickets_arrived.store(false, std::memory_order_release);
-            tickets.poll([&vec](request_ticket && ti) {
-                vec.emplace_back(std::move(ti));
-            });
-        }
-        return vec;
     }
 
     bool check_and_abort_on_multi_error(CURLMcode code) {
