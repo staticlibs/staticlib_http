@@ -195,7 +195,7 @@ private:
             CURLMcode err_timeout = curl_multi_timeout(multi_handle, std::addressof(timeo));
             if (err_timeout != CURLM_OK) throw http_exception(TRACEMSG(
                     "cURL timeout error: [" + curl_multi_strerror(err_timeout) + "], url: [" + url + "]"));
-            struct timeval timeout = create_timeout_struct(timeo);
+            struct timeval timeout = create_timeout_struct(timeo, session_opts.st_socket_select_max_timeout_millis);
 
             // get file descriptors from the transfers
             fd_set fdread = create_fd();
@@ -210,7 +210,7 @@ private:
             // wait or select
             int err_select = 0;
             if (maxfd == -1) {
-                std::this_thread::sleep_for(std::chrono::milliseconds{session_opts.fdset_timeout_millis});
+                std::this_thread::sleep_for(std::chrono::milliseconds(session_opts.fdset_timeout_millis));
             } else {
                 err_select = select(maxfd + 1, std::addressof(fdread), std::addressof(fdwrite),
                         std::addressof(fdexcep), std::addressof(timeout));

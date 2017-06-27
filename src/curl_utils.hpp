@@ -33,18 +33,22 @@
 namespace staticlib {
 namespace http {
 
-// http://curl-library.cool.haxx.narkive.com/2sYifbgu/issue-with-curl-multi-timeout-while-doing-non-blocking-http-posts-in-vms
-inline struct timeval create_timeout_struct(long timeo) {
+// https://curl.haxx.se/mail/lib-2007-07/0339.html
+// https://stackoverflow.com/q/5852784/314015
+inline struct timeval create_timeout_struct(long timeo, uint16_t max_timeout_millis) {
+    uint16_t tm_u16 = max_timeout_millis;
+    if (sl::support::is_uint16_positive(timeo)) {
+        uint16_t timeo_u16 = static_cast<uint16_t>(timeo);
+        if (timeo_u16 < max_timeout_millis) {
+            tm_u16 = timeo_u16;
+        }
+    }
+    long tm_long = static_cast<long> (tm_u16);
+    
     struct timeval timeout;
     std::memset(std::addressof(timeout), '\0', sizeof (timeout));
-    timeout.tv_sec = 10;
-    if (timeo > 0) {
-        long ctsecs = timeo / 1000;
-        if (ctsecs < 10) {
-            timeout.tv_sec = ctsecs;
-        }
-        timeout.tv_usec = (timeo % 1000) * 1000;
-    }
+    timeout.tv_sec = tm_long / 1000;
+    timeout.tv_usec = (tm_long % 1000) * 1000;
     return timeout;
 }
 

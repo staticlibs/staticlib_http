@@ -45,6 +45,14 @@ struct session_options {
      */
     uint32_t fdset_timeout_millis = 100;
     /**
+     * Socket 'select' max timeout for multi-threaded resource (in milliseconds)
+     */
+    uint16_t mt_socket_select_max_timeout_millis = 100;
+    /**
+     * Socket 'select' max timeout for single-threaded resource (in milliseconds)
+     */
+    uint16_t st_socket_select_max_timeout_millis = 10000;
+    /**
      * Timeout to wait for when requests queue is not empty, but all 
      * running requests are paused.
      */

@@ -89,6 +89,7 @@ public:
         if (!enqueued) throw http_exception(TRACEMSG(
                 "Requests queue is full, size: [" + sl::support::to_string(tickets.size()) + "]"));
         new_tickets_arrived.exchange(true, std::memory_order_acq_rel);
+        pause_latch->notify_one();
         auto params = resource_params(url, std::move(pipe));
         return multi_threaded_resource(std::move(params));
     }
@@ -142,7 +143,7 @@ private:
                 if (!pop_success) {
                     break;
                 }
-
+                
                 // check there are running requests
                 if (0 == requests.size()) break;
 
@@ -160,8 +161,8 @@ private:
         if (check_and_abort_on_multi_error(err_timeout)) {
             return false;
         }
-        struct timeval timeout = create_timeout_struct(timeo);
-
+        struct timeval timeout = create_timeout_struct(timeo, this->options.mt_socket_select_max_timeout_millis);
+        
         // fdset
         fd_set fdread = create_fd();
         fd_set fdwrite = create_fd();
