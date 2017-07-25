@@ -242,7 +242,15 @@ private:
             CURLcode err_wf = curl_easy_setopt(handle, CURLOPT_READFUNCTION, curl_options<T>::read_callback);
             if (err_wf != CURLE_OK) throw http_exception(TRACEMSG(
                     "Error setting option: [CURLOPT_READFUNCTION], error: [" + curl_easy_strerror(err_wf) + "]"));
-            options->headers.emplace_back("Transfer-Encoding", "chunked");
+            if (options->send_request_body_content_length) {
+                CURLcode err = curl_easy_setopt(handle, CURLOPT_POSTFIELDSIZE, static_cast<long> (options->request_body_content_length));
+                if (err != CURLE_OK) throw http_exception(TRACEMSG(
+                        "Error setting option: [CURLOPT_POSTFIELDSIZE]," +
+                        " to value: [" + sl::support::to_string(options->request_body_content_length) + "]," +
+                        " error: [" + curl_easy_strerror(err) + "]"));
+            } else {
+                options->headers.emplace_back("Transfer-Encoding", "chunked");
+            }
         }
     }   
 

@@ -65,6 +65,19 @@ struct request_options {
      */
     uint16_t consumer_thread_wakeup_timeout_millis = 100;
     
+    /**
+     * Whether to specify a "Content-Length" header for the request body,
+     * not specified by default, "Transfer-Encoding: chunked" is used instead.
+     * If set to "true", then client must also specify a "request_body_content_length" parameter
+     */
+    bool send_request_body_content_length = false;
+    
+    /**
+     * "Content-Length" header value for request body,
+     * used only if "send_request_body_content_length" is enabled
+     */
+    uint32_t request_body_content_length = 0;
+    
     // general behavior options
     
     /**
