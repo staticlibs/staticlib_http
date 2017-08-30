@@ -47,6 +47,7 @@ staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_pimpl )
 # testonly
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_utils )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_tinydir )
+staticlib_add_subdirectory ( ${STATICLIB_DEPS}/external_asio )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_pion ) 
 # end testonly
 staticlib_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../../staticlib_http )
