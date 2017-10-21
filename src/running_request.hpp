@@ -137,17 +137,19 @@ public:
     }
     
     // http://stackoverflow.com/a/9681122/314015
-    size_t write_headers(char *buffer, size_t size, size_t nitems) {
-        namespace sc = staticlib::config;
+    size_t write_headers(char* buffer, size_t size, size_t nitems) {
         if (req_state::created == state) {
             curl_info ci(handle.get());
             long code = ci.getinfo_long(CURLINFO_RESPONSE_CODE);
-            if (options.abort_on_response_error && code >= 400) {
-                append_error(TRACEMSG("HTTP response error, status code: [" + sl::support::to_string(code) + "]"));
-                return 0;
-            } else {
+            // https://curl.haxx.se/mail/lib-2011-03/0160.html
+            if (100 != code) {
                 pipe->set_response_code(code);
-                state = req_state::receiving_headers;
+                if (options.abort_on_response_error && code >= 400) {
+                    append_error(TRACEMSG("HTTP response error, status code: [" + sl::support::to_string(code) + "]"));
+                    return 0;
+                } else {
+                    state = req_state::receiving_headers;
+                }
             }
         } else if (req_state::receiving_data == state) {
             state = req_state::receiving_trailers;
@@ -168,7 +170,7 @@ public:
             return 0;
         }
         size_t len = size * nitems;
-        // chunk is too big for stack        
+        // chunk is too big for stack
         buf.resize(len);
         std::memcpy(buf.data(), buffer, buf.size());
         bool placed = pipe->write_some_data(std::move(buf));

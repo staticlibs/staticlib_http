@@ -63,7 +63,6 @@ public:
 
     sl::support::optional<curl_slist*> wrap_into_slist(
             const std::vector<std::pair<std::string, std::string>>& provided_headers) {
-        namespace sc = staticlib::config;
         for (auto& pa : provided_headers) {
             stored_headers.emplace_back(pa.first + ": " + pa.second);
             curl_slist* released = slist.release();

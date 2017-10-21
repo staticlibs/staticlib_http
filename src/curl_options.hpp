@@ -185,7 +185,6 @@ private:
 
     // note: think about integer overflow 
     void setopt_uint32(CURLoption opt, uint32_t value) {
-        namespace sc = staticlib::config;
         if (0 == value) return;
         if (value > static_cast<uint32_t> (std::numeric_limits<int32_t>::max())) throw http_exception(TRACEMSG(
                 "Error setting option: [" + sl::support::to_string(opt) + "]," +
@@ -198,7 +197,6 @@ private:
     }
 
     void setopt_bool(CURLoption opt, bool value) {
-        namespace sc = staticlib::config;
         CURLcode err = curl_easy_setopt(handle, opt, value ? 1 : 0);
         if (err != CURLE_OK) throw http_exception(TRACEMSG(
                 "Error setting option: [" + sl::support::to_string(opt) + "]," +
@@ -207,7 +205,6 @@ private:
     }
 
     void setopt_string(CURLoption opt, const std::string& value) {
-        namespace sc = staticlib::config;
         if ("" == value) return;
         CURLcode err = curl_easy_setopt(handle, opt, value.c_str());
         if (err != CURLE_OK) throw http_exception(TRACEMSG(
@@ -217,7 +214,6 @@ private:
     }
 
     void setopt_object(CURLoption opt, void* value) {
-        namespace sc = staticlib::config;
         if (nullptr == value) return;
         CURLcode err = curl_easy_setopt(handle, opt, value);
         if (err != CURLE_OK) throw http_exception(TRACEMSG(
@@ -280,7 +276,6 @@ public:
 
 private:
     void setopt_uint32(CURLMoption opt, uint32_t value) {
-        namespace sc = staticlib::config;
         if (0 == value) return;
         CURLMcode err = curl_multi_setopt(handle, opt, value);
         if (err != CURLM_OK) throw http_exception(TRACEMSG(

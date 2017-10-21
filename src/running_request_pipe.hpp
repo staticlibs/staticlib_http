@@ -68,7 +68,6 @@ public:
     running_request_pipe& operator=(const running_request_pipe&) = delete;
     
     void set_response_code(long code) {
-        namespace sc = staticlib::config;
         if (!sl::support::is_uint16_positive(code)) throw http_exception(TRACEMSG(
                 "Invalid response code specified: [" + sl::support::to_string(code) + "]"));
         int16_t the_zero = 0;
@@ -139,7 +138,6 @@ public:
     }
     
     void emplace_header(std::pair<std::string, std::string>&& pair) {
-        namespace sc = staticlib::config;
         bool emplaced = headers_queue.emplace(std::move(pair));
         if (!emplaced) throw http_exception(TRACEMSG(
                 "Error emplacing header to queue, " +

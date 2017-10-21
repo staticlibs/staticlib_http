@@ -48,7 +48,6 @@ public:
     curl_info& operator=(const curl_info&) = delete;
     
     long getinfo_long(CURLINFO opt) {
-        namespace sc = staticlib::config;
         long out = -1;
         CURLcode err = curl_easy_getinfo(handle, opt, std::addressof(out));
         if (err != CURLE_OK) throw http_exception(TRACEMSG(
@@ -58,7 +57,6 @@ public:
     }
 
     double getinfo_double(CURLINFO opt) {
-        namespace sc = staticlib::config;
         double out = -1;
         CURLcode err = curl_easy_getinfo(handle, opt, std::addressof(out));
         if (err != CURLE_OK) throw http_exception(TRACEMSG(
@@ -68,7 +66,6 @@ public:
     }
 
     std::string getinfo_string(CURLINFO opt) {
-        namespace sc = staticlib::config;
         char* out = nullptr;
         CURLcode err = curl_easy_getinfo(handle, opt, std::addressof(out));
         if (err != CURLE_OK) throw http_exception(TRACEMSG(
