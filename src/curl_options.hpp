@@ -22,7 +22,7 @@
  */
 
 #ifndef STATICLIB_HTTP_CURL_OPTIONS_HPP
-#define	STATICLIB_HTTP_CURL_OPTIONS_HPP
+#define STATICLIB_HTTP_CURL_OPTIONS_HPP
 
 #include <cstdint>
 #include <memory>
@@ -300,5 +300,5 @@ inline void apply_curl_multi_options(CURLM* handle, session_options& options) {
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTP_CURL_OPTIONS_HPP */
+#endif /* STATICLIB_HTTP_CURL_OPTIONS_HPP */
 

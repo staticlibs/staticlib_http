@@ -22,7 +22,7 @@
  */
 
 #ifndef STATICLIB_HTTP_SESSION_HPP
-#define	STATICLIB_HTTP_SESSION_HPP
+#define STATICLIB_HTTP_SESSION_HPP
 
 #include <istream>
 #include <memory>
@@ -52,7 +52,7 @@ protected:
      * 
      * @param options session options
      */
-    session(session_options options = session_options{});
+    session(session_options opts = session_options{});
     
 public:
     /**
@@ -66,32 +66,32 @@ public:
      * Opens specified HTTP url as a Source
      * 
      * @param url HTTP URL
-     * @param options request options
+     * @param opts request options
      * @return HTTP resource
      */
     resource open_url(
             const std::string& url,
-            request_options options = request_options{});
+            request_options opts = request_options{});
 
     /**
      * Opens specified HTTP url as a Source using POST method
      * 
      * @param url HTTP URL
      * @param post_data data to upload
-     * @param options request options
+     * @param opts request options
      * @return HTTP resource
      */
     resource open_url(
             const std::string& url,
             std::streambuf* post_data,
-            request_options options = request_options{});
+            request_options opts = request_options{});
 
     /**
      * Opens specified HTTP url as a Source using POST method
      * 
      * @param url HTTP URL
      * @param post_data data to upload
-     * @param options request options
+     * @param opts request options
      * @return HTTP resource
      */
     template<typename PostDataSource,
@@ -99,11 +99,11 @@ public:
     resource open_url(
             const std::string& url,
             PostDataSource&& post_data,
-            request_options options = request_options{}) {
+            request_options opts = request_options{}) {
         std::unique_ptr<std::istream> sbuf{
             staticlib::io::make_source_istream_ptr(std::move(post_data))
         };
-        return open_url(url, std::move(sbuf), std::move(options));
+        return open_url(url, std::move(sbuf), std::move(opts));
     }
 
     /**
@@ -111,18 +111,18 @@ public:
      * 
      * @param url HTTP URL
      * @param post_data data to upload
-     * @param options request options
+     * @param opts request options
      * @return HTTP resource
      */
     template<typename PostDataSource>
     resource open_url(
             const std::string& url,
             PostDataSource& post_data,
-            request_options options = request_options{}) {
+            request_options opts = request_options{}) {
         std::unique_ptr<std::istream> sbuf{
             staticlib::io::make_source_istream_ptr(post_data)
         };
-        return open_url(url, std::move(sbuf), std::move(options));
+        return open_url(url, std::move(sbuf), std::move(opts));
     }
             
     /**
@@ -130,18 +130,18 @@ public:
      * 
      * @param url HTTP URL
      * @param post_data data to upload
-     * @param options request options
+     * @param opts request options
      * @return HTTP resource
      */
     virtual resource open_url(
             const std::string& url,
             std::unique_ptr<std::istream> post_data,
-            request_options options = request_options{}) = 0;
+            request_options opts = request_options{}) = 0;
             
 };
 
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTP_SESSION_HPP */
+#endif /* STATICLIB_HTTP_SESSION_HPP */
 

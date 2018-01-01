@@ -22,7 +22,7 @@
  */
 
 #ifndef STATICLIB_HTTP_CURL_DELETERS_HPP
-#define	STATICLIB_HTTP_CURL_DELETERS_HPP
+#define STATICLIB_HTTP_CURL_DELETERS_HPP
 
 #include <functional>
 
@@ -69,5 +69,5 @@ public:
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTP_CURL_DELETERS_HPP */
+#endif /* STATICLIB_HTTP_CURL_DELETERS_HPP */
 

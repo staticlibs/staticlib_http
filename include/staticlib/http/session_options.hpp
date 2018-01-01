@@ -22,7 +22,7 @@
  */
 
 #ifndef STATICLIB_HTTP_SESSION_OPTIONS_HPP
-#define	STATICLIB_HTTP_SESSION_OPTIONS_HPP
+#define STATICLIB_HTTP_SESSION_OPTIONS_HPP
 
 #include <cstdint>
 
@@ -77,5 +77,5 @@ struct session_options {
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTP_SESSION_OPTIONS_HPP */
+#endif /* STATICLIB_HTTP_SESSION_OPTIONS_HPP */
 

@@ -22,7 +22,7 @@
  */
 
 #ifndef STATICLIB_HTTP_CURL_INFO_HPP
-#define	STATICLIB_HTTP_CURL_INFO_HPP
+#define STATICLIB_HTTP_CURL_INFO_HPP
 
 #include <cstdint>
 #include <cstdint>
@@ -104,5 +104,5 @@ inline resource_info curl_collect_info(CURL* handle) {
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTP_CURL_INFO_HPP */
+#endif /* STATICLIB_HTTP_CURL_INFO_HPP */
 

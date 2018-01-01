@@ -22,7 +22,7 @@
  */
 
 #ifndef STATICLIB_HTTP_CURL_HEADERS_HPP
-#define	STATICLIB_HTTP_CURL_HEADERS_HPP
+#define STATICLIB_HTTP_CURL_HEADERS_HPP
 
 #include <memory>
 #include <string>
@@ -83,5 +83,5 @@ public:
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTP_CURL_HEADERS_HPP */
+#endif /* STATICLIB_HTTP_CURL_HEADERS_HPP */
 

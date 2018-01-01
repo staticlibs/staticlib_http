@@ -16,7 +16,7 @@ cmake_minimum_required ( VERSION 2.8.12 )
 
 # project
 project ( staticlib_http CXX )
-set ( ${PROJECT_NAME}_STATICLIB_VERSION 1.3.0 )
+set ( ${PROJECT_NAME}_STATICLIB_VERSION 1.3.1 )
 set ( ${PROJECT_NAME}_DESCRIPTION "Staticlibs HTTP client library" )
 set ( ${PROJECT_NAME}_URL https://github.com/staticlibs/staticlib_http )
 include ( ${CMAKE_CURRENT_LIST_DIR}/resources/macros.cmake )

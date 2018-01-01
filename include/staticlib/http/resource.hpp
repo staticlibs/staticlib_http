@@ -22,7 +22,7 @@
  */
 
 #ifndef STATICLIB_HTTP_RESOURCE_HPP
-#define	STATICLIB_HTTP_RESOURCE_HPP
+#define STATICLIB_HTTP_RESOURCE_HPP
 
 #include <ios>
 #include <istream>
@@ -118,5 +118,5 @@ public:
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTP_RESOURCE_HPP */
+#endif /* STATICLIB_HTTP_RESOURCE_HPP */
 

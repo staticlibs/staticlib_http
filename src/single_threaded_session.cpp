@@ -39,18 +39,18 @@ class single_threaded_session::impl : public session::impl {
     bool has_active_request = false;
     
 public:
-    impl(session_options options) :
-    session::impl(options) { }
+    impl(session_options opts) :
+    session::impl(opts) { }
     resource open_url(single_threaded_session&, const std::string& url,
-            std::unique_ptr<std::istream> post_data, request_options options) {
+            std::unique_ptr<std::istream> post_data, request_options opts) {
         if (has_active_request) throw http_exception(TRACEMSG(
                 "This single-threaded session is already has one HTTP resource open, please dispose it first"));
-        if ("" == options.method) {
-            options.method = "POST";
+        if ("" == opts.method) {
+            opts.method = "POST";
         }
         this->has_active_request = true;
         return single_threaded_resource(handle.get(), this->options, std::move(url), 
-                std::move(post_data), std::move(options), [this] {this->has_active_request = false; });
+                std::move(post_data), std::move(opts), [this] {this->has_active_request = false; });
     }
     
 };

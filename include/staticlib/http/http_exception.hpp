@@ -22,7 +22,7 @@
  */
 
 #ifndef STATICLIB_HTTP_HTTP_EXCEPTION_HPP
-#define	STATICLIB_HTTP_HTTP_EXCEPTION_HPP
+#define STATICLIB_HTTP_HTTP_EXCEPTION_HPP
 
 #include "staticlib/support/exception.hpp"
 
@@ -52,5 +52,5 @@ public:
 } //namespace
 }
 
-#endif	/* STATICLIB_HTTP_HTTP_EXCEPTION_HPP */
+#endif /* STATICLIB_HTTP_HTTP_EXCEPTION_HPP */
 

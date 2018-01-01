@@ -22,7 +22,7 @@
  */
 
 #ifndef STATICLIB_HTTP_RESOURCE_INFO_HPP
-#define	STATICLIB_HTTP_RESOURCE_INFO_HPP
+#define STATICLIB_HTTP_RESOURCE_INFO_HPP
 
 #include <string>
 #include <vector>
@@ -114,5 +114,5 @@ struct resource_info {
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTP_RESOURCE_INFO_HPP */
+#endif /* STATICLIB_HTTP_RESOURCE_INFO_HPP */
 

@@ -22,7 +22,7 @@
  */
 
 #ifndef STATICLIB_HTTP_RESOURCE_PARAMS_HPP
-#define	STATICLIB_HTTP_RESOURCE_PARAMS_HPP
+#define STATICLIB_HTTP_RESOURCE_PARAMS_HPP
 
 #include <string>
 #include <memory>
@@ -57,5 +57,5 @@ public:
 }
 
 
-#endif	/* STATICLIB_HTTP_RESOURCE_PARAMS_HPP */
+#endif /* STATICLIB_HTTP_RESOURCE_PARAMS_HPP */
 

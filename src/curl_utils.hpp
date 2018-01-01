@@ -22,7 +22,7 @@
  */
 
 #ifndef STATICLIB_HTTP_CURL_UTILS_HPP
-#define	STATICLIB_HTTP_CURL_UTILS_HPP
+#define STATICLIB_HTTP_CURL_UTILS_HPP
 
 #include <cstring>
 #include <string>
@@ -86,5 +86,5 @@ inline sl::support::optional<std::pair<std::string, std::string>> curl_parse_hea
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTP_CURL_UTILS_HPP */
+#endif /* STATICLIB_HTTP_CURL_UTILS_HPP */
 

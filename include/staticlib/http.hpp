@@ -22,7 +22,7 @@
  */
 
 #ifndef STATICLIB_HTTP_HPP
-#define	STATICLIB_HTTP_HPP
+#define STATICLIB_HTTP_HPP
 
 #include "staticlib/config.hpp"
 
@@ -34,5 +34,5 @@
 #include "staticlib/http/multi_threaded_session.hpp"
 #include "staticlib/http/single_threaded_session.hpp"
 
-#endif	/* STATICLIB_HTTP_HPP */
+#endif /* STATICLIB_HTTP_HPP */
 

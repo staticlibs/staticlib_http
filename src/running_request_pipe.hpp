@@ -22,7 +22,7 @@
  */
 
 #ifndef STATICLIB_HTTP_RUNNING_REQUEST_PIPE_HPP
-#define	STATICLIB_HTTP_RUNNING_REQUEST_PIPE_HPP
+#define STATICLIB_HTTP_RUNNING_REQUEST_PIPE_HPP
 
 #include <cstdint>
 #include <atomic>
@@ -178,5 +178,5 @@ public:
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTP_RUNNING_REQUEST_PIPE_HPP */
+#endif /* STATICLIB_HTTP_RUNNING_REQUEST_PIPE_HPP */
 

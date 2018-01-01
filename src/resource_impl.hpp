@@ -22,7 +22,7 @@
  */
 
 #ifndef STATICLIB_HTTP_RESOURCE_IMPL_HPP
-#define	STATICLIB_HTTP_RESOURCE_IMPL_HPP
+#define STATICLIB_HTTP_RESOURCE_IMPL_HPP
 
 #include "staticlib/http/resource.hpp"
 
@@ -51,5 +51,5 @@ public:
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTP_RESOURCE_IMPL_HPP */
+#endif /* STATICLIB_HTTP_RESOURCE_IMPL_HPP */
 

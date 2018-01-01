@@ -22,7 +22,7 @@
  */
 
 #ifndef STATICLIB_HTTP_SESSION_IMPL_HPP
-#define	STATICLIB_HTTP_SESSION_IMPL_HPP
+#define STATICLIB_HTTP_SESSION_IMPL_HPP
 
 #include "staticlib/http/session.hpp"
 
@@ -39,23 +39,23 @@ protected:
     std::unique_ptr<CURLM, curl_multi_deleter> handle;
 
 public:
-    impl(session_options options = session_options{});
+    impl(session_options opts = session_options{});
     
     resource open_url(
             session&,
             const std::string& url,
-            request_options options);
+            request_options opts);
 
     resource open_url(
             session&,
             const std::string& url,
             std::streambuf* post_data,
-            request_options options);
+            request_options opts);
     
 };
 
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTP_SESSION_IMPL_HPP */
+#endif /* STATICLIB_HTTP_SESSION_IMPL_HPP */
 

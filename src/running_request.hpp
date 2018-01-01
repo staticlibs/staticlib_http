@@ -22,7 +22,7 @@
  */
 
 #ifndef STATICLIB_HTTP_RUNNING_REQUEST_HPP
-#define	STATICLIB_HTTP_RUNNING_REQUEST_HPP
+#define STATICLIB_HTTP_RUNNING_REQUEST_HPP
 
 #include <cstdint>
 #include <chrono>
@@ -193,5 +193,5 @@ public:
 }
 
 
-#endif	/* STATICLIB_HTTP_RUNNING_REQUEST_HPP */
+#endif /* STATICLIB_HTTP_RUNNING_REQUEST_HPP */
 

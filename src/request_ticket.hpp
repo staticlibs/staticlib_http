@@ -22,7 +22,7 @@
  */
 
 #ifndef STATICLIB_HTTP_REQUEST_TICKET_HPP
-#define	STATICLIB_HTTP_REQUEST_TICKET_HPP
+#define STATICLIB_HTTP_REQUEST_TICKET_HPP
 
 namespace staticlib {
 namespace http {
@@ -67,5 +67,5 @@ public:
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTP_REQUEST_TICKET_HPP */
+#endif /* STATICLIB_HTTP_REQUEST_TICKET_HPP */
 

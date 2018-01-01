@@ -1,6 +1,9 @@
 HTTP client library for Staticlibs
 ==================================
 
+[![travis](https://travis-ci.org/staticlibs/staticlib_http.svg?branch=master)](https://travis-ci.org/staticlibs/staticlib_http)
+[![appveyor](https://ci.appveyor.com/api/projects/status/github/staticlibs/staticlib_http?svg=true)](https://ci.appveyor.com/project/staticlibs/staticlib-http)
+
 This project is a part of [Staticlibs](http://staticlibs.net/).
 
 This library is built on top of [libcurl](http://curl.haxx.se/libcurl/c/). 
@@ -58,6 +61,11 @@ This project is released under the [Apache License 2.0](http://www.apache.org/li
 
 Changelog
 ---------
+
+**2017-12-31**
+
+ * version 1.3.1
+ * vs2017 support
 
 **2017-04-10**
 

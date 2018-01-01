@@ -58,9 +58,9 @@ class multi_threaded_session::impl : public session::impl {
     std::atomic<bool> running;
     
 public:
-    impl(session_options options) :
-    session::impl(options),    
-    tickets(options.requests_queue_max_size),
+    impl(session_options opts) :
+    session::impl(opts),    
+    tickets(opts.requests_queue_max_size),
     new_tickets_arrived(false),
     pause_latch(std::make_shared<sl::concurrent::condition_latch>([this] {
         return this->check_pause_condition();
@@ -79,13 +79,13 @@ public:
     }
 
     resource open_url(multi_threaded_session&, const std::string& url,
-            std::unique_ptr<std::istream> post_data, request_options options) {
-        if ("" == options.method) {
-            options.method = "POST";
+            std::unique_ptr<std::istream> post_data, request_options opts) {
+        if ("" == opts.method) {
+            opts.method = "POST";
         }
         //  note: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=63736
-        auto pipe = std::make_shared<running_request_pipe>(options, pause_latch);
-        auto enqueued = tickets.emplace(url, std::move(options), std::move(post_data), pipe);
+        auto pipe = std::make_shared<running_request_pipe>(opts, pause_latch);
+        auto enqueued = tickets.emplace(url, std::move(opts), std::move(post_data), pipe);
         if (!enqueued) throw http_exception(TRACEMSG(
                 "Requests queue is full, size: [" + sl::support::to_string(tickets.size()) + "]"));
         new_tickets_arrived.exchange(true, std::memory_order_acq_rel);

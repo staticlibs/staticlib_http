@@ -22,7 +22,7 @@
  */
 
 #ifndef STATICLIB_HTTP_REQUEST_OPTIONS_HPP
-#define	STATICLIB_HTTP_REQUEST_OPTIONS_HPP
+#define STATICLIB_HTTP_REQUEST_OPTIONS_HPP
 
 #include <string>
 #include <vector>
@@ -218,5 +218,5 @@ struct request_options {
 } // namespace
 }
 
-#endif	/* STATICLIB_HTTP_REQUEST_OPTIONS_HPP */
+#endif /* STATICLIB_HTTP_REQUEST_OPTIONS_HPP */
 
