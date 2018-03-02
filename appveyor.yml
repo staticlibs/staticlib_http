@@ -24,13 +24,16 @@ clone_folder: c:\projects\staticlib_http
 install:
   - cd ..
   - git clone https://github.com/staticlibs/tools_windows_pkgconfig.git
-  - git clone https://github.com/staticlibs/tools_windows_perl.git
+  - git clone https://github.com/staticlibs/tools_windows_perl520.git
   - git clone https://github.com/staticlibs/tools_windows_nasm.git
-  - set PATH=%PATH%;c:\projects\tools_windows_pkgconfig\bin;c:\projects\tools_windows_perl\perl\bin;c:\projects\tools_windows_nasm
+  - set PATH=%PATH%;c:\projects\tools_windows_pkgconfig\bin;c:\projects\tools_windows_perl520\perl\bin;c:\projects\tools_windows_nasm
   - git clone https://github.com/staticlibs/cmake.git
-  - git clone --recursive https://github.com/staticlibs/external_zlib.git
-  - git clone --recursive https://github.com/staticlibs/external_openssl.git
-  - git clone --recursive https://github.com/staticlibs/external_curl.git
+  - git clone https://github.com/staticlibs/external_zlib.git
+  - git clone https://github.com/staticlibs/lookaside_zlib.git
+  - git clone https://github.com/staticlibs/external_openssl.git
+  - git clone https://github.com/staticlibs/lookaside_openssl.git
+  - git clone https://github.com/staticlibs/external_curl.git
+  - git clone https://github.com/staticlibs/lookaside_curl.git
   - git clone https://github.com/staticlibs/staticlib_config.git
   - git clone https://github.com/staticlibs/staticlib_support.git
   - git clone https://github.com/staticlibs/staticlib_concurrent.git
@@ -40,8 +43,10 @@ install:
   - mkdir test
   - robocopy staticlib_http\test\certificates test\certificates /e /ndl /njh /njs /nc /ns /np || true
   - git clone https://github.com/staticlibs/staticlib_utils.git
-  - git clone --recursive https://github.com/staticlibs/staticlib_tinydir.git
-  - git clone --recursive https://github.com/staticlibs/external_asio.git
+  - git clone https://github.com/staticlibs/staticlib_tinydir.git
+  - git clone https://github.com/staticlibs/tinydir.git
+  - git clone https://github.com/staticlibs/external_asio.git
+  - git clone https://github.com/staticlibs/lookaside_asio.git
   - git clone https://github.com/staticlibs/staticlib_pion.git
 
 build: off

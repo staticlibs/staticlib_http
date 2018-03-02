@@ -65,17 +65,15 @@ install:
 before_script:
   - cd ..
   - git clone https://github.com/staticlibs/cmake.git
-# mac
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-    git clone https://github.com/staticlibs/tools_macos_openssl.git ;
-    export PKG_CONFIG_PATH=`pwd`/tools_macos_openssl/lib/pkgconfig:$PKG_CONFIG_PATH ;
-    fi
-# android
-  - git clone --recursive https://github.com/staticlibs/external_openssl.git
-# mac and android
-  - git clone --recursive https://github.com/staticlibs/external_asio.git
-  - git clone --recursive https://github.com/staticlibs/external_zlib.git
-  - git clone --recursive https://github.com/staticlibs/external_curl.git
+# android and mac
+  - git clone https://github.com/staticlibs/external_openssl.git
+  - git clone https://github.com/staticlibs/lookaside_openssl.git
+  - git clone https://github.com/staticlibs/external_asio.git
+  - git clone https://github.com/staticlibs/lookaside_asio.git
+  - git clone https://github.com/staticlibs/external_zlib.git
+  - git clone https://github.com/staticlibs/lookaside_zlib.git
+  - git clone https://github.com/staticlibs/external_curl.git
+  - git clone https://github.com/staticlibs/lookaside_curl.git
 # all platforms
   - git clone https://github.com/staticlibs/staticlib_config.git
   - git clone https://github.com/staticlibs/staticlib_support.git
@@ -92,7 +90,8 @@ before_script:
   - mkdir test
   - cp -r staticlib_http/test/certificates test/
   - git clone https://github.com/staticlibs/staticlib_utils.git
-  - git clone --recursive https://github.com/staticlibs/staticlib_tinydir.git
+  - git clone https://github.com/staticlibs/staticlib_tinydir.git
+  - git clone https://github.com/staticlibs/tinydir.git
   - git clone https://github.com/staticlibs/staticlib_pion.git
 
 script:
