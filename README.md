@@ -62,6 +62,11 @@ This project is released under the [Apache License 2.0](http://www.apache.org/li
 Changelog
 ---------
 
+**2018-02-28**
+
+ * version 1.3.2
+ * use bundled OpenSSL on mac
+
 **2017-12-31**
 
  * version 1.3.1
