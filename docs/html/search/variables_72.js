@@ -1,9 +1,9 @@
 var searchData=
 [
-  ['redirect_5fcount',['redirect_count',['../structstaticlib_1_1httpclient_1_1http__resource__info.html#a4968cc9b5da1e9ca4882b49625774ef2',1,'staticlib::httpclient::http_resource_info']]],
-  ['redirect_5ftime_5fsecs',['redirect_time_secs',['../structstaticlib_1_1httpclient_1_1http__resource__info.html#adec70e933363a1333005b058ca898422',1,'staticlib::httpclient::http_resource_info']]],
-  ['request_5fsize_5fbytes',['request_size_bytes',['../structstaticlib_1_1httpclient_1_1http__resource__info.html#ac871a17fd6fb91617566599d9763da08',1,'staticlib::httpclient::http_resource_info']]],
-  ['requests_5fqueue_5fmax_5fsize',['requests_queue_max_size',['../structstaticlib_1_1httpclient_1_1http__session__options.html#a7bf26f89a611bdb6a1c89e248e8575a1',1,'staticlib::httpclient::http_session_options']]],
-  ['require_5ftls',['require_tls',['../structstaticlib_1_1httpclient_1_1http__request__options.html#ace8dc27848ce5d25803468080b1c4063',1,'staticlib::httpclient::http_request_options']]],
-  ['response_5fdata_5fqueue_5fsize',['response_data_queue_size',['../structstaticlib_1_1httpclient_1_1http__request__options.html#a41a934e334c3baa400cac2bbf8fea315',1,'staticlib::httpclient::http_request_options']]]
+  ['redirect_5fcount',['redirect_count',['../structstaticlib_1_1http_1_1resource__info.html#a231b353a679d232681b9c0e0c061232e',1,'staticlib::http::resource_info']]],
+  ['redirect_5ftime_5fsecs',['redirect_time_secs',['../structstaticlib_1_1http_1_1resource__info.html#afdad8a68b0f51627eb9a1c2a3f15517f',1,'staticlib::http::resource_info']]],
+  ['request_5fbody_5fcontent_5flength',['request_body_content_length',['../structstaticlib_1_1http_1_1request__options.html#a430b959b082b8603c666c1f9161cf59e',1,'staticlib::http::request_options']]],
+  ['request_5fsize_5fbytes',['request_size_bytes',['../structstaticlib_1_1http_1_1resource__info.html#a47cdbe742651704b5cc53585a9b6e25e',1,'staticlib::http::resource_info']]],
+  ['requests_5fqueue_5fmax_5fsize',['requests_queue_max_size',['../structstaticlib_1_1http_1_1session__options.html#a27613da571027553186d16d2dfd50896',1,'staticlib::http::session_options']]],
+  ['require_5ftls',['require_tls',['../structstaticlib_1_1http_1_1request__options.html#ac31fdc06447dfe159c2fee3271c0eb98',1,'staticlib::http::request_options']]]
 ];

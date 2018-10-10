@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
-<title>staticlib_httpclient: Class Members</title>
+<title>staticlib_http: Class Members</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -22,8 +22,8 @@
  <tr style="height: 56px;">
   <td id="projectlogo"><img alt="Logo" src="logo.png"/></td>
   <td style="padding-left: 0.5em;">
-   <div id="projectname">staticlib_httpclient
-   &#160;<span id="projectnumber">1.2</span>
+   <div id="projectname">staticlib_http
+   &#160;<span id="projectnumber">1.3.2</span>
    </div>
   </td>
  </tr>
@@ -63,6 +63,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
     <ul class="tablist">
       <li><a href="annotated.html"><span>Class&#160;List</span></a></li>
       <li><a href="classes.html"><span>Class&#160;Index</span></a></li>
+      <li><a href="hierarchy.html"><span>Class&#160;Hierarchy</span></a></li>
       <li class="current"><a href="functions.html"><span>Class&#160;Members</span></a></li>
     </ul>
   </div>
@@ -71,7 +72,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       <li class="current"><a href="functions.html"><span>All</span></a></li>
       <li><a href="functions_func.html"><span>Functions</span></a></li>
       <li><a href="functions_vars.html"><span>Variables</span></a></li>
-      <li><a href="functions_rela.html"><span>Related&#160;Functions</span></a></li>
     </ul>
   </div>
   <div id="navrow4" class="tabs3">
@@ -99,7 +99,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Friends</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -113,277 +113,297 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <h3><a class="anchor" id="index_a"></a>- a -</h3><ul>
 <li>abort_on_connect_error
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#a0bda291034812768fc594293e981aea7">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#adb40a68a6804055ee540a31cad554548">staticlib::http::request_options</a>
 </li>
 <li>abort_on_response_error
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#afdc5cc01fc81d06a72e99b8f1f659d9d">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#a5fa4af228c8a44f6e7d26212d5698cfb">staticlib::http::request_options</a>
 </li>
 <li>accept_encoding
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#a072880cce393c26e527c44ff87cfc670">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#a8e6c723e1df9fbb143fcc702f9681bbf">staticlib::http::request_options</a>
 </li>
 <li>all_requests_paused_timeout_millis
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__session__options.html#a134d14d25a56bc399f2cd5cea31a92f6">staticlib::httpclient::http_session_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1session__options.html#ac725560bf2afdf19a1c8b4b4e7c46976">staticlib::http::session_options</a>
 </li>
 <li>appconnect_time_secs
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__resource__info.html#a21a609862313e5d575778aceec9597e8">staticlib::httpclient::http_resource_info</a>
+: <a class="el" href="structstaticlib_1_1http_1_1resource__info.html#a066cf8596bd0cafccf1618ec8a711731">staticlib::http::resource_info</a>
 </li>
 </ul>
 
 
 <h3><a class="anchor" id="index_b"></a>- b -</h3><ul>
 <li>buffersize_bytes
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#afa65d5d3beafdc84094f9b05b744ff45">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#a755414f2ac03cea328de047dba19c6e6">staticlib::http::request_options</a>
 </li>
 </ul>
 
 
 <h3><a class="anchor" id="index_c"></a>- c -</h3><ul>
 <li>cainfo_filename
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#ab779a6ba0b56bc0026bce5672c77748d">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#abf0fadf108b74eb72edbf02c56d20225">staticlib::http::request_options</a>
 </li>
 <li>connect_time_secs
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__resource__info.html#a1207dc7f6c2d16318deac1a232b6c924">staticlib::httpclient::http_resource_info</a>
+: <a class="el" href="structstaticlib_1_1http_1_1resource__info.html#a931e92ff896739b2737b6f89e024a5f4">staticlib::http::resource_info</a>
 </li>
 <li>connection_successful()
-: <a class="el" href="classstaticlib_1_1httpclient_1_1http__resource.html#a2aae76d69e2e54ce710f633694d2c389">staticlib::httpclient::http_resource</a>
+: <a class="el" href="classstaticlib_1_1http_1_1resource.html#a17668aef11d960fea471a4638be8fde3">staticlib::http::resource</a>
 </li>
 <li>connecttimeout_millis
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#a6694afc5eaf6e79bb6326fabdb399f6b">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#a51fd5b01b78fd813ca54a8ddc7d7edf0">staticlib::http::request_options</a>
+</li>
+<li>consumer_thread_wakeup_timeout_millis
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#a62c8545bfe99d15c675fc59dbc352a23">staticlib::http::request_options</a>
 </li>
 <li>crlfile_filename
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#afca66a04f407f166a09ddd5ab1792840">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#ae50aa90224d20086f93814a88a6fb05a">staticlib::http::request_options</a>
 </li>
 </ul>
 
 
 <h3><a class="anchor" id="index_e"></a>- e -</h3><ul>
 <li>effective_url
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__resource__info.html#a7b712a78ca2ed701b4871d88fcef5415">staticlib::httpclient::http_resource_info</a>
+: <a class="el" href="structstaticlib_1_1http_1_1resource__info.html#a133f540365acf787b26ecf136c666ee8">staticlib::http::resource_info</a>
 </li>
 </ul>
 
 
 <h3><a class="anchor" id="index_f"></a>- f -</h3><ul>
 <li>failonerror
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#af23beeb02e8dfa342f9b01ccff346c1e">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#aff830dc053f8965e517f0a2d766ee1a6">staticlib::http::request_options</a>
 </li>
 <li>fdset_timeout_millis
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__session__options.html#a5bbe8572466f4fd2325b70b8220d51cd">staticlib::httpclient::http_session_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1session__options.html#ad28e7dbb03d44a943db70c92f4ee277d">staticlib::http::session_options</a>
 </li>
 <li>followlocation
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#a7beefa26b79bab8ffba12289781dc96e">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#a1a2de2744a4e3000cfdadef4e7621c67">staticlib::http::request_options</a>
 </li>
 <li>force_http_10
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#a5bb58dcbd8817f80f7d6d68a2b056e50">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#a32a001f30a1df620eb9c9a3467440b35">staticlib::http::request_options</a>
 </li>
 </ul>
 
 
 <h3><a class="anchor" id="index_g"></a>- g -</h3><ul>
 <li>get_header()
-: <a class="el" href="classstaticlib_1_1httpclient_1_1http__resource.html#a51a48a13f5a075a8995d28efc95b26b9">staticlib::httpclient::http_resource</a>
+: <a class="el" href="classstaticlib_1_1http_1_1resource.html#a1bf06894d2c77e6228033f0c5b2fe3a2">staticlib::http::resource</a>
 </li>
 <li>get_headers()
-: <a class="el" href="classstaticlib_1_1httpclient_1_1http__resource.html#a9465e8762a064fc4191f7f24ecbbafcb">staticlib::httpclient::http_resource</a>
+: <a class="el" href="classstaticlib_1_1http_1_1resource.html#ab4b34f6c31428dd15b180bd9d813b008">staticlib::http::resource</a>
 </li>
 <li>get_info()
-: <a class="el" href="classstaticlib_1_1httpclient_1_1http__resource.html#a4aec97fc36c0aa055f25e76e929275ed">staticlib::httpclient::http_resource</a>
+: <a class="el" href="classstaticlib_1_1http_1_1resource.html#ac918659c9f26ba82d7975f1d3f50dd03">staticlib::http::resource</a>
 </li>
 <li>get_status_code()
-: <a class="el" href="classstaticlib_1_1httpclient_1_1http__resource.html#ab0afa99cbaae779d9781bc3551d50ea6">staticlib::httpclient::http_resource</a>
+: <a class="el" href="classstaticlib_1_1http_1_1resource.html#a8786b49c62dd230431b19c77c8790028">staticlib::http::resource</a>
 </li>
 <li>get_url()
-: <a class="el" href="classstaticlib_1_1httpclient_1_1http__resource.html#a769da2908120e3454dc15a7a1739d65f">staticlib::httpclient::http_resource</a>
+: <a class="el" href="classstaticlib_1_1http_1_1resource.html#aa08411453847b7922a99d7b52c803d71">staticlib::http::resource</a>
 </li>
 </ul>
 
 
 <h3><a class="anchor" id="index_h"></a>- h -</h3><ul>
 <li>header_size_bytes
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__resource__info.html#ac2c4ed8d2b64bd922a0222c9eed882b7">staticlib::httpclient::http_resource_info</a>
+: <a class="el" href="structstaticlib_1_1http_1_1resource__info.html#aa3a67d412531ac93b0271355a4c1fd7a">staticlib::http::resource_info</a>
 </li>
 <li>headers
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#a369324aa57dc0e31b54fe189dbe40a1a">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#a4b383bd1f084498e4ae7de20a2dfbb59">staticlib::http::request_options</a>
 </li>
-<li>http_session()
-: <a class="el" href="classstaticlib_1_1httpclient_1_1http__session.html#af1a7099b27e97bb7e9e15c4606f99b43">staticlib::httpclient::http_session</a>
-, <a class="el" href="classstaticlib_1_1httpclient_1_1http__resource.html#a195994c20b9a24feaeb4d58ef56ff9e9">staticlib::httpclient::http_resource</a>
-</li>
-<li>httpclient_exception()
-: <a class="el" href="classstaticlib_1_1httpclient_1_1httpclient__exception.html#af7301b52e63693b10e7b4ea06cc42b39">staticlib::httpclient::httpclient_exception</a>
+<li>http_exception()
+: <a class="el" href="classstaticlib_1_1http_1_1http__exception.html#a63201fccbf58ebd86bb7a88f94b23f00">staticlib::http::http_exception</a>
 </li>
 </ul>
 
 
 <h3><a class="anchor" id="index_m"></a>- m -</h3><ul>
 <li>max_host_connections
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__session__options.html#aae2798d900eb7366f729a1668cf35f59">staticlib::httpclient::http_session_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1session__options.html#a922b1b66b8bf05e42cae6e8f80e7c566">staticlib::http::session_options</a>
 </li>
 <li>max_number_of_response_headers
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#ab7fc8997f0af464d2c8c1eb3b2e65251">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#a0ae940300207ae2b6385c836a6cb3359">staticlib::http::request_options</a>
 </li>
 <li>max_recv_speed_large_bytes_per_second
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#a0e8159e36c901c1ca6e49ef553e72b35">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#ad28363ceded5ede1815e387e11ba6360">staticlib::http::request_options</a>
 </li>
 <li>max_sent_speed_large_bytes_per_second
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#ac43e2bbf1b292642d7c478748e6daf64">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#a5bad0e7804dba90ea1986dae4212211c">staticlib::http::request_options</a>
 </li>
 <li>max_total_connections
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__session__options.html#a2378da1181ccb21d64d4cf7c205409d3">staticlib::httpclient::http_session_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1session__options.html#aec58ae76f990f2ae284cadbf97a980b4">staticlib::http::session_options</a>
 </li>
 <li>maxconnects
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__session__options.html#a30ad7440ffceb07ab19e827df0ba115f">staticlib::httpclient::http_session_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1session__options.html#a7e565aca3255ebb13c9585d6115b639c">staticlib::http::session_options</a>
 </li>
 <li>maxredirs
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#aa043a9c738d81b33ef1441e58f8a884b">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#a2fe50006528602dadfe8b84dc5613e83">staticlib::http::request_options</a>
 </li>
 <li>method
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#ade4c309973090408114f2de0b85a0082">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#a473a602bcc95ecb8ab011aaa94f4f561">staticlib::http::request_options</a>
+</li>
+<li>mt_socket_select_max_timeout_millis
+: <a class="el" href="structstaticlib_1_1http_1_1session__options.html#af43f3a9756b26f0f2a7720dcd67ee01c">staticlib::http::session_options</a>
+</li>
+<li>multi_threaded_session()
+: <a class="el" href="classstaticlib_1_1http_1_1multi__threaded__session.html#a3ffca8f2d5b27076e683c2140b6f209e">staticlib::http::multi_threaded_session</a>
 </li>
 </ul>
 
 
 <h3><a class="anchor" id="index_n"></a>- n -</h3><ul>
 <li>namelookup_time_secs
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__resource__info.html#a2e4db7b9a033ea8346a6325787ad8851">staticlib::httpclient::http_resource_info</a>
+: <a class="el" href="structstaticlib_1_1http_1_1resource__info.html#a10172e7c8232d7d1af568c1de6f9fd60">staticlib::http::resource_info</a>
 </li>
 <li>noprogress
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#afc5f760f1060ae79346de46de347a528">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#abebeead85fa24194ddb0858f36c5c004">staticlib::http::request_options</a>
 </li>
 <li>nosignal
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#af9ec476ded64eef9d840daed801424a4">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#a85d4ce6c8c4df64365569ca9a7bd4784">staticlib::http::request_options</a>
 </li>
 <li>num_connects
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__resource__info.html#a7df97af798f69be445ae0d1068f134b9">staticlib::httpclient::http_resource_info</a>
+: <a class="el" href="structstaticlib_1_1http_1_1resource__info.html#a6582c88de9dec1ee527cbba9c82689bc">staticlib::http::resource_info</a>
 </li>
 </ul>
 
 
 <h3><a class="anchor" id="index_o"></a>- o -</h3><ul>
 <li>open_url()
-: <a class="el" href="classstaticlib_1_1httpclient_1_1http__session.html#abeea81ff82d758530297f2d91434b6ac">staticlib::httpclient::http_session</a>
+: <a class="el" href="classstaticlib_1_1http_1_1multi__threaded__session.html#ae48a50d67a1dfd908c8add05e2e4796b">staticlib::http::multi_threaded_session</a>
+, <a class="el" href="classstaticlib_1_1http_1_1session.html#ab0a3084fd7ba65db8b1a291850650344">staticlib::http::session</a>
+, <a class="el" href="classstaticlib_1_1http_1_1single__threaded__session.html#a932d5805857dc4d3ab29bbce63b39e30">staticlib::http::single_threaded_session</a>
+, <a class="el" href="classstaticlib_1_1http_1_1session.html#aaed4cc40bdeff14bca79e88ec27b0706">staticlib::http::session</a>
 </li>
 <li>os_errno
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__resource__info.html#afd2c635b88e6eb8e1242fd3cc9da9cb5">staticlib::httpclient::http_resource_info</a>
+: <a class="el" href="structstaticlib_1_1http_1_1resource__info.html#a8b09cb5715c2febd71f04e39e28c046e">staticlib::http::resource_info</a>
 </li>
 </ul>
 
 
 <h3><a class="anchor" id="index_p"></a>- p -</h3><ul>
 <li>path_as_is
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#ab3ee8ecdc6b91aceb62727bc1abe4ab9">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#a01643075e345755f3e38ab1b588caf6c">staticlib::http::request_options</a>
 </li>
 <li>pretransfer_time_secs
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__resource__info.html#a16a732ea298b525fc5ce29d96d12f851">staticlib::httpclient::http_resource_info</a>
+: <a class="el" href="structstaticlib_1_1http_1_1resource__info.html#a83c7dff3cfd420bd0a88c8596ef53d69">staticlib::http::resource_info</a>
 </li>
 <li>primary_ip
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__resource__info.html#a98969f1d402ab8e7c688073eb8bb6274">staticlib::httpclient::http_resource_info</a>
+: <a class="el" href="structstaticlib_1_1http_1_1resource__info.html#a580c2a56e14ec96f4e8f9bb6d91402f0">staticlib::http::resource_info</a>
 </li>
 <li>primary_port
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__resource__info.html#afe4f39aa32145535c66c2bce3e04f819">staticlib::httpclient::http_resource_info</a>
+: <a class="el" href="structstaticlib_1_1http_1_1resource__info.html#a6a4f3a103f2a1158dff8dd2e3dc5bac6">staticlib::http::resource_info</a>
 </li>
 </ul>
 
 
 <h3><a class="anchor" id="index_r"></a>- r -</h3><ul>
 <li>read()
-: <a class="el" href="classstaticlib_1_1httpclient_1_1http__resource.html#adfa8fb0d5568c2f3d27a9279a5e75cda">staticlib::httpclient::http_resource</a>
+: <a class="el" href="classstaticlib_1_1http_1_1resource.html#ad0080a9704bd0bd176da47477fcff819">staticlib::http::resource</a>
 </li>
 <li>redirect_count
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__resource__info.html#a4968cc9b5da1e9ca4882b49625774ef2">staticlib::httpclient::http_resource_info</a>
+: <a class="el" href="structstaticlib_1_1http_1_1resource__info.html#a231b353a679d232681b9c0e0c061232e">staticlib::http::resource_info</a>
 </li>
 <li>redirect_time_secs
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__resource__info.html#adec70e933363a1333005b058ca898422">staticlib::httpclient::http_resource_info</a>
+: <a class="el" href="structstaticlib_1_1http_1_1resource__info.html#afdad8a68b0f51627eb9a1c2a3f15517f">staticlib::http::resource_info</a>
+</li>
+<li>request_body_content_length
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#a430b959b082b8603c666c1f9161cf59e">staticlib::http::request_options</a>
 </li>
 <li>request_size_bytes
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__resource__info.html#ac871a17fd6fb91617566599d9763da08">staticlib::httpclient::http_resource_info</a>
+: <a class="el" href="structstaticlib_1_1http_1_1resource__info.html#a47cdbe742651704b5cc53585a9b6e25e">staticlib::http::resource_info</a>
 </li>
 <li>requests_queue_max_size
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__session__options.html#a7bf26f89a611bdb6a1c89e248e8575a1">staticlib::httpclient::http_session_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1session__options.html#a27613da571027553186d16d2dfd50896">staticlib::http::session_options</a>
 </li>
 <li>require_tls
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#ace8dc27848ce5d25803468080b1c4063">staticlib::httpclient::http_request_options</a>
-</li>
-<li>response_data_queue_size
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#a41a934e334c3baa400cac2bbf8fea315">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#ac31fdc06447dfe159c2fee3271c0eb98">staticlib::http::request_options</a>
 </li>
 </ul>
 
 
 <h3><a class="anchor" id="index_s"></a>- s -</h3><ul>
+<li>send_request_body_content_length
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#a4cfd57bb2272f1c272984f115664d456">staticlib::http::request_options</a>
+</li>
+<li>session()
+: <a class="el" href="classstaticlib_1_1http_1_1session.html#a37f1fa526f5af2aa3a87d255563b801f">staticlib::http::session</a>
+</li>
+<li>single_threaded_session()
+: <a class="el" href="classstaticlib_1_1http_1_1single__threaded__session.html#a821d5fc162fdb1a4e55ded89817d3873">staticlib::http::single_threaded_session</a>
+</li>
 <li>speed_download_bytes_secs
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__resource__info.html#a21470100bd62607a27b6dfef6399458a">staticlib::httpclient::http_resource_info</a>
+: <a class="el" href="structstaticlib_1_1http_1_1resource__info.html#a26e8ad7212fb5c8c3ee1f57b7f62e95f">staticlib::http::resource_info</a>
 </li>
 <li>speed_upload_bytes_secs
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__resource__info.html#a0ac1e0f15490b880f9cc5c61dba0ae76">staticlib::httpclient::http_resource_info</a>
+: <a class="el" href="structstaticlib_1_1http_1_1resource__info.html#a73af3905741feb2d39562f83431b18be">staticlib::http::resource_info</a>
 </li>
 <li>ssl_cipher_list
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#ac35547e98ab585e4c8a95b1133159f76">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#ac050dccdd1b71da1f0969084e0d3f918">staticlib::http::request_options</a>
 </li>
 <li>ssl_key_type
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#a255d49770d839bc5778a6ad80c9c9075">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#a292008ba99693f6af97f208a82cce226">staticlib::http::request_options</a>
 </li>
 <li>ssl_keypasswd
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#a59fabcbd660bbde0db4fc46478ab1f3f">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#a38ed63c9844756cd63d4d5e822010a13">staticlib::http::request_options</a>
 </li>
 <li>ssl_verifyhost
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#abe18c7ed4c2068991e1cd934a49bd120">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#a3913bf69c115732e675641d57ef4dbb3">staticlib::http::request_options</a>
 </li>
 <li>ssl_verifypeer
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#ac3819de3f04a63ce5a2159ccc6221446">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#a6069696a6e13921eed121de807daec0b">staticlib::http::request_options</a>
 </li>
 <li>ssl_verifyresult
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__resource__info.html#a4a4f98ecb13266f0dc58ea5ae694c1e7">staticlib::httpclient::http_resource_info</a>
+: <a class="el" href="structstaticlib_1_1http_1_1resource__info.html#af38532c5e89466f6727ca34d23b57d2f">staticlib::http::resource_info</a>
 </li>
 <li>ssl_verifystatus
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#aff7201d5deedadd0c5dc76c571573f1c">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#aac8856604a91a7bec2d36119a72022a1">staticlib::http::request_options</a>
 </li>
 <li>sslcert_filename
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#acc7a3a26f3705a3282980892416d0d62">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#a82a085652f8c3fca5f729f12e57de968">staticlib::http::request_options</a>
 </li>
 <li>sslcertype
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#aaf3b361f0240ee77e58eb75f3127e652">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#ac1dab174e3af05bc7c9173b38cf92365">staticlib::http::request_options</a>
 </li>
 <li>sslkey_filename
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#a8ba63d9120ae9c6867c21db9229a572e">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#a99b9562aea86e3cbcc57f852c7310a4a">staticlib::http::request_options</a>
+</li>
+<li>st_socket_select_max_timeout_millis
+: <a class="el" href="structstaticlib_1_1http_1_1session__options.html#a6fb3c02098cfdcd4ba36eb819395ad2c">staticlib::http::session_options</a>
 </li>
 <li>starttransfer_time_secs
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__resource__info.html#ab9b7ae9982fa59fc06093299b73095c6">staticlib::httpclient::http_resource_info</a>
+: <a class="el" href="structstaticlib_1_1http_1_1resource__info.html#a61802d738bd61a8bef3188497b55caa1">staticlib::http::resource_info</a>
 </li>
 </ul>
 
 
 <h3><a class="anchor" id="index_t"></a>- t -</h3><ul>
 <li>tcp_keepalive
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#a220435602a1bfefff7a82611f3ae96a5">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#a80e9a321908d375d5ad9ff613d3d842c">staticlib::http::request_options</a>
 </li>
 <li>tcp_keepidle_secs
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#a313b7ad9433e9054770109ce34d18dd2">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#af836584717dba54a98f2e769baec5c1e">staticlib::http::request_options</a>
 </li>
 <li>tcp_keepintvl_secs
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#ac8cccd93a1b6b29eb908551fbf0d83da">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#af35d2e6f6d7d1180057f3fd02b12add4">staticlib::http::request_options</a>
 </li>
 <li>tcp_nodelay
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#a5484e1c8f28880373bec93972977321e">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#a93f5253db0db98b20bf2fa0561ddcbec">staticlib::http::request_options</a>
 </li>
 <li>timeout_millis
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#aecd6d61ce1d34dd276f7a8a7ef34bd72">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#a0732228f423b6b0656e76d7528093735">staticlib::http::request_options</a>
 </li>
 <li>total_time_secs
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__resource__info.html#a6a5c8de8ea88340c02726514cbf18146">staticlib::httpclient::http_resource_info</a>
+: <a class="el" href="structstaticlib_1_1http_1_1resource__info.html#ae5cd1553a4588bc277e769996405bd05">staticlib::http::resource_info</a>
 </li>
 </ul>
 
 
 <h3><a class="anchor" id="index_u"></a>- u -</h3><ul>
 <li>useragent
-: <a class="el" href="structstaticlib_1_1httpclient_1_1http__request__options.html#a74632f7922dcd6ffe2575536a17f7632">staticlib::httpclient::http_request_options</a>
+: <a class="el" href="structstaticlib_1_1http_1_1request__options.html#a0e233c453fcb450232cf25b291c88376">staticlib::http::request_options</a>
 </li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Feb 18 2017 19:01:02 for staticlib_httpclient by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Oct 10 2018 10:28:01 for staticlib_http by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.1.2
 </small></address>

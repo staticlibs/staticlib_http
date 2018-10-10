@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['read',['read',['../classstaticlib_1_1httpclient_1_1http__resource.html#adfa8fb0d5568c2f3d27a9279a5e75cda',1,'staticlib::httpclient::http_resource']]]
+  ['read',['read',['../classstaticlib_1_1http_1_1resource.html#ad0080a9704bd0bd176da47477fcff819',1,'staticlib::http::resource']]]
 ];
