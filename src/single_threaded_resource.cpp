@@ -55,17 +55,17 @@ class single_threaded_resource::impl : public resource::impl {
         writing_headers,
         response_info_filled
     };
-    
+
     CURLM* multi_handle;
     std::unique_ptr<CURL, curl_easy_deleter> handle;
-    
+
     // holds data passed to curl
     std::string url;
     session_options session_opts;
     request_options options;
     std::unique_ptr<std::istream> post_data;
     curl_headers request_headers;
-    
+
     // run details
     resource_info info;
     uint16_t status_code = 0;
@@ -75,7 +75,7 @@ class single_threaded_resource::impl : public resource::impl {
     bool open = false;
     resource_state state = resource_state::created;
     std::string error;
-    
+
 public:
     impl(CURLM* multi_handle, const session_options& session_opts,
             const std::string& url, std::unique_ptr<std::istream> post_data,

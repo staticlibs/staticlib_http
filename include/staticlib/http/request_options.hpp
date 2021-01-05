@@ -36,9 +36,9 @@ namespace http {
  * Configuration options for the HTTP request
  */
 struct request_options {
-    
+
     // options implemented manually
-    
+
     /**
      * Headers to send with a request
      */
@@ -64,22 +64,22 @@ struct request_options {
      * Consumer thread wakeup timeout (in milliseconds)
      */
     uint16_t consumer_thread_wakeup_timeout_millis = 100;
-    
+
     /**
      * Whether to specify a "Content-Length" header for the request body,
      * not specified by default, "Transfer-Encoding: chunked" is used instead.
      * If set to "true", then client must also specify a "request_body_content_length" parameter
      */
     bool send_request_body_content_length = false;
-    
+
     /**
      * "Content-Length" header value for request body,
      * used only if "send_request_body_content_length" is enabled
      */
     uint32_t request_body_content_length = 0;
-    
+
     // general behavior options
-    
+
     /**
      * https://curl.haxx.se/libcurl/c/CURLOPT_HTTP_VERSION.html
      */
@@ -100,9 +100,9 @@ struct request_options {
      * https://curl.haxx.se/libcurl/c/CURLOPT_PATH_AS_IS.html
      */
     bool path_as_is = true;
-    
+ 
     // TCP options
-    
+
     /**
      * https://curl.haxx.se/libcurl/c/CURLOPT_TCP_NODELAY.html
      */
@@ -127,9 +127,9 @@ struct request_options {
      * https://curl.haxx.se/libcurl/c/CURLOPT_TIMEOUT_MS.html
      */
     uint32_t timeout_millis = 15000;
-    
+
     // HTTP options
-    
+
     /**
      * https://curl.haxx.se/libcurl/c/CURLOPT_BUFFERSIZE.html
      */
@@ -151,9 +151,9 @@ struct request_options {
      */
     // "Mozilla/5.0 (Linux; U; Android 4.2.2; en-us; GT-I9505 Build/JDQ39) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30"
     std::string useragent = "";
-    
+
     // throttling options
-    
+
     /**
      * https://curl.haxx.se/libcurl/c/CURLOPT_MAX_SEND_SPEED_LARGE.html
      */
@@ -162,9 +162,9 @@ struct request_options {
      * https://curl.haxx.se/libcurl/c/CURLOPT_MAX_RECV_SPEED_LARGE.html
      */
     uint32_t max_recv_speed_large_bytes_per_second = 0;
-    
+
     // SSL options
-    
+
     /**
      * https://curl.haxx.se/libcurl/c/CURLOPT_SSLCERT.html
      */

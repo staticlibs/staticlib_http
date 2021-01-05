@@ -37,7 +37,7 @@ namespace http {
 
 class single_threaded_session::impl : public session::impl {
     bool has_active_request = false;
-    
+
 public:
     impl(session_options opts) :
     session::impl(opts) { }
@@ -52,7 +52,7 @@ public:
         return single_threaded_resource(handle.get(), this->options, std::move(url), 
                 std::move(post_data), std::move(opts), [this] {this->has_active_request = false; });
     }
-    
+
 };
 
 PIMPL_FORWARD_CONSTRUCTOR(single_threaded_session, (session_options), (), http_exception)

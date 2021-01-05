@@ -44,7 +44,7 @@ protected:
 
 public:
     using session::open_url;
-    
+
     /**
      * PIMPL-specific constructor
      * 

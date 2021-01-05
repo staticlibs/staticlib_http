@@ -51,7 +51,7 @@ protected:
      * implementation class
      */
     class impl;
-    
+
 public:
     /**
      * PIMPL-specific constructor
@@ -59,7 +59,7 @@ public:
      * @param pimpl impl object
      */
     PIMPL_CONSTRUCTOR(resource)
-    
+
     /**
      * Reads some data from a remote resource
      * 
@@ -67,21 +67,21 @@ public:
      * @return number of bytes processed
      */
     virtual std::streamsize read(sl::io::span<char> span);
-    
+
     /**
      * Returns URL of this resource
      * 
      * @return URL of this resource
      */
     virtual const std::string& get_url() const;
-    
+
     /**
      * Returns HTTP status code
      * 
      * @return HTTP status code
      */
     virtual uint16_t get_status_code() const;
-    
+
     /**
      * Accessor for the resource metainformation
      * 
@@ -111,8 +111,8 @@ public:
      * @return 'true' if connection has been established successfully and
      *         response code has been received, 'false' otherwise
      */
-    virtual bool connection_successful() const;    
-    
+    virtual bool connection_successful() const;
+ 
 };
 
 } // namespace

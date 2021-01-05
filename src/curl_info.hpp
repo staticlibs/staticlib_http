@@ -38,7 +38,7 @@ namespace http {
 
 class curl_info {
     CURL* handle;
-       
+
 public:
     curl_info(CURL* handle):
     handle(handle) { }
@@ -46,7 +46,7 @@ public:
     curl_info(const curl_info&) = delete;
 
     curl_info& operator=(const curl_info&) = delete;
-    
+
     long getinfo_long(CURLINFO opt) {
         long out = -1;
         CURLcode err = curl_easy_getinfo(handle, opt, std::addressof(out));

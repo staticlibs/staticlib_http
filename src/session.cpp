@@ -65,6 +65,6 @@ resource session::impl::open_url(session& frontend,
     return frontend.open_url(url, std::move(sbuf), std::move(opts));
 }
 PIMPL_FORWARD_METHOD(session, resource, open_url, (const std::string&)(std::streambuf*)(request_options), (), http_exception)
-        
+
 } // namespace
 }

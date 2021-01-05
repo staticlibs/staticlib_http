@@ -45,7 +45,7 @@ public:
     single_threaded_resource(CURLM* multi_handle, const session_options& session_options, 
             const std::string& url, std::unique_ptr<std::istream> post_data,
             request_options options, std::function<void()> finalizer);
-    
+
     virtual std::streamsize read(sl::io::span<char> span) override;
 
     virtual const std::string& get_url() const override;
@@ -59,7 +59,7 @@ public:
     virtual const std::string& get_header(const std::string& name) const override;
 
     virtual bool connection_successful() const override;    
-    
+
 };
 
 } // namespace

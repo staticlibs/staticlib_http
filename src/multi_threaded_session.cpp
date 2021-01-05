@@ -56,10 +56,10 @@ class multi_threaded_session::impl : public session::impl {
 
     std::thread worker;
     std::atomic<bool> running;
-    
+
 public:
     impl(session_options opts) :
-    session::impl(opts),    
+    session::impl(opts),
     tickets(opts.requests_queue_max_size),
     new_tickets_arrived(false),
     pause_latch(std::make_shared<sl::concurrent::condition_latch>([this] {
@@ -143,7 +143,7 @@ private:
                 if (!pop_success) {
                     break;
                 }
-                
+
                 // check there are running requests
                 if (0 == requests.size()) break;
 
@@ -162,7 +162,7 @@ private:
             return false;
         }
         struct timeval timeout = create_timeout_struct(timeo, this->options.mt_socket_select_max_timeout_millis);
-        
+
         // fdset
         fd_set fdread = create_fd();
         fd_set fdwrite = create_fd();
@@ -237,7 +237,7 @@ private:
     }
 
     void enqueue_request(request_ticket&& ticket) {
-        // local copy                
+        // local copy
         auto pipe = ticket.pipe;
         try {
             auto req = std::unique_ptr<running_request>(new running_request(handle.get(), std::move(ticket)));
@@ -269,7 +269,7 @@ private:
     }
 };
 PIMPL_FORWARD_CONSTRUCTOR(multi_threaded_session, (session_options), (), http_exception)
-PIMPL_FORWARD_METHOD(multi_threaded_session, resource, open_url, (const std::string&)(std::unique_ptr<std::istream>)(request_options), (), http_exception)            
+PIMPL_FORWARD_METHOD(multi_threaded_session, resource, open_url, (const std::string&)(std::unique_ptr<std::istream>)(request_options), (), http_exception)
 
 } // namespace
 }

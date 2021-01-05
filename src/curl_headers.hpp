@@ -45,16 +45,16 @@ class curl_headers {
     std::unique_ptr<struct curl_slist, curl_slist_deleter> slist;
 
 public:
-    curl_headers() { }   
+    curl_headers() { }
     
     curl_headers(const curl_headers&) = delete;
 
     curl_headers& operator=(const curl_headers&) = delete;
-    
+
     curl_headers(curl_headers&& other) :
     stored_headers(std::move(other.stored_headers)),
     slist(std::move(other.slist)) { }
-    
+
     curl_headers& operator=(curl_headers&& other) {
         stored_headers = std::move(other.stored_headers);
         slist = std::move(other.slist);

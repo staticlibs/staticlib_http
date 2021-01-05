@@ -51,21 +51,21 @@ class running_request {
     enum class req_state {
         created, receiving_headers, receiving_data, receiving_trailers
     };
-    
+
     // holds data passed to curl
     std::string url;
     request_options options;
     std::unique_ptr<std::istream> post_data;
     curl_headers headers;
     std::unique_ptr<CURL, curl_easy_deleter> handle;
-    
+
     // run details
     std::shared_ptr<running_request_pipe> pipe;
     bool paused = false;
     std::string error;
     sl::concurrent::growing_buffer buf;
     req_state state = req_state::created;
-    
+
 public:
     running_request(CURLM* multi_handle, request_ticket&& ticket) :
     url(std::move(ticket.url)),
@@ -79,11 +79,11 @@ public:
                 "cURL multi_add error: [" + curl_multi_strerror(errm) + "], url: [" + this->url + "]"));
         apply_curl_options(this, this->url, this->options, this->post_data, this->headers, this->handle);
     }
-    
+
     running_request(const running_request&) = delete;
-    
+
     running_request& operator=(const running_request&) = delete;
-    
+
     // finalization must be noexcept anyway,
     // so lets tie finalization to destruction
     ~running_request() STATICLIB_NOEXCEPT {
@@ -101,15 +101,15 @@ public:
         }
         pipe->shutdown();
     }
-    
+
     const std::string& get_url() const {
         return url;
     }
-    
+
     bool is_paused() {
         return paused;
     }
-    
+
     void unpause() {
         this->paused = false;
         curl_easy_pause(handle.get(), CURLPAUSE_CONT);
@@ -127,15 +127,15 @@ public:
     request_options& get_options() {
         return options;
     }
-    
+
     CURL* easy_handle() {
         return handle.get();
     }
-    
+
     bool data_queue_is_full() {
         return pipe->data_queue_is_full();
     }
-    
+
     // http://stackoverflow.com/a/9681122/314015
     size_t write_headers(char* buffer, size_t size, size_t nitems) {
         if (req_state::created == state) {
@@ -161,7 +161,7 @@ public:
         }
         return len;
     }
-    
+
     size_t write_data(char* buffer, size_t size, size_t nitems) {
         if (req_state::receiving_headers == state) {
             state = req_state::receiving_data;

@@ -36,21 +36,21 @@ class resource_params {
 public:
     const std::string& url;
     std::shared_ptr<running_request_pipe> pipe;
-    
+
     resource_params(const std::string& url, std::shared_ptr<running_request_pipe>&& pipe) :
     url(url),
     pipe(std::move(pipe)) { }
-    
+
     resource_params(const resource_params&) = delete;
-    
+
     resource_params& operator=(const resource_params&) = delete;
-    
+
     resource_params(resource_params&& other) :
     url(other.url),
     pipe(std::move(other.pipe)) { }
-    
+
     resource_params& operator=(resource_params&&) = delete;
-    
+
 };
 
 } // namespace

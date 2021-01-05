@@ -30,7 +30,7 @@ namespace staticlib {
 namespace http {
 
 class resource::impl : public sl::pimpl::object::impl {
-    
+
 public:
     virtual std::streamsize read(resource&, sl::io::span<char> span) = 0;
 
@@ -45,7 +45,7 @@ public:
     virtual const std::string& get_header(const resource&,const std::string& name) const = 0;
 
     virtual bool connection_successful(const resource&) const = 0;
-    
+
 };
 
 } // namespace

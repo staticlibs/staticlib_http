@@ -33,7 +33,7 @@ namespace http {
  * Configuration options for the HTTP Session
  */
 struct session_options {
-    
+
     // general options
 
     /**
@@ -57,9 +57,9 @@ struct session_options {
      * running requests are paused.
      */
     uint32_t all_requests_paused_timeout_millis = 100;
-    
+
     // cURL multi API options
-    
+
     /**
      * https://curl.haxx.se/libcurl/c/CURLMOPT_MAX_HOST_CONNECTIONS.html
      */
@@ -71,7 +71,7 @@ struct session_options {
     /**
      * https://curl.haxx.se/libcurl/c/CURLMOPT_MAXCONNECTS.html
      */
-    uint32_t maxconnects = 0;    
+    uint32_t maxconnects = 0;
 };
 
 } // namespace

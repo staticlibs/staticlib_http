@@ -35,12 +35,12 @@ class resource_params;
 class multi_threaded_resource : public resource {
 protected:
     class impl;
-    
-public:    
+
+public:
     PIMPL_INHERIT_CONSTRUCTOR(multi_threaded_resource, resource)
 
     multi_threaded_resource(resource_params&& params);
-    
+
     virtual std::streamsize read(sl::io::span<char> span) override;
 
     virtual const std::string& get_url() const override;
@@ -54,7 +54,7 @@ public:
     virtual const std::string& get_header(const std::string& name) const override;
 
     virtual bool connection_successful() const override;
-    
+
 };
 
 } // namespace

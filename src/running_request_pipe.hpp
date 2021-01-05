@@ -52,7 +52,7 @@ class running_request_pipe : public std::enable_shared_from_this<running_request
     uint16_t consumer_thread_wakeup_timeout_millis;
     std::atomic<bool> running;
 
-public:    
+public:
     running_request_pipe(request_options& opts, 
             std::shared_ptr<sl::concurrent::condition_latch> pause_latch) :
     response_code(0),
@@ -62,11 +62,11 @@ public:
     pause_latch(std::move(pause_latch)),
     consumer_thread_wakeup_timeout_millis(opts.consumer_thread_wakeup_timeout_millis),
     running(true) { }
-    
+
     running_request_pipe(const running_request_pipe&) = delete;
-    
+
     running_request_pipe& operator=(const running_request_pipe&) = delete;
-    
+
     void set_response_code(long code) {
         if (!sl::support::is_uint16_positive(code)) throw http_exception(TRACEMSG(
                 "Invalid response code specified: [" + sl::support::to_string(code) + "]"));
@@ -78,27 +78,27 @@ public:
                 " existing code: [" + sl::support::to_string(the_zero) +"]," +
                 " new code: [" + sl::support::to_string(code) + "]"));
     }
-    
+
     uint16_t get_response_code() const {
         return response_code.load(std::memory_order_acquire);
     }
-    
+
     void set_resource_info(resource_info&& info) {
         if (res_info.size() > 0) throw http_exception(TRACEMSG(
                 "Invalid second attempt to set resource info"));
         res_info.emplace(std::move(info));
     }
-    
+
     resource_info get_resource_info() {
         resource_info res;
         res_info.poll(res);
         return res;
     }
-    
+
     bool write_some_data(sl::concurrent::growing_buffer&& buf) {
         return data_queue.emplace(std::move(buf));
     }
-    
+
     bool receive_some_data(sl::concurrent::growing_buffer& dest_buffer) {
         // non-blocking read
         bool polres = data_queue.poll(dest_buffer);
@@ -127,23 +127,23 @@ public:
             }
         }
     }
-    
+
     void shutdown() STATICLIB_NOEXCEPT {
         running.store(false, std::memory_order_release);
         data_queue.unblock();
     }
-    
+
     bool data_queue_is_full() {
         return data_queue.full();
     }
-    
+
     void emplace_header(std::pair<std::string, std::string>&& pair) {
         bool emplaced = headers_queue.emplace(std::move(pair));
         if (!emplaced) throw http_exception(TRACEMSG(
                 "Error emplacing header to queue, " +
-                "queue size: [" + sl::support::to_string(headers_queue.max_size()) + "]"));        
+                "queue size: [" + sl::support::to_string(headers_queue.max_size()) + "]"));
     }
-    
+
     std::vector<std::pair<std::string, std::string>> consume_received_headers() {
         std::vector<std::pair<std::string, std::string>> res;
         auto pa = std::pair<std::string, std::string>();
@@ -152,12 +152,12 @@ public:
         }
         return res;
     }
-    
+
     void append_error(const std::string& msg) STATICLIB_NOEXCEPT {
         errors_non_empty.store(true, std::memory_order_release);
         errors.emplace(msg);
     }
-    
+
     std::string get_error_message() {
         std::string dest;
         errors.poll([&dest](std::string&& st){
@@ -172,7 +172,7 @@ public:
     bool has_errors() {
         return errors_non_empty.load(std::memory_order_acquire);
     }
-    
+
 };
 
 } // namespace

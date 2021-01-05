@@ -40,7 +40,7 @@ protected:
 
 public:
     impl(session_options opts = session_options{});
-    
+
     resource open_url(
             session&,
             const std::string& url,
@@ -51,7 +51,7 @@ public:
             const std::string& url,
             std::streambuf* post_data,
             request_options opts);
-    
+
 };
 
 } // namespace

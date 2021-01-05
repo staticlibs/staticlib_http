@@ -50,7 +50,7 @@ class curl_options {
     sl::support::observer_ptr<curl_headers> headers;
     // CURL is void so cannot be used with observer
     CURL* handle;
-    
+
 public:
     curl_options(T* cb_obj, std::string& url, request_options& options,
             std::unique_ptr<std::istream>& post_data, curl_headers& headers,
@@ -61,11 +61,11 @@ public:
     post_data(sl::support::make_observer_ptr(post_data.get())),
     headers(sl::support::make_observer_ptr(headers)),
     handle(handle.get()) { }
-    
+
     curl_options(const curl_options&) = delete;
-    
+
     curl_options& operator=(const curl_options&) = delete;
-    
+
     void apply() {
         // url
         setopt_string(CURLOPT_URL, *url);
@@ -140,9 +140,9 @@ public:
         }
         setopt_bool(CURLOPT_SSL_VERIFYPEER, options->ssl_verifypeer);
         // Added in 7.41.0
-#if LIBCURL_VERSION_NUM >= 0x072900        
+#if LIBCURL_VERSION_NUM >= 0x072900
         setopt_bool(CURLOPT_SSL_VERIFYSTATUS, options->ssl_verifystatus);
-#endif // LIBCURL_VERSION_NUM        
+#endif // LIBCURL_VERSION_NUM
         setopt_string(CURLOPT_CAINFO, options->cainfo_filename);
         setopt_string(CURLOPT_CRLFILE, options->crlfile_filename);
         setopt_string(CURLOPT_SSL_CIPHER_LIST, options->ssl_cipher_list);
@@ -180,7 +180,7 @@ public:
             return CURL_READFUNC_ABORT;
         }
     }
-    
+
 private:
 
     // note: think about integer overflow 
@@ -248,14 +248,14 @@ private:
                 options->headers.emplace_back("Transfer-Encoding", "chunked");
             }
         }
-    }   
+    }
 
 };
 
 class curl_multi_options {
     CURLM* handle;
     sl::support::observer_ptr<session_options> options;
-    
+
 public:
     curl_multi_options(CURLM* handle, session_options& options) :
     handle(handle),
@@ -266,7 +266,7 @@ public:
     curl_multi_options& operator=(const curl_multi_options&) = delete;
 
     void apply() {
-        // available since 7.30.0        
+        // available since 7.30.0
 #if LIBCURL_VERSION_NUM >= 0x071e00
         setopt_uint32(CURLMOPT_MAX_HOST_CONNECTIONS, options->max_host_connections);
         setopt_uint32(CURLMOPT_MAX_TOTAL_CONNECTIONS, options->max_total_connections);
@@ -282,8 +282,8 @@ private:
                 "Error setting session option: [" + sl::support::to_string(opt) + "]," +
                 " to value: [" + sl::support::to_string(value) + "]," +
                 " error: [" + curl_multi_strerror(err) + "]"));
-    }        
-    
+    }
+
 };
 
 template<typename T>

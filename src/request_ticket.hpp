@@ -28,14 +28,14 @@ namespace staticlib {
 namespace http {
 
 class request_ticket {
-public:    
+public:
     std::string url;
     request_options options;
     std::unique_ptr<std::istream> post_data;
     std::shared_ptr<running_request_pipe> pipe;
 
     request_ticket() { }
-    
+
     request_ticket(const std::string& url, request_options options,
             std::unique_ptr<std::istream>&& post_data,
             std::shared_ptr<running_request_pipe> pipe) :
@@ -43,17 +43,17 @@ public:
     options(std::move(options)),
     post_data(std::move(post_data)),
     pipe(std::move(pipe)) { }
-    
+
     request_ticket(const request_ticket&) = delete;
-    
+
     request_ticket& operator=(const request_ticket&) = delete;
-    
+
     request_ticket(request_ticket&& other) :
     url(std::move(other.url)),
     options(std::move(other.options)),
     post_data(std::move(other.post_data)),
     pipe(std::move(other.pipe)) { }
-    
+
     request_ticket& operator=(request_ticket&& other) {
         url = std::move(other.url);
         options = std::move(other.options);
@@ -61,7 +61,7 @@ public:
         pipe = std::move(other.pipe);
         return *this;
     }
-    
+
 };
 
 } // namespace

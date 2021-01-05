@@ -46,14 +46,14 @@ protected:
      * Implementation class
      */
     class impl;
-    
+
     /**
      * Constructor for inheritors
      * 
      * @param options session options
      */
     session(session_options opts = session_options{});
-    
+
 public:
     /**
      * PIMPL-specific constructor
@@ -124,7 +124,7 @@ public:
         };
         return open_url(url, std::move(sbuf), std::move(opts));
     }
-            
+
     /**
      * Opens specified HTTP url as a Source using POST method
      * 
@@ -137,7 +137,7 @@ public:
             const std::string& url,
             std::unique_ptr<std::istream> post_data,
             request_options opts = request_options{}) = 0;
-            
+
 };
 
 } // namespace
