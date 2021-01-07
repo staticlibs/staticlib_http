@@ -50,6 +50,7 @@ staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_tinydir )
 if ( NOT STATICLIB_TOOLCHAIN MATCHES "linux_[^_]+_[^_]+" )
     staticlib_add_subdirectory ( ${STATICLIB_DEPS}/external_asio )
 endif ( )
+staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_websocket ) 
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_pion ) 
 # end testonly
 staticlib_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../../staticlib_http )
