@@ -47,6 +47,7 @@ install:
   - git clone https://github.com/staticlibs/tinydir.git
   - git clone https://github.com/staticlibs/external_asio.git
   - git clone https://github.com/staticlibs/lookaside_asio.git
+  - git clone https://github.com/staticlibs/staticlib_websocket.git
   - git clone https://github.com/staticlibs/staticlib_pion.git
 
 build: off
