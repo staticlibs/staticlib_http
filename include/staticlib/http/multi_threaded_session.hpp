@@ -33,7 +33,7 @@ namespace http {
  * Thread-safe "session" implementation it can be used for performing
  * HTTP queries from multiple threads simultaneously. Separate thread
  * is used to process session operations. TCP connections are
- * cached where possible and are bound to session object.
+ * cached where possible and are bound to the session object.
  */
 class multi_threaded_session : public session {
 protected:

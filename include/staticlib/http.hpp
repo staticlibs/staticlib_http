@@ -26,12 +26,14 @@
 
 #include "staticlib/config.hpp"
 
+#include "staticlib/http/http_exception.hpp"
+#include "staticlib/http/multi_threaded_session.hpp"
+#include "staticlib/http/polling_session.hpp"
 #include "staticlib/http/request_options.hpp"
 #include "staticlib/http/resource.hpp"
 #include "staticlib/http/resource_info.hpp"
+#include "staticlib/http/session.hpp"
 #include "staticlib/http/session_options.hpp"
-#include "staticlib/http/http_exception.hpp"
-#include "staticlib/http/multi_threaded_session.hpp"
 #include "staticlib/http/single_threaded_session.hpp"
 
 #endif /* STATICLIB_HTTP_HPP */

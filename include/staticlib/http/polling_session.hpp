@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, alex at staticlibs.net
+ * Copyright 2021, alex at staticlibs.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,26 +15,28 @@
  */
 
 /* 
- * File:   single_threaded_session.hpp
+ * File:   polling_session.hpp
  * Author: alex
  *
- * Created on March 25, 2017, 5:35 PM
+ * Created on January 17, 2021, 12:44 AM
  */
 
-#ifndef STATICLIB_HTTP_SINGLE_THREADED_SESSION_HPP
-#define STATICLIB_HTTP_SINGLE_THREADED_SESSION_HPP
+#ifndef STATICLIB_HTTP_POLLING_SESSION_HPP
+#define STATICLIB_HTTP_POLLING_SESSION_HPP
 
 #include "staticlib/http/session.hpp"
+
+#include <vector>
 
 namespace staticlib {
 namespace http {
 
 /**
- * Single-threaded "session" implementation, NOT thread-safe,
- * opened resource must be disposed before opening next one.
+ * Single-threaded "session" implementation, that can perform multiple requests
+ * simultaneously. NOT thread-safe.
  * TCP connections are cached where possible and are bound to the session object.
  */
-class single_threaded_session : public session {
+class polling_session : public session {
 protected:
     /**
      * Implementation class
@@ -49,14 +51,14 @@ public:
      * 
      * @param pimpl impl object
      */
-    PIMPL_INHERIT_CONSTRUCTOR(single_threaded_session, session)
+    PIMPL_INHERIT_CONSTRUCTOR(polling_session, session)
 
     /**
      * Constructor
      * 
      * @param options session options
      */
-    single_threaded_session(session_options options = session_options{});
+    polling_session(session_options options = session_options{});
 
     /**
      * Opens specified HTTP url as a Source using POST method
@@ -70,10 +72,13 @@ public:
             const std::string& url,
             std::unique_ptr<std::istream> post_data,
             request_options options = request_options{}) override;
+
+    std::vector<resource> poll();
 };
 
 } // namespace
 }
 
-#endif /* STATICLIB_HTTP_SINGLE_THREADED_SESSION_HPP */
+
+#endif /* STATICLIB_HTTP_POLLING_SESSION_HPP */
 

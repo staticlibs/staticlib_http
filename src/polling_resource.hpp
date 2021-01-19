@@ -15,36 +15,35 @@
  */
 
 /* 
- * File:   single_threaded_resource.hpp
+ * File:   polling_resource.hpp
  * Author: alex
  *
- * Created on March 25, 2017, 9:43 PM
+ * Created on March 25, 2017, 9:10 PM
  */
 
-#ifndef STATICLIB_HTTP_SINGLE_THREADED_RESOURCE_HPP
-#define STATICLIB_HTTP_SINGLE_THREADED_RESOURCE_HPP
+#ifndef STATICLIB_HTTP_POLLING_RESOURCE_HPP
+#define STATICLIB_HTTP_POLLING_RESOURCE_HPP
 
 #include "staticlib/http/resource.hpp"
-
-#include <functional>
-
-#include "curl/curl.h"
-
-#include "staticlib/http/session_options.hpp"
 
 namespace staticlib {
 namespace http {
 
-class single_threaded_resource : public resource {
+// forward decl
+class resource_params;
+
+class polling_resource : public resource {
 protected:
     class impl;
 
 public:
-    PIMPL_INHERIT_CONSTRUCTOR(single_threaded_resource, resource)
+    PIMPL_INHERIT_CONSTRUCTOR(polling_resource, resource)
 
-    single_threaded_resource(CURLM* multi_handle, const session_options& session_options, 
-            const std::string& url, std::unique_ptr<std::istream> post_data,
-            request_options options, std::function<void()> finalizer);
+    polling_resource(const std::string& url);
+
+    polling_resource(const std::string& url, resource_info&& info, uint16_t status_code,
+            std::vector<std::pair<std::string, std::string>>&& response_headers,
+            std::vector<char>&& data);
 
     virtual std::streamsize read(sl::io::span<char> span) override;
 
@@ -65,5 +64,4 @@ public:
 } // namespace
 }
 
-#endif /* STATICLIB_HTTP_SINGLE_THREADED_RESOURCE_HPP */
-
+#endif /* STATICLIB_HTTP_POLLING_RESOURCE_HPP */

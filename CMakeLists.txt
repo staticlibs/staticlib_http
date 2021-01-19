@@ -52,6 +52,7 @@ if ( NOT DEFINED STATICLIB_TOOLCHAIN )
     staticlib_http_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../staticlib_support )
     staticlib_http_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../staticlib_concurrent )
     staticlib_http_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../staticlib_io )
+    staticlib_http_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../staticlib_tinydir )
     staticlib_http_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../staticlib_pimpl )
 endif ( )
 
@@ -60,6 +61,7 @@ set ( ${PROJECT_NAME}_OPTIONS "" )
 set ( ${PROJECT_NAME}_DEPS_PUBLIC
         staticlib_concurrent
         staticlib_io
+        staticlib_tinydir
         staticlib_pimpl )
 set ( ${PROJECT_NAME}_DEPS_PRIVATE 
         libcurl )

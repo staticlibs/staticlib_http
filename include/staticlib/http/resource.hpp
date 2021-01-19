@@ -24,6 +24,7 @@
 #ifndef STATICLIB_HTTP_RESOURCE_HPP
 #define STATICLIB_HTTP_RESOURCE_HPP
 
+#include <cstdint>
 #include <ios>
 #include <istream>
 #include <memory>

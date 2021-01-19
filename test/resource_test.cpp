@@ -79,70 +79,30 @@ void enrich_opts_ssl(sl::http::request_options& opts) {
     opts.ssl_keypasswd = "test";
 }
 
-void get_handler(sl::pion::http_request_ptr& req, sl::pion::tcp_connection_ptr& conn) {
+void get_handler(sl::pion::http_request_ptr req, sl::pion::response_writer_ptr resp) {
     slassert("test" == req->get_header("User-Agent"));
     slassert("GET" == req->get_header("X-Method"));
-    auto writer = sl::pion::http_response_writer::create(conn, req);
-    writer->write(GET_RESPONSE);
-    writer->send();
+    resp->write(GET_RESPONSE);
+    resp->send(std::move(resp));
 }
 
-void get_5_sec_handler(sl::pion::http_request_ptr& req, sl::pion::tcp_connection_ptr& conn) {    
+void get_5_sec_handler(sl::pion::http_request_ptr req, sl::pion::response_writer_ptr resp) {
 //    std::cout << ">>> server5: " << std::this_thread::get_id() << std::endl;
-    auto writer = sl::pion::http_response_writer::create(conn, req);
+    (void) req;
     std::this_thread::sleep_for(std::chrono::seconds{5});
-    writer->write("5 sec resp");
-    writer->send();
+    resp->write("5 sec resp");
+    resp->send(std::move(resp));
 //    std::cout << "<<< server5: " << std::this_thread::get_id() << std::endl;
 }
 
-void get_1_sec_handler(sl::pion::http_request_ptr& req, sl::pion::tcp_connection_ptr& conn) {
+void get_1_sec_handler(sl::pion::http_request_ptr req, sl::pion::response_writer_ptr resp) {
 //    std::cout << ">>> server1: " << std::this_thread::get_id() << std::endl;
-    auto writer = sl::pion::http_response_writer::create(conn, req);
+    (void) req;
     std::this_thread::sleep_for(std::chrono::seconds{1});
-    writer->write("1 sec resp");
-    writer->send();
+    resp->write("1 sec resp");
+    resp->send(std::move(resp));
 //    std::cout << "<<< server1: " << std::this_thread::get_id() << std::endl;
 }
-
-class response_sender : public std::enable_shared_from_this<response_sender> {
-    std::mutex mutex;
-    sl::pion::http_response_writer_ptr writer;
-    std::unique_ptr<std::streambuf> stream;
-    std::array<char, 4096> buf;
-
-public:
-    response_sender(sl::pion::http_response_writer_ptr writer,
-            std::unique_ptr<std::streambuf> stream) :
-    writer(writer),
-    stream(std::move(stream)) { }
-
-    void send() {
-        std::error_code ec;
-        handle_write(ec, 0);
-    }
-
-    void handle_write(const std::error_code& ec, std::size_t /* bytes_written */) {
-        std::lock_guard<std::mutex> lock{mutex};
-        if (!ec) {
-            auto src = sl::io::streambuf_source(stream.get());
-            size_t read = sl::io::read_all(src, buf);
-            writer->clear();
-            if (read > 0) {
-                writer->write_no_copy(buf.data(), read);
-                auto self = shared_from_this();
-                writer->send_chunk([self](const std::error_code& ec, size_t bt) {
-                    self->handle_write(ec, bt);
-                });
-            } else {
-                writer->send_final_chunk();
-            }
-        } else {
-            // make sure it will get closed
-            writer->get_connection()->set_lifecycle(sl::pion::tcp_connection::LIFECYCLE_CLOSE);
-        }
-    }
-};
 
 class payload_receiver {
     bool received;
@@ -157,50 +117,38 @@ public:
     }
 };
 
-void post_handler(sl::pion::http_request_ptr& req, sl::pion::tcp_connection_ptr& conn) {
+void post_handler(sl::pion::http_request_ptr req, sl::pion::response_writer_ptr resp) {
     slassert("test" == req->get_header("User-Agent"));
     slassert("POST" == req->get_header("X-Method"));
     auto ph = req->get_payload_handler<payload_receiver>();
     slassert(nullptr != ph);
     slassert(ph->is_received());
-    auto writer = sl::pion::http_response_writer::create(conn, req);
-    writer->write(POST_RESPONSE);
-    writer->send();
+    resp->write(POST_RESPONSE);
+    resp->send(std::move(resp));
 }
 
-void put_handler(sl::pion::http_request_ptr& req, sl::pion::tcp_connection_ptr& conn) {
+void put_handler(sl::pion::http_request_ptr req, sl::pion::response_writer_ptr resp) {
     slassert("test" == req->get_header("User-Agent"));
     slassert("PUT" == req->get_header("X-Method"));
     auto ph = req->get_payload_handler<payload_receiver>();
     slassert(nullptr != ph);
     slassert(ph->is_received());
-    auto writer = sl::pion::http_response_writer::create(conn, req);
-    writer->write(PUT_RESPONSE);
-    writer->send();
+    resp->write(PUT_RESPONSE);
+    resp->send(std::move(resp));
 }
 
-void delete_handler(sl::pion::http_request_ptr& req, sl::pion::tcp_connection_ptr& conn) {
+void delete_handler(sl::pion::http_request_ptr req, sl::pion::response_writer_ptr resp) {
     slassert("test" == req->get_header("User-Agent"));
     slassert("DELETE" == req->get_header("X-Method"));
-    auto writer = sl::pion::http_response_writer::create(conn, req);
-    writer->write(DELETE_RESPONSE);
-    writer->send();
+    resp->write(DELETE_RESPONSE);
+    resp->send(std::move(resp));
 }
 
-void large_handler(sl::pion::http_request_ptr& req, sl::pion::tcp_connection_ptr& conn) {
-    slassert("test" == req->get_header("User-Agent"));
-    auto writer = sl::pion::http_response_writer::create(conn, req);
-    auto src = sl::io::make_unbuffered_istreambuf_ptr(sl::tinydir::file_source("/home/alex/vbox/hd/Android-x86_4.4_r4.7z"));
-    auto sender = std::make_shared<response_sender>(writer, std::move(src));
-    sender->send();
-}
-
-void timeout_handler(sl::pion::http_request_ptr& req, sl::pion::tcp_connection_ptr& conn) {
+void timeout_handler(sl::pion::http_request_ptr req, sl::pion::response_writer_ptr resp) {
     slassert("test" == req->get_header("User-Agent"));
     std::this_thread::sleep_for(std::chrono::seconds(2));
-    auto writer = sl::pion::http_response_writer::create(conn, req);
-    writer->write(GET_RESPONSE);
-    writer->send();
+    resp->write(GET_RESPONSE);
+    resp->send(std::move(resp));
 }
 
 void request_get(sl::http::session& session) {
@@ -226,7 +174,7 @@ void request_post(sl::http::session& session) {
     sl::http::resource src = session.open_url(URL + "post", post_data, opts);
     // check
     std::string out{};
-    out.resize(POST_RESPONSE.size());        
+    out.resize(POST_RESPONSE.size());
     std::streamsize res = sl::io::read_all(src, out);
     slassert(out.size() == static_cast<size_t> (res));
     slassert(POST_RESPONSE == out);
@@ -261,7 +209,7 @@ void request_delete(sl::http::session& session) {
     slassert(DELETE_RESPONSE == out);
 }
 
-void request_connectfail(sl::http::session& session) {    
+void request_connectfail(sl::http::session& session) {
     sl::http::request_options opts{};
     opts.abort_on_connect_error = false;
     opts.connecttimeout_millis = 100;
@@ -328,8 +276,8 @@ void test_stress() {
         sl::http::resource src = session.open_url("http://127.0.0.1:80/data", opts);
         auto sink = sl::crypto::make_sha256_sink(sl::io::null_sink());
         std::streamsize res = sl::io::copy_all(src, sink);
-        slassert(432515165 == res);
-        slassert("1dfa11d08c8e721385b4a3717d575ec5a7bf85a7a7b7494e1aaa8583504c574b" == sink.get_hash());
+        slassert(3537494016 == res);
+        slassert("e401808d47bd814d35b74e1e321b4412b842be5b71cf9027d437a9456b677311" == sink.get_hash());
     };
     
     std::vector<std::thread> threads;
@@ -346,7 +294,7 @@ void test_stress() {
 
 void test_methods() {
     // server
-    sl::pion::http_server server(2, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
+    sl::pion::http_server server(2, TCP_PORT, asio::ip::address_v4::any(), 10000, SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
     server.add_handler("GET", "/get", get_handler);
     server.add_handler("POST", "/post", post_handler);
     server.add_payload_handler("POST", "/post", [](sl::pion::http_request_ptr&) { return payload_receiver{}; });
@@ -398,7 +346,7 @@ void test_single() {
 
 void test_timeout() {
     // server
-    sl::pion::http_server server(2, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
+    sl::pion::http_server server(2, TCP_PORT, asio::ip::address_v4::any(), 10000, SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
     server.add_handler("GET", "/", timeout_handler);
     server.start();
     try {
@@ -428,7 +376,7 @@ void test_status_fail() {
 }
 
 void test_queue() {
-    sl::pion::http_server server(4, TCP_PORT, asio::ip::address_v4::any(), SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
+    sl::pion::http_server server(4, TCP_PORT, asio::ip::address_v4::any(), 10000, SERVER_CERT_PATH, pwdcb, CA_PATH, verifier);
     server.add_handler("GET", "/get5", get_5_sec_handler);
     server.add_handler("GET", "/get1", get_1_sec_handler);
     server.start();
@@ -474,11 +422,11 @@ int main() {
         test_methods();
         test_connectfail();
         test_single();
-//        test_timeout();
         test_status_fail();
 //        test_stress();
 //        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start);
-//        std::cout << "millist elapsed: " << elapsed.count() << std::endl;
+//        std::cout << "millis elapsed: " << elapsed.count() << std::endl;
+//        test_timeout();
 //        test_queue();
     } catch (const std::exception& e) {
         std::cout << e.what() << std::endl;

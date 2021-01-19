@@ -31,6 +31,7 @@
 
 #include "staticlib/io.hpp"
 #include "staticlib/pimpl/forward_macros.hpp"
+#include "staticlib/utils.hpp"
 
 #include "curl_deleters.hpp"
 #include "curl_headers.hpp"
@@ -130,14 +131,12 @@ public:
     }
 
     virtual const std::string& get_header(const resource&, const std::string& name) const override {
-        // try cached first
         for (auto& en : response_headers) {
             if (name == en.first) {
                 return en.second;
             }
         }
-        static std::string empty;
-        return empty;
+        return sl::utils::empty_string();
     }
 
     virtual bool connection_successful(const resource& frontend) const override {
