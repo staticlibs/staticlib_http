@@ -60,7 +60,7 @@ class multi_threaded_session::impl : public session::impl {
 public:
     impl(session_options opts) :
     session::impl(opts),
-    tickets(opts.requests_queue_max_size),
+    tickets(opts.mt_requests_queue_max_size),
     new_tickets_arrived(false),
     pause_latch(std::make_shared<sl::concurrent::condition_latch>([this] {
         return this->check_pause_condition();
