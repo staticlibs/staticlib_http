@@ -154,7 +154,7 @@ public:
 
         auto key = reinterpret_cast<int64_t>(easy_handle.get());
         auto req = sl::support::make_unique<request>(std::move(easy_handle), url, std::move(post_data), opts);
-        auto inserted = queue.emplace(key, std::move(req));
+        auto inserted = queue.insert(std::make_pair(key, std::move(req)));
         if (!inserted.second) throw http_exception(TRACEMSG(
                 "Error enqueuing cURL handle, url: [" + url + "]," +
                 " queue size: [" + sl::support::to_string(queue.size()) + "]"));
