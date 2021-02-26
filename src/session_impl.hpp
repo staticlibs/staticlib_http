@@ -38,13 +38,11 @@ namespace http {
 
 class session::impl : public sl::pimpl::object::impl {
 protected:
-    std::atomic<uint64_t> resource_id = std::atomic<uint64_t>(1);
+    std::atomic<uint64_t> resource_id;
     session_options options;
     std::unique_ptr<CURLM, curl_multi_deleter> handle;
 
-    uint64_t increment_resource_id() {
-        return resource_id.fetch_add(1, std::memory_order_relaxed);
-    }
+    uint64_t increment_resource_id();
 
 public:
     impl(session_options opts = session_options{});

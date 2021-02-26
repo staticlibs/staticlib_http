@@ -33,10 +33,15 @@ namespace http {
 session::impl::impl(session_options opts) :
 options(opts),
 handle(curl_multi_init(), curl_multi_deleter()) {
+    this->resource_id.store(1, std::memory_order_release);
     if (nullptr == handle.get()) throw http_exception(TRACEMSG("Error initializing cURL multi handle"));
     apply_curl_multi_options(this->handle.get(), this->options);
 }
 PIMPL_FORWARD_CONSTRUCTOR(session, (session_options), (), http_exception)
+
+uint64_t session::impl::increment_resource_id() {
+    return resource_id.fetch_add(1, std::memory_order_acq_rel);
+}
 
 resource session::impl::open_url(session& frontend, 
         const std::string& url, request_options opts) {
