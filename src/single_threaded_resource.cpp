@@ -57,6 +57,7 @@ class single_threaded_resource::impl : public resource::impl {
         response_info_filled
     };
 
+    uint64_t id;
     CURLM* multi_handle;
     std::unique_ptr<CURL, curl_easy_deleter> handle;
 
@@ -78,9 +79,10 @@ class single_threaded_resource::impl : public resource::impl {
     std::string error;
 
 public:
-    impl(CURLM* multi_handle, const session_options& session_opts,
+    impl(uint64_t resource_id, CURLM* multi_handle, const session_options& session_opts,
             const std::string& url, std::unique_ptr<std::istream> post_data,
             request_options options, std::function<void()> finalizer) :
+    id(resource_id),
     multi_handle(multi_handle),
     handle(curl_easy_init(), curl_easy_deleter(this->multi_handle, finalizer)),
     url(url.data(), url.length()),
@@ -142,7 +144,15 @@ public:
     virtual bool connection_successful(const resource& frontend) const override {
         return get_status_code(frontend) > 0;
     }
-    
+
+    virtual uint64_t get_id(const resource&) const override {
+        return id;
+    }
+
+    virtual const std::string& get_response_data_file(const resource&) const override {
+        return sl::utils::empty_string();
+    }
+
     size_t write_headers(char* buffer, size_t size, size_t nitems) {
         if (resource_state::created == state) {
             curl_info ci(handle.get());
@@ -156,7 +166,8 @@ public:
         }
         return len;
     }
-    
+
+    // todo: verify me, currently this impl is not used
     size_t write_data(char *buffer, size_t size, size_t nitems) {
         size_t len = size*nitems;
         buf.resize(len);
@@ -259,7 +270,7 @@ private:
     }
 };
 
-PIMPL_FORWARD_CONSTRUCTOR(single_threaded_resource, (CURLM*)(const session_options&)(const std::string&)(std::unique_ptr<std::istream>)(request_options)(fin_type), (), http_exception)
+PIMPL_FORWARD_CONSTRUCTOR(single_threaded_resource, (uint64_t)(CURLM*)(const session_options&)(const std::string&)(std::unique_ptr<std::istream>)(request_options)(fin_type), (), http_exception)
 PIMPL_FORWARD_METHOD(single_threaded_resource, std::streamsize, read, (sl::io::span<char>), (), http_exception)
 PIMPL_FORWARD_METHOD(single_threaded_resource, const std::string&, get_url, (), (const), http_exception)
 PIMPL_FORWARD_METHOD(single_threaded_resource, uint16_t, get_status_code, (), (const), http_exception)
@@ -267,6 +278,8 @@ PIMPL_FORWARD_METHOD(single_threaded_resource, resource_info, get_info, (), (con
 PIMPL_FORWARD_METHOD(single_threaded_resource, headers_type, get_headers, (), (const), http_exception)
 PIMPL_FORWARD_METHOD(single_threaded_resource, const std::string&, get_header, (const std::string&), (const), http_exception)
 PIMPL_FORWARD_METHOD(single_threaded_resource, bool, connection_successful, (), (const), http_exception)
+PIMPL_FORWARD_METHOD(single_threaded_resource, uint64_t, get_id, (), (const), http_exception)
+PIMPL_FORWARD_METHOD(single_threaded_resource, const std::string&, get_response_data_file, (), (const), http_exception)
 
 } // namespace
 }

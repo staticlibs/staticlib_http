@@ -39,11 +39,11 @@ protected:
 public:
     PIMPL_INHERIT_CONSTRUCTOR(polling_resource, resource)
 
-    polling_resource(const std::string& url);
+    polling_resource(uint64_t resource_id, const std::string& url);
 
-    polling_resource(const std::string& url, resource_info&& info, uint16_t status_code,
+    polling_resource(uint64_t resource_id, const std::string& url, resource_info&& info, uint16_t status_code,
             std::vector<std::pair<std::string, std::string>>&& response_headers,
-            std::vector<char>&& data);
+            std::vector<char>&& data, const std::string& data_file_path);
 
     virtual std::streamsize read(sl::io::span<char> span) override;
 
@@ -58,6 +58,10 @@ public:
     virtual const std::string& get_header(const std::string& name) const override;
 
     virtual bool connection_successful() const override;
+
+    virtual uint64_t get_id() const override;
+
+    virtual const std::string& get_response_data_file() const override;
 
 };
 

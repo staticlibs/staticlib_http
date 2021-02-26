@@ -26,6 +26,9 @@
 
 #include "staticlib/http/session.hpp"
 
+#include <cstdint>
+#include <atomic>
+
 #include "curl/curl.h"
 
 #include "curl_deleters.hpp"
@@ -35,8 +38,13 @@ namespace http {
 
 class session::impl : public sl::pimpl::object::impl {
 protected:
+    std::atomic<uint64_t> resource_id = std::atomic<uint64_t>(1);
     session_options options;
     std::unique_ptr<CURLM, curl_multi_deleter> handle;
+
+    uint64_t increment_resource_id() {
+        return resource_id.fetch_add(1, std::memory_order_relaxed);
+    }
 
 public:
     impl(session_options opts = session_options{});

@@ -43,23 +43,28 @@ struct request_options {
      * Headers to send with a request
      */
     std::vector<std::pair<std::string, std::string>> headers;
+
     /**
      * HTTP method to use
      */
     std::string method = "";
+
     /**
-     * HttpException will be thrown from read method on unsuccessful connection attempt,
+     * http_exception will be thrown from read method on unsuccessful connection attempt,
      * see also 'connecttimeout_millis'
      */
     bool abort_on_connect_error = true;
+
     /**
      * HttpException will be thrown from read method on HTTP response code >= 400
      */
     bool abort_on_response_error = true;
+
     /**
      * Max allowed number of response headers
      */
     uint16_t max_number_of_response_headers = 128;
+
     /**
      * Consumer thread wakeup timeout (in milliseconds)
      */
@@ -77,6 +82,12 @@ struct request_options {
      * used only if "send_request_body_content_length" is enabled
      */
     uint32_t request_body_content_length = 0;
+
+    /**
+     * Polling session will write response body into the specified file
+     * instead of a memory buffer
+     */
+    std::string polling_response_body_file_path = "";
 
     // general behavior options
 

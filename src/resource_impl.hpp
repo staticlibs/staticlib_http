@@ -46,6 +46,9 @@ public:
 
     virtual bool connection_successful(const resource&) const = 0;
 
+    virtual uint64_t get_id(const resource&) const = 0;
+
+    virtual const std::string& get_response_data_file(const resource&) const = 0;
 };
 
 } // namespace

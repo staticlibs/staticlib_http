@@ -41,6 +41,8 @@ PIMPL_FORWARD_METHOD(resource, resource_info, get_info, (), (const), http_except
 PIMPL_FORWARD_METHOD(resource, headers_type, get_headers, (), (const), http_exception)
 PIMPL_FORWARD_METHOD(resource, const std::string&, get_header, (const std::string&), (const), http_exception)
 PIMPL_FORWARD_METHOD(resource, bool, connection_successful, (), (const), http_exception)
+PIMPL_FORWARD_METHOD(resource, uint64_t, get_id, (), (const), http_exception)
+PIMPL_FORWARD_METHOD(resource, const std::string&, get_response_data_file, (), (const), http_exception)
 
 } // namespace
 }

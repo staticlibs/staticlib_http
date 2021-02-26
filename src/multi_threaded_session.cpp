@@ -91,7 +91,7 @@ public:
         new_tickets_arrived.exchange(true, std::memory_order_acq_rel);
         pause_latch->notify_one();
         auto params = resource_params(url, std::move(pipe));
-        return multi_threaded_resource(std::move(params));
+        return multi_threaded_resource(increment_resource_id(), std::move(params));
     }
 
     // not exposed

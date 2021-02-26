@@ -31,7 +31,6 @@ namespace staticlib {
 namespace http {
 
 session::impl::impl(session_options opts) :
-// todo: use move
 options(opts),
 handle(curl_multi_init(), curl_multi_deleter()) {
     if (nullptr == handle.get()) throw http_exception(TRACEMSG("Error initializing cURL multi handle"));

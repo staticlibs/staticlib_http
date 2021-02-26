@@ -33,8 +33,10 @@
 
 #include "curl/curl.h"
 
+#include "staticlib/support.hpp"
 #include "staticlib/io.hpp"
 #include "staticlib/pimpl/forward_macros.hpp"
+#include "staticlib/tinydir.hpp"
 
 #include "session_impl.hpp"
 #include "curl_headers.hpp"
@@ -50,6 +52,8 @@ namespace http {
 namespace { // anonymous
 
 class request {
+    uint64_t id;
+
     std::unique_ptr<CURL, curl_easy_deleter> handle;
 
     // holds data passed to curl
@@ -63,6 +67,7 @@ class request {
     uint16_t status_code = 0;
     std::vector<std::pair<std::string, std::string>> response_headers;
     std::vector<char> buf;
+    std::unique_ptr<sl::tinydir::file_sink> response_body_file_sink;
     std::string error;
 
     // no-copy
@@ -70,12 +75,17 @@ class request {
     void operator=(const request&) = delete;
 
 public:
-    request(std::unique_ptr<CURL, curl_easy_deleter> handle, const std::string& url, std::unique_ptr<std::istream> post_data,
-            request_options options):
+    request(uint64_t request_id, std::unique_ptr<CURL, curl_easy_deleter> handle, const std::string& url,
+            std::unique_ptr<std::istream> post_data, request_options opts):
+    id(request_id),
     handle(std::move(handle)),
     url(url.data(), url.length()),
-    options(std::move(options)),
+    options(std::move(opts)),
     post_data(std::move(post_data)) {
+        if (!this->options.polling_response_body_file_path.empty()) {
+            this->response_body_file_sink = sl::support::make_unique<sl::tinydir::file_sink>(
+                    this->options.polling_response_body_file_path);
+        }
         apply_curl_options(this, this->url, this->options, this->post_data, this->request_headers, this->handle);
     }
 
@@ -92,10 +102,15 @@ public:
         return len;
     }
 
-    size_t write_data(char *buffer, size_t size, size_t nitems) {
+    size_t write_data(char* buffer, size_t size, size_t nitems) {
         size_t len = size*nitems;
-        buf.resize(len);
-        std::memcpy(buf.data(), buffer, len);
+        if (nullptr == response_body_file_sink.get()) {
+            size_t size = buf.size();
+            buf.resize(size + len);
+            std::memcpy(buf.data() + size, buffer, len);
+        } else {
+            sl::io::write_all(*response_body_file_sink, {buffer, len});
+        }
         return len;
     }
 
@@ -117,8 +132,11 @@ public:
 
     polling_resource to_resource() {
         auto info = curl_collect_info(handle.get());
-        return polling_resource(url, std::move(info), status_code,
-                std::move(response_headers), std::move(buf));
+        if (nullptr != response_body_file_sink.get()) {
+            response_body_file_sink.reset();
+        }
+        return polling_resource(id, url, std::move(info), status_code,
+                std::move(response_headers), std::move(buf), options.polling_response_body_file_path);
     }
 };
 
@@ -152,15 +170,16 @@ public:
         if (errm != CURLM_OK) throw http_exception(TRACEMSG(
                 "cURL multi_add error: [" + curl_multi_strerror(errm) + "], url: [" + url + "]"));
 
+        auto id = increment_resource_id();
         auto key = reinterpret_cast<int64_t>(easy_handle.get());
-        auto req = sl::support::make_unique<request>(std::move(easy_handle), url, std::move(post_data), opts);
+        auto req = sl::support::make_unique<request>(id, std::move(easy_handle), url, std::move(post_data), opts);
         auto inserted = queue.insert(std::make_pair(key, std::move(req)));
         if (!inserted.second) throw http_exception(TRACEMSG(
                 "Error enqueuing cURL handle, url: [" + url + "]," +
                 " queue size: [" + sl::support::to_string(queue.size()) + "]"));
 
         // return empty resource
-        return polling_resource(url);
+        return polling_resource(id, url);
     }
 
     std::vector<resource> poll(polling_session&) {

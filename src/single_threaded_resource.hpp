@@ -42,8 +42,9 @@ protected:
 public:
     PIMPL_INHERIT_CONSTRUCTOR(single_threaded_resource, resource)
 
-    single_threaded_resource(CURLM* multi_handle, const session_options& session_options, 
-            const std::string& url, std::unique_ptr<std::istream> post_data,
+    single_threaded_resource(uint64_t resource_id, CURLM* multi_handle,
+            const session_options& session_options, const std::string& url,
+            std::unique_ptr<std::istream> post_data,
             request_options options, std::function<void()> finalizer);
 
     virtual std::streamsize read(sl::io::span<char> span) override;
@@ -60,6 +61,9 @@ public:
 
     virtual bool connection_successful() const override;
 
+    virtual uint64_t get_id() const override;
+
+    virtual const std::string& get_response_data_file() const override;
 };
 
 } // namespace

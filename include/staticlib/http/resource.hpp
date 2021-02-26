@@ -86,7 +86,7 @@ public:
     /**
      * Accessor for the resource metainformation
      * 
-     * @return 
+     * @return resource metainformation
      */
     virtual resource_info get_info() const;
 
@@ -113,6 +113,23 @@ public:
      *         response code has been received, 'false' otherwise
      */
     virtual bool connection_successful() const;
+
+    /**
+     * ID of this resource, it is unique only inside the current session
+     * where this resource was opened
+     * 
+     * @return ID of the resource
+     */
+    virtual uint64_t get_id() const;
+
+    /**
+     * Path to the file, where response data was written.
+     * Only supported in polling sesssion
+     * 
+     * @return path to the response data file, empty string if response data
+     *         file is not used
+     */
+    virtual const std::string& get_response_data_file() const;
  
 };
 

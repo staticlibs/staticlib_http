@@ -49,7 +49,7 @@ public:
             opts.method = "POST";
         }
         this->has_active_request = true;
-        return single_threaded_resource(handle.get(), this->options, std::move(url), 
+        return single_threaded_resource(increment_resource_id(), handle.get(), this->options, std::move(url), 
                 std::move(post_data), std::move(opts), [this] {this->has_active_request = false; });
     }
 
