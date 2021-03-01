@@ -61,6 +61,7 @@ class multi_threaded_resource::impl : public resource::impl {
     sl::concurrent::growing_buffer current_buf;
     size_t start_idx = 0;
     bool empty_response = false;
+    mutable std::string pipe_error;
 
 public:
     impl(uint64_t resource_id, resource_params&& params):
@@ -141,6 +142,14 @@ public:
         return sl::utils::empty_string();
     }
 
+    virtual const std::string& get_error(const resource&) const override {
+        if (pipe->has_errors()) {
+            this->pipe_error = pipe->get_error_message();
+            return this->pipe_error;
+        }
+        return sl::utils::empty_string();
+    }
+
 private:
     std::streamsize read_from_current(sl::io::span<char>& span, size_t avail) {
         size_t len = avail <= span.size() ? avail : span.size();
@@ -166,6 +175,7 @@ PIMPL_FORWARD_METHOD(multi_threaded_resource, const std::string&, get_header, (c
 PIMPL_FORWARD_METHOD(multi_threaded_resource, bool, connection_successful, (), (const), http_exception)
 PIMPL_FORWARD_METHOD(multi_threaded_resource, uint64_t, get_id, (), (const), http_exception)
 PIMPL_FORWARD_METHOD(multi_threaded_resource, const std::string&, get_response_data_file, (), (const), http_exception)
+PIMPL_FORWARD_METHOD(multi_threaded_resource, const std::string&, get_error, (), (const), http_exception)
 
 } // namespace
 }

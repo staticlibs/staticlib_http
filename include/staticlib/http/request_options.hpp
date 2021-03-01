@@ -89,6 +89,12 @@ struct request_options {
      */
     std::string polling_response_body_file_path = "";
 
+    /**
+     * Request in polling session with in-memory response body
+     * will fail if this limit is exceeded
+     */
+    uint32_t polling_response_body_max_size_bytes = 0;
+
     // general behavior options
 
     /**

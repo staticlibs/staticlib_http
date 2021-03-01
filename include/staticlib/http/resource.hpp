@@ -124,12 +124,19 @@ public:
 
     /**
      * Path to the file, where response data was written.
-     * Only supported in polling sesssion
+     * Only supported with polling session
      * 
      * @return path to the response data file, empty string if response data
      *         file is not used
      */
     virtual const std::string& get_response_data_file() const;
+
+    /**
+     * Error message, empty if no error happened.
+     * 
+     * @return error message
+     */
+    virtual const std::string& get_error() const;
  
 };
 

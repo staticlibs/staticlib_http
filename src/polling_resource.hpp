@@ -43,7 +43,7 @@ public:
 
     polling_resource(uint64_t resource_id, const std::string& url, resource_info&& info, uint16_t status_code,
             std::vector<std::pair<std::string, std::string>>&& response_headers,
-            std::vector<char>&& data, const std::string& data_file_path);
+            std::vector<char>&& data, const std::string& data_file_path, const std::string& error_message);
 
     virtual std::streamsize read(sl::io::span<char> span) override;
 
@@ -62,6 +62,8 @@ public:
     virtual uint64_t get_id() const override;
 
     virtual const std::string& get_response_data_file() const override;
+
+    virtual const std::string& get_error() const override;
 
 };
 

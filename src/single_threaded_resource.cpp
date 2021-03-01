@@ -153,6 +153,10 @@ public:
         return sl::utils::empty_string();
     }
 
+    virtual const std::string& get_error(const resource&) const override {
+        return error;
+    }
+
     size_t write_headers(char* buffer, size_t size, size_t nitems) {
         if (resource_state::created == state) {
             curl_info ci(handle.get());
@@ -167,7 +171,6 @@ public:
         return len;
     }
 
-    // todo: verify me, currently this impl is not used
     size_t write_data(char *buffer, size_t size, size_t nitems) {
         size_t len = size*nitems;
         buf.resize(len);
@@ -280,6 +283,7 @@ PIMPL_FORWARD_METHOD(single_threaded_resource, const std::string&, get_header, (
 PIMPL_FORWARD_METHOD(single_threaded_resource, bool, connection_successful, (), (const), http_exception)
 PIMPL_FORWARD_METHOD(single_threaded_resource, uint64_t, get_id, (), (const), http_exception)
 PIMPL_FORWARD_METHOD(single_threaded_resource, const std::string&, get_response_data_file, (), (const), http_exception)
+PIMPL_FORWARD_METHOD(single_threaded_resource, const std::string&, get_error, (), (const), http_exception)
 
 } // namespace
 }

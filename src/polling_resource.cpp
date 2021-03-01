@@ -58,6 +58,7 @@ class polling_resource::impl : public resource::impl {
     std::vector<char> buf;
     size_t buf_idx = 0;
     std::string data_file;
+    std::string error;
 
 public:
     impl(uint64_t resource_id, const std::string& url):
@@ -68,7 +69,7 @@ public:
 
     impl(uint64_t resource_id, const std::string& url, resource_info&& info, uint16_t status_code,
             std::vector<std::pair<std::string, std::string>>&& response_headers,
-            std::vector<char>&& data, const std::string& data_file_path):
+            std::vector<char>&& data, const std::string& data_file_path, const std::string& error_message):
     resource::impl(),
     id(resource_id),
     url(url.data(), url.length()),
@@ -77,7 +78,12 @@ public:
     status_code(status_code),
     response_headers(std::move(response_headers)),
     buf(std::move(data)),
-    data_file(data_file_path.data(), data_file_path.length()) { }
+    data_file(data_file_path.data(), data_file_path.length()),
+    error(error_message.data(), error_message.length()){
+        if (0 == status_code && error.empty()) {
+            error.append("Connection error");
+        }
+    }
 
     virtual std::streamsize read(resource&, sl::io::span<char> span) override {
         if (!empty) {
@@ -86,7 +92,7 @@ public:
                 size_t ulen = span.size();
                 size_t avail = buf.size() - buf_idx;
                 size_t reslen = avail <= ulen ? avail : ulen;
-                std::memcpy(span.data(), buf.data(), reslen);
+                std::memcpy(span.data(), buf.data() + buf_idx, reslen);
                 buf_idx += reslen;
                 return static_cast<std::streamsize> (reslen);
             } else {
@@ -133,9 +139,13 @@ public:
     virtual const std::string& get_response_data_file(const resource&) const override {
         return data_file;
     }
+
+    virtual const std::string& get_error(const resource&) const override {
+        return error;
+    }
 };
 PIMPL_FORWARD_CONSTRUCTOR(polling_resource, (uint64_t)(const std::string&), (), http_exception)
-PIMPL_FORWARD_CONSTRUCTOR(polling_resource, (uint64_t)(const std::string&)(resource_info&&)(uint16_t)(headers_type&&)(std::vector<char>&&)(const std::string&), (), http_exception)
+PIMPL_FORWARD_CONSTRUCTOR(polling_resource, (uint64_t)(const std::string&)(resource_info&&)(uint16_t)(headers_type&&)(std::vector<char>&&)(const std::string&)(const std::string&), (), http_exception)
 PIMPL_FORWARD_METHOD(polling_resource, std::streamsize, read, (sl::io::span<char>), (), http_exception)
 PIMPL_FORWARD_METHOD(polling_resource, const std::string&, get_url, (), (const), http_exception)
 PIMPL_FORWARD_METHOD(polling_resource, uint16_t, get_status_code, (), (const), http_exception)
@@ -145,6 +155,7 @@ PIMPL_FORWARD_METHOD(polling_resource, const std::string&, get_header, (const st
 PIMPL_FORWARD_METHOD(polling_resource, bool, connection_successful, (), (const), http_exception)
 PIMPL_FORWARD_METHOD(polling_resource, uint64_t, get_id, (), (const), http_exception)
 PIMPL_FORWARD_METHOD(polling_resource, const std::string&, get_response_data_file, (), (const), http_exception)
+PIMPL_FORWARD_METHOD(polling_resource, const std::string&, get_error, (), (const), http_exception)
 
 } // namespace
 }

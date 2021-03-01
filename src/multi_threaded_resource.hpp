@@ -59,6 +59,8 @@ public:
 
     virtual const std::string& get_response_data_file() const override;
 
+    virtual const std::string& get_error() const override;
+
 };
 
 } // namespace

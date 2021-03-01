@@ -105,9 +105,16 @@ public:
     size_t write_data(char* buffer, size_t size, size_t nitems) {
         size_t len = size*nitems;
         if (nullptr == response_body_file_sink.get()) {
-            size_t size = buf.size();
-            buf.resize(size + len);
-            std::memcpy(buf.data() + size, buffer, len);
+            size_t buf_size = buf.size();
+            size_t max_size = options.polling_response_body_max_size_bytes;
+            if (max_size > 0 && buf_size + len > max_size) {
+                this->status_code = 0;
+                this->append_error(std::string() + "response body size exceeded, " +
+                        "limit: [" + sl::support::to_string(max_size) + "]");
+                return 0;
+            }
+            buf.resize(buf_size + len);
+            std::memcpy(buf.data() + buf_size, buffer, len);
         } else {
             sl::io::write_all(*response_body_file_sink, {buffer, len});
         }
@@ -136,7 +143,8 @@ public:
             response_body_file_sink.reset();
         }
         return polling_resource(id, url, std::move(info), status_code,
-                std::move(response_headers), std::move(buf), options.polling_response_body_file_path);
+                std::move(response_headers), std::move(buf), options.polling_response_body_file_path,
+                error);
     }
 };
 
