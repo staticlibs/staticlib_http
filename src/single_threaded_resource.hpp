@@ -30,6 +30,7 @@
 
 #include "curl/curl.h"
 
+#include "staticlib/http/request_options.hpp"
 #include "staticlib/http/session_options.hpp"
 
 namespace staticlib {
@@ -63,7 +64,7 @@ public:
 
     virtual uint64_t get_id() const override;
 
-    virtual const std::string& get_response_data_file() const override;
+    virtual const request_options& get_request_options() const override;
 
     virtual const std::string& get_error() const override;
 };

@@ -33,6 +33,7 @@
 #include "staticlib/pimpl/forward_macros.hpp"
 #include "staticlib/utils.hpp"
 
+#include "staticlib/http/request_options.hpp"
 #include "staticlib/http/resource_info.hpp"
 #include "staticlib/http/http_exception.hpp"
 
@@ -49,6 +50,7 @@ using headers_type = std::vector<std::pair<std::string, std::string>>;
 
 class polling_resource::impl : public resource::impl {
     uint64_t id;
+    request_options request_opts;
     std::string url;
     bool empty;
 
@@ -57,28 +59,29 @@ class polling_resource::impl : public resource::impl {
     std::vector<std::pair<std::string, std::string>> response_headers;
     std::vector<char> buf;
     size_t buf_idx = 0;
-    std::string data_file;
     std::string error;
 
 public:
-    impl(uint64_t resource_id, const std::string& url):
+    impl(uint64_t resource_id, const request_options& req_options, const std::string& url):
     resource::impl(),
     id(resource_id),
+    request_opts(req_options),
     url(url.data(), url.length()),
     empty(true) { }
 
-    impl(uint64_t resource_id, const std::string& url, resource_info&& info, uint16_t status_code,
+    impl(uint64_t resource_id, const request_options& req_options, const std::string& url,
+            resource_info&& info, uint16_t status_code,
             std::vector<std::pair<std::string, std::string>>&& response_headers,
-            std::vector<char>&& data, const std::string& data_file_path, const std::string& error_message):
+            std::vector<char>&& data, const std::string& error_message):
     resource::impl(),
     id(resource_id),
+    request_opts(req_options),
     url(url.data(), url.length()),
     empty(false),
     info(std::move(info)),
     status_code(status_code),
     response_headers(std::move(response_headers)),
     buf(std::move(data)),
-    data_file(data_file_path.data(), data_file_path.length()),
     error(error_message.data(), error_message.length()){
         if (0 == status_code && error.empty()) {
             error.append("Connection error");
@@ -136,16 +139,16 @@ public:
         return id;
     }
 
-    virtual const std::string& get_response_data_file(const resource&) const override {
-        return data_file;
+    virtual const request_options& get_request_options(const resource&) const override {
+        return request_opts;
     }
 
     virtual const std::string& get_error(const resource&) const override {
         return error;
     }
 };
-PIMPL_FORWARD_CONSTRUCTOR(polling_resource, (uint64_t)(const std::string&), (), http_exception)
-PIMPL_FORWARD_CONSTRUCTOR(polling_resource, (uint64_t)(const std::string&)(resource_info&&)(uint16_t)(headers_type&&)(std::vector<char>&&)(const std::string&)(const std::string&), (), http_exception)
+PIMPL_FORWARD_CONSTRUCTOR(polling_resource, (uint64_t)(const request_options&)(const std::string&), (), http_exception)
+PIMPL_FORWARD_CONSTRUCTOR(polling_resource, (uint64_t)(const request_options&)(const std::string&)(resource_info&&)(uint16_t)(headers_type&&)(std::vector<char>&&)(const std::string&), (), http_exception)
 PIMPL_FORWARD_METHOD(polling_resource, std::streamsize, read, (sl::io::span<char>), (), http_exception)
 PIMPL_FORWARD_METHOD(polling_resource, const std::string&, get_url, (), (const), http_exception)
 PIMPL_FORWARD_METHOD(polling_resource, uint16_t, get_status_code, (), (const), http_exception)
@@ -154,7 +157,7 @@ PIMPL_FORWARD_METHOD(polling_resource, const headers_type&, get_headers, (), (co
 PIMPL_FORWARD_METHOD(polling_resource, const std::string&, get_header, (const std::string&), (const), http_exception)
 PIMPL_FORWARD_METHOD(polling_resource, bool, connection_successful, (), (const), http_exception)
 PIMPL_FORWARD_METHOD(polling_resource, uint64_t, get_id, (), (const), http_exception)
-PIMPL_FORWARD_METHOD(polling_resource, const std::string&, get_response_data_file, (), (const), http_exception)
+PIMPL_FORWARD_METHOD(polling_resource, const request_options&, get_request_options, (), (const), http_exception)
 PIMPL_FORWARD_METHOD(polling_resource, const std::string&, get_error, (), (const), http_exception)
 
 } // namespace

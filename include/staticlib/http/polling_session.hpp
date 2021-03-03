@@ -73,7 +73,20 @@ public:
             std::unique_ptr<std::istream> post_data,
             request_options options = request_options{}) override;
 
+    /**
+     * Poll the queue making cURL to actually process the requests
+     * 
+     * @return list of requests, that finished execution
+     */
     std::vector<resource> poll();
+
+    /**
+     * Number of request, that were submitted for execution and
+     * not yet finished
+     * 
+     * @return number of enqueued requests
+     */
+    size_t enqueued_requests_count();
 };
 
 } // namespace

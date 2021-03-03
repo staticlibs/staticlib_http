@@ -149,8 +149,8 @@ public:
         return id;
     }
 
-    virtual const std::string& get_response_data_file(const resource&) const override {
-        return sl::utils::empty_string();
+    virtual const request_options& get_request_options(const resource&) const override {
+        return options;
     }
 
     virtual const std::string& get_error(const resource&) const override {
@@ -208,7 +208,7 @@ private:
             CURLMcode err_timeout = curl_multi_timeout(multi_handle, std::addressof(timeo));
             if (err_timeout != CURLM_OK) throw http_exception(TRACEMSG(
                     "cURL timeout error: [" + curl_multi_strerror(err_timeout) + "], url: [" + url + "]"));
-            struct timeval timeout = create_timeout_struct(timeo, session_opts.st_socket_select_max_timeout_millis);
+            struct timeval timeout = create_timeout_struct(timeo, session_opts.socket_select_max_timeout_millis);
 
             // get file descriptors from the transfers
             fd_set fdread = create_fd();
@@ -282,7 +282,7 @@ PIMPL_FORWARD_METHOD(single_threaded_resource, headers_type, get_headers, (), (c
 PIMPL_FORWARD_METHOD(single_threaded_resource, const std::string&, get_header, (const std::string&), (const), http_exception)
 PIMPL_FORWARD_METHOD(single_threaded_resource, bool, connection_successful, (), (const), http_exception)
 PIMPL_FORWARD_METHOD(single_threaded_resource, uint64_t, get_id, (), (const), http_exception)
-PIMPL_FORWARD_METHOD(single_threaded_resource, const std::string&, get_response_data_file, (), (const), http_exception)
+PIMPL_FORWARD_METHOD(single_threaded_resource, const request_options&, get_request_options, (), (const), http_exception)
 PIMPL_FORWARD_METHOD(single_threaded_resource, const std::string&, get_error, (), (const), http_exception)
 
 } // namespace

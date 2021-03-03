@@ -41,7 +41,6 @@
 #include "session_impl.hpp"
 #include "curl_headers.hpp"
 #include "curl_utils.hpp"
-#include "resource_params.hpp"
 #include "polling_resource.hpp"
 #include "running_request_pipe.hpp"
 #include "running_request.hpp"
@@ -142,9 +141,8 @@ public:
         if (nullptr != response_body_file_sink.get()) {
             response_body_file_sink.reset();
         }
-        return polling_resource(id, url, std::move(info), status_code,
-                std::move(response_headers), std::move(buf), options.polling_response_body_file_path,
-                error);
+        return polling_resource(id, options, url, std::move(info), status_code,
+                std::move(response_headers), std::move(buf), error);
     }
 };
 
@@ -165,6 +163,10 @@ public:
         if ("" == opts.method) {
             opts.method = "POST";
         }
+
+        if (queue.size() >= options.requests_queue_max_size) throw http_exception(TRACEMSG(
+                "HTTP queue max size exceeded, url: [" + url + "]" +
+                " queue size: [" + sl::support::to_string(queue.size()) + "]"));
 
         // create easy handle
         auto easy_handle = std::unique_ptr<CURL, curl_easy_deleter>(
@@ -187,7 +189,7 @@ public:
                 " queue size: [" + sl::support::to_string(queue.size()) + "]"));
 
         // return empty resource
-        return polling_resource(id, url);
+        return polling_resource(id, opts, url);
     }
 
     std::vector<resource> poll(polling_session&) {
@@ -230,12 +232,16 @@ public:
         return results;
     }
 
+    size_t enqueued_requests_count(polling_session&) {
+        return queue.size();
+    }
+
     struct timeval call_timeout() {
         long timeo = -1;
         CURLMcode err = curl_multi_timeout(this->handle.get(), std::addressof(timeo));
         if (CURLM_OK != err) throw http_exception(TRACEMSG(
                 "cURL multi_timeout error: [" + curl_multi_strerror(err) + "]"));
-        return create_timeout_struct(timeo, this->options.mt_socket_select_max_timeout_millis);
+        return create_timeout_struct(timeo, this->options.socket_select_max_timeout_millis);
     }
 
     bool call_select(struct timeval& timeout) {
@@ -295,6 +301,7 @@ public:
 PIMPL_FORWARD_CONSTRUCTOR(polling_session, (session_options), (), http_exception)
 PIMPL_FORWARD_METHOD(polling_session, resource, open_url, (const std::string&)(std::unique_ptr<std::istream>)(request_options), (), http_exception)
 PIMPL_FORWARD_METHOD(polling_session, std::vector<resource>, poll, (), (), http_exception)
+PIMPL_FORWARD_METHOD(polling_session, size_t, enqueued_requests_count, (), (), http_exception)
 
 } // namespace
 }

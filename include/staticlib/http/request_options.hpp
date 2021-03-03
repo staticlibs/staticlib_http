@@ -95,6 +95,12 @@ struct request_options {
      */
     uint32_t polling_response_body_max_size_bytes = 0;
 
+    /**
+     * Arbitrary user provided string, that is not used during
+     * request processing and is available from resource
+     */
+    std::string user_options = "";
+
     // general behavior options
 
     /**

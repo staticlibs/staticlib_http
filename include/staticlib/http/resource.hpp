@@ -123,13 +123,11 @@ public:
     virtual uint64_t get_id() const;
 
     /**
-     * Path to the file, where response data was written.
-     * Only supported with polling session
+     * Configuration options that were specified for this request
      * 
-     * @return path to the response data file, empty string if response data
-     *         file is not used
+     * @return request configuration options
      */
-    virtual const std::string& get_response_data_file() const;
+    virtual const request_options& get_request_options() const;
 
     /**
      * Error message, empty if no error happened.

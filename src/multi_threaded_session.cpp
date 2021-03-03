@@ -60,7 +60,7 @@ class multi_threaded_session::impl : public session::impl {
 public:
     impl(session_options opts) :
     session::impl(opts),
-    tickets(opts.mt_requests_queue_max_size),
+    tickets(opts.requests_queue_max_size),
     new_tickets_arrived(false),
     pause_latch(std::make_shared<sl::concurrent::condition_latch>([this] {
         return this->check_pause_condition();
@@ -85,13 +85,13 @@ public:
         }
         //  note: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=63736
         auto pipe = std::make_shared<running_request_pipe>(opts, pause_latch);
-        auto enqueued = tickets.emplace(url, std::move(opts), std::move(post_data), pipe);
+        auto enqueued = tickets.emplace(url, opts, std::move(post_data), pipe);
         if (!enqueued) throw http_exception(TRACEMSG(
                 "Requests queue is full, size: [" + sl::support::to_string(tickets.size()) + "]"));
         new_tickets_arrived.exchange(true, std::memory_order_acq_rel);
         pause_latch->notify_one();
         auto params = resource_params(url, std::move(pipe));
-        return multi_threaded_resource(increment_resource_id(), std::move(params));
+        return multi_threaded_resource(increment_resource_id(), opts, std::move(params));
     }
 
     // not exposed
@@ -161,7 +161,7 @@ private:
         if (check_and_abort_on_multi_error(err_timeout)) {
             return false;
         }
-        struct timeval timeout = create_timeout_struct(timeo, this->options.mt_socket_select_max_timeout_millis);
+        struct timeval timeout = create_timeout_struct(timeo, this->options.socket_select_max_timeout_millis);
 
         // fdset
         fd_set fdread = create_fd();

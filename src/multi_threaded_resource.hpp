@@ -26,6 +26,8 @@
 
 #include "staticlib/http/resource.hpp"
 
+#include "staticlib/http/request_options.hpp"
+
 namespace staticlib {
 namespace http {
 
@@ -39,7 +41,7 @@ protected:
 public:
     PIMPL_INHERIT_CONSTRUCTOR(multi_threaded_resource, resource)
 
-    multi_threaded_resource(uint64_t resource_id, resource_params&& params);
+    multi_threaded_resource(uint64_t resource_id, const request_options& req_options, resource_params&& params);
 
     virtual std::streamsize read(sl::io::span<char> span) override;
 
@@ -57,7 +59,7 @@ public:
 
     virtual uint64_t get_id() const override;
 
-    virtual const std::string& get_response_data_file() const override;
+    virtual const request_options& get_request_options() const override;
 
     virtual const std::string& get_error() const override;
 

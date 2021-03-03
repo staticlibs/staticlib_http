@@ -37,21 +37,17 @@ struct session_options {
     // general options
 
     /**
-     * Max number of simultaneous requests in multithreaded session
+     * Max number of simultaneous requests
      */
-    uint32_t mt_requests_queue_max_size = 1024;
+    uint32_t requests_queue_max_size = 1024;
     /**
-     * Timeout to wait for when reading data unsuccessfully
+     * Timeout to wait for after 'fdset' call failure (in milliseconds)
      */
     uint32_t fdset_timeout_millis = 100;
     /**
-     * Socket 'select' max timeout for multi-threaded resource (in milliseconds)
+     * Max timeout for socket 'select' call (in milliseconds)
      */
-    uint16_t mt_socket_select_max_timeout_millis = 100;
-    /**
-     * Socket 'select' max timeout for single-threaded resource (in milliseconds)
-     */
-    uint16_t st_socket_select_max_timeout_millis = 10000;
+    uint16_t socket_select_max_timeout_millis = 100;
 
     // cURL multi API options
 

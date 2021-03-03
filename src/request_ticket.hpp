@@ -36,11 +36,11 @@ public:
 
     request_ticket() { }
 
-    request_ticket(const std::string& url, request_options options,
+    request_ticket(const std::string& url, const request_options& options,
             std::unique_ptr<std::istream>&& post_data,
             std::shared_ptr<running_request_pipe> pipe) :
     url(url.data(), url.length()),
-    options(std::move(options)),
+    options(options),
     post_data(std::move(post_data)),
     pipe(std::move(pipe)) { }
 

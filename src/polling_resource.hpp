@@ -26,11 +26,10 @@
 
 #include "staticlib/http/resource.hpp"
 
+#include "staticlib/http/request_options.hpp"
+
 namespace staticlib {
 namespace http {
-
-// forward decl
-class resource_params;
 
 class polling_resource : public resource {
 protected:
@@ -39,11 +38,11 @@ protected:
 public:
     PIMPL_INHERIT_CONSTRUCTOR(polling_resource, resource)
 
-    polling_resource(uint64_t resource_id, const std::string& url);
+    polling_resource(uint64_t resource_id, const request_options& req_options, const std::string& url);
 
-    polling_resource(uint64_t resource_id, const std::string& url, resource_info&& info, uint16_t status_code,
+    polling_resource(uint64_t resource_id, const request_options& req_options, const std::string& url, resource_info&& info, uint16_t status_code,
             std::vector<std::pair<std::string, std::string>>&& response_headers,
-            std::vector<char>&& data, const std::string& data_file_path, const std::string& error_message);
+            std::vector<char>&& data, const std::string& error_message);
 
     virtual std::streamsize read(sl::io::span<char> span) override;
 
@@ -61,7 +60,7 @@ public:
 
     virtual uint64_t get_id() const override;
 
-    virtual const std::string& get_response_data_file() const override;
+    virtual const request_options& get_request_options() const override;
 
     virtual const std::string& get_error() const override;
 
